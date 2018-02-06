@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, make_response
+from flask import Blueprint, jsonify, make_response, url_for
 
 from app.models.prediction import PredictionTask, PredictionResult
 from app.tasks.predict import predict_task
@@ -13,7 +13,9 @@ def predict(customer_id):
     """
     task = predict_task.delay(customer_id)
     return jsonify({
-        'task_id': task.id
+        'task_id': task.id,
+        'task_status': url_for('.get_task_status', task_id=task.id, _external=True),
+        'result': url_for('.get_result', task_id=task.id, _external=True)
     })
 
 

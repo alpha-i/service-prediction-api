@@ -7,8 +7,8 @@ class BaseModel(db.Model):
     __abstract__ = True
 
     id = db.Column(db.Integer, autoincrement=True, primary_key=True)
-    created_at = db.Column(db.DateTime, default=datetime.datetime.now())
-    last_update = db.Column(db.DateTime, onupdate=datetime.datetime.now(), default=datetime.datetime.now())
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow())
+    last_update = db.Column(db.DateTime, onupdate=datetime.datetime.utcnow(), default=datetime.datetime.utcnow())
 
     def to_dict(self):
         return {column.key: getattr(self, attr) for attr, column in self.__mapper__.c.items()}
