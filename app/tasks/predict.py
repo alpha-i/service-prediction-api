@@ -28,7 +28,7 @@ def predict_task(self, customer_id):
     }
     db.session.add(prediction_result)
     db.session.commit()
-    return 'Yada yada'
+    return
 
 
 def create_pending_task(task_id, customer_id):

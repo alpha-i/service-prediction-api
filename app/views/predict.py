@@ -8,6 +8,9 @@ predict_blueprint = Blueprint('predict', __name__)
 
 @predict_blueprint.route('/<int:customer_id>/')
 def predict(customer_id):
+    """
+    Submit a prediction task for a customer
+    """
     task = predict_task.delay(customer_id)
     return jsonify({
         'task_id': task.id
@@ -16,6 +19,9 @@ def predict(customer_id):
 
 @predict_blueprint.route('/status/<string:task_id>')
 def get_task_status(task_id):
+    """
+    Get the status of a particular task
+    """
     task = PredictionTask.get_by_task_id(task_id)
     if task:
         return jsonify(task)
@@ -25,6 +31,9 @@ def get_task_status(task_id):
 
 @predict_blueprint.route('/result/<string:task_id>')
 def get_result(task_id):
+    """
+    Get the result of an individual task
+    """
     result = PredictionResult.get_for_task(task_id)
     if not result:
         return make_response("None found!"), 404
