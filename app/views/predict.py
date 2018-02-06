@@ -1,17 +1,17 @@
 from flask import Blueprint, jsonify, make_response, url_for
 
 from app.models.prediction import PredictionTask, PredictionResult
-from app.tasks.predict import predict_task
+from app.tasks.predict import predict_task, prediction_failure
 
 predict_blueprint = Blueprint('predict', __name__)
 
 
-@predict_blueprint.route('/<int:customer_id>/')
-def predict(customer_id):
+@predict_blueprint.route('/<string:customer_id>/<string:upload_id>')
+def predict(customer_id, upload_id):
     """
     Submit a prediction task for a customer
     """
-    task = predict_task.delay(customer_id)
+    task = predict_task.apply_async((customer_id, upload_id), link_error=prediction_failure.s())
     return jsonify({
         'task_id': task.id,
         'task_status': url_for('.get_task_status', task_id=task.id, _external=True),

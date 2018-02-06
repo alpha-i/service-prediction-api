@@ -22,9 +22,11 @@ def create_app(config_filename, register_blueprints=True):
         from app.views.main import home_blueprint
         from app.views.predict import predict_blueprint
         from app.views.customer import customer_blueprint
+        from app.views.upload import upload_blueprint
         app.register_blueprint(home_blueprint, url_prefix='/')
         app.register_blueprint(predict_blueprint, url_prefix='/predict')
         app.register_blueprint(customer_blueprint, url_prefix='/customer')
+        app.register_blueprint(upload_blueprint, url_prefix='/upload')
     app.json_encoder = CustomJSONEncoder
     return app
 

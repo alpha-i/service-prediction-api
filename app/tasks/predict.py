@@ -1,23 +1,35 @@
 import logging
 import random
-
 import time
+
+from celery.result import AsyncResult, allow_join_result
 
 from app import celery
 from app.db import db
+from app.models.files import FileUpload
 from app.models.prediction import PredictionTask, PredictionResult
 
 
 @celery.task(bind=True)
-def predict_task(self, customer_id):
+def predict_task(self, customer_id, upload_id):
     prediction_task = create_pending_task(self.request.id, customer_id)
     logging.info("TASK RECEIVED! %s", prediction_task.task_id)
+
+    data = FileUpload.get_by_id(upload_id)
+    if not data:
+        set_task_status(prediction_task, 'FAILED')
+        return
+
     time.sleep(5)
     logging.info("TASK STARTED! %s", prediction_task.task_id)
     set_task_status(prediction_task, 'STARTED')
     time.sleep(5)
 
+    # *** TASK ACTION START ***
+    file_contents = data.get_file()
+    logging.info(file_contents.read())
     result = random.randint(1, 6)
+    # *** TASK ACTION END *****
 
     logging.info("TASK FINISHED! %s", prediction_task.task_id)
     set_task_status(prediction_task, 'SUCCESS')
@@ -29,6 +41,17 @@ def predict_task(self, customer_id):
     db.session.add(prediction_result)
     db.session.commit()
     return
+
+
+@celery.task(bind=True)
+def prediction_failure(self, uuid):
+    result = AsyncResult(uuid)
+    with allow_join_result():
+        exc = result.get(propagate=False)
+
+    prediction_task = PredictionTask.get_by_task_id(uuid)
+    set_task_status(prediction_task, 'FAILED')
+    print('Task {0} raised exception: {1!r}\n{2!r}'.format(uuid, exc, result.traceback))
 
 
 def create_pending_task(task_id, customer_id):

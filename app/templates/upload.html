@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Home page</title>
+</head>
+<body>
+
+<div>
+    <p>Upload a file for {{ customer_id }}</p>
+</div>
+
+<div>
+    <form action="/upload/{{ customer_id }}" method="post" enctype="multipart/form-data">
+        <input type="file" name="upload" id="upload">
+        <input type="submit" value="Upload file" name="submit">
+    </form>
+
+</div>
+
+</body>
+</html>
