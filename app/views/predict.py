@@ -16,7 +16,7 @@ def predict(customer_id):
         'task_id': task.id,
         'task_status': url_for('.get_task_status', task_id=task.id, _external=True),
         'result': url_for('.get_result', task_id=task.id, _external=True)
-    })
+    }), 202
 
 
 @predict_blueprint.route('/status/<string:task_id>')
