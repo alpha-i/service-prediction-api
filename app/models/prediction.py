@@ -25,12 +25,13 @@ class PredictionTask(BaseModel):
 
 
 class PredictionResult(BaseModel):
+    customer_id = db.Column(db.String)
     task_id = db.Column(db.String(60), unique=True)
     result = db.Column(db.JSON)
 
     @staticmethod
     def get_for_task(task_id):
         try:
-            return PredictionResult.query.filter(PredictionResult.task_id==task_id).one()
+            return PredictionResult.query.filter(PredictionResult.task_id == task_id).one()
         except NoResultFound:
             return None

@@ -1,17 +1,28 @@
-from flask import Blueprint, jsonify, make_response, url_for
+from flask import Blueprint, jsonify, make_response, url_for, request, abort
 
+from app.core.schemas import prediction_request_schema
 from app.models.prediction import PredictionTask, PredictionResult
 from app.tasks.predict import predict_task, prediction_failure
 
 predict_blueprint = Blueprint('predict', __name__)
 
 
-@predict_blueprint.route('/<string:customer_id>/<string:upload_id>')
+@predict_blueprint.route('/<string:customer_id>/<string:upload_id>', methods=['POST'])
 def predict(customer_id, upload_id):
     """
     Submit a prediction task for a customer
     """
-    task = predict_task.apply_async((customer_id, upload_id), link_error=prediction_failure.s())
+    assert request.content_type == 'application/json', abort(400)
+    prediction_request, errors = prediction_request_schema.load(request.json)
+    if errors:
+        return jsonify(errors=errors), 400
+
+    print(prediction_request)
+
+    task = predict_task.apply_async(
+        (customer_id, upload_id, prediction_request),
+        link_error=prediction_failure.s()
+    )
     return jsonify({
         'task_id': task.id,
         'task_status': url_for('.get_task_status', task_id=task.id, _external=True),
@@ -36,7 +47,13 @@ def get_result(task_id):
     """
     Get the result of an individual task
     """
-    result = PredictionResult.get_for_task(task_id)
-    if not result:
-        return make_response("None found!"), 404
-    return jsonify(result)
+    prediction_result = PredictionResult.get_for_task(task_id)
+    if not prediction_result:
+        return make_response("Result not found!"), 404
+
+    return jsonify({
+        'customer_id': prediction_result.customer_id,
+        'task_id': prediction_result.task_id,
+        'feature': prediction_result.result['feature'],
+        'result': prediction_result.result['prediction'],
+    })

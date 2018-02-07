@@ -1,19 +1,24 @@
 import logging
-import random
 import time
 
 from celery.result import AsyncResult, allow_join_result
 
 from app import celery
+from app.core.oracle import Oracle
+from app.core.schemas import prediction_request_schema
 from app.db import db
 from app.models.files import FileUpload
 from app.models.prediction import PredictionTask, PredictionResult
 
 
 @celery.task(bind=True)
-def predict_task(self, customer_id, upload_id):
+def predict_task(self, customer_id, upload_id, prediction_request):
+    prediction_request, errors = prediction_request_schema.load(prediction_request)
+    if errors:
+        raise Exception(errors)
     prediction_task = create_pending_task(self.request.id, customer_id)
     logging.info("TASK RECEIVED! %s", prediction_task.task_id)
+    logging.info("Prediction request: %s")
 
     data = FileUpload.get_by_id(upload_id)
     if not data:
@@ -26,18 +31,25 @@ def predict_task(self, customer_id, upload_id):
     time.sleep(5)
 
     # *** TASK ACTION START ***
-    file_contents = data.get_file()
-    logging.info(file_contents.read())
-    result = random.randint(1, 6)
+    # file_contents = data.get_file()
+    # file_contents.close()
+    data = {
+        'feature': prediction_request['feature'],
+        'start_time': prediction_request['start_time'],
+        'end_time': prediction_request['end_time']
+    }
+    prediction = Oracle().predict(data)
     # *** TASK ACTION END *****
 
     logging.info("TASK FINISHED! %s", prediction_task.task_id)
     set_task_status(prediction_task, 'SUCCESS')
 
-    prediction_result = PredictionResult(task_id=prediction_task.task_id)
-    prediction_result.result = {
-        'random': result
-    }
+    prediction_result = PredictionResult(
+        customer_id=customer_id,
+        task_id=prediction_task.task_id,
+        result={'feature': prediction_request['feature'],
+                'prediction': prediction}
+    )
     db.session.add(prediction_result)
     db.session.commit()
     return
