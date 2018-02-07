@@ -14,19 +14,18 @@ def predict(customer_id, upload_id):
     """
     assert request.content_type == 'application/json', abort(400)
     prediction_request, errors = prediction_request_schema.load(request.json)
+    print(errors)
     if errors:
         return jsonify(errors=errors), 400
 
-    print(prediction_request)
-
-    task = predict_task.apply_async(
+    prediction_task = predict_task.apply_async(
         (customer_id, upload_id, prediction_request),
         link_error=prediction_failure.s()
     )
     return jsonify({
-        'task_id': task.id,
-        'task_status': url_for('.get_task_status', task_id=task.id, _external=True),
-        'result': url_for('.get_result', task_id=task.id, _external=True)
+        'task_id': prediction_task.id,
+        'task_status': url_for('.get_task_status', task_id=prediction_task.id, _external=True),
+        'result': url_for('.get_result', task_id=prediction_task.id, _external=True)
     }), 202
 
 
@@ -35,9 +34,9 @@ def get_task_status(task_id):
     """
     Get the status of a particular task
     """
-    task = PredictionTask.get_by_task_id(task_id)
-    if task:
-        return jsonify(task)
+    prediction_task = PredictionTask.get_by_task_id(task_id)
+    if prediction_task:
+        return jsonify(prediction_task)
     else:
         return make_response("Task not found!"), 404
 
@@ -54,6 +53,5 @@ def get_result(task_id):
     return jsonify({
         'customer_id': prediction_result.customer_id,
         'task_id': prediction_result.task_id,
-        'feature': prediction_result.result['feature'],
-        'result': prediction_result.result['prediction'],
+        'result': prediction_result.result,
     })

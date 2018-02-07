@@ -13,10 +13,10 @@ from app.models.prediction import PredictionTask, PredictionResult
 
 @celery.task(bind=True)
 def predict_task(self, customer_id, upload_id, prediction_request):
+    prediction_task = create_pending_task(self.request.id, customer_id)
     prediction_request, errors = prediction_request_schema.load(prediction_request)
     if errors:
         raise Exception(errors)
-    prediction_task = create_pending_task(self.request.id, customer_id)
     logging.info("TASK RECEIVED! %s", prediction_task.task_id)
     logging.info("Prediction request: %s")
 
@@ -34,7 +34,7 @@ def predict_task(self, customer_id, upload_id, prediction_request):
     # file_contents = data.get_file()
     # file_contents.close()
     data = {
-        'feature': prediction_request['feature'],
+        'features': prediction_request['features'],
         'start_time': prediction_request['start_time'],
         'end_time': prediction_request['end_time']
     }
@@ -47,8 +47,7 @@ def predict_task(self, customer_id, upload_id, prediction_request):
     prediction_result = PredictionResult(
         customer_id=customer_id,
         task_id=prediction_task.task_id,
-        result={'feature': prediction_request['feature'],
-                'prediction': prediction}
+        result=prediction
     )
     db.session.add(prediction_result)
     db.session.commit()
@@ -70,7 +69,7 @@ def create_pending_task(task_id, customer_id):
     new_task = PredictionTask(
         task_id=task_id,
         customer_id=customer_id,
-        status='PENDING'
+        status='QUEUED'
     )
     db.session.add(new_task)
     db.session.commit()
