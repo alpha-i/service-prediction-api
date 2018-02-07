@@ -11,10 +11,10 @@ class FileTypes(Enum):
 
 
 class FileUpload(BaseModel):
-    customer_id = db.Column(db.String(10), nullable=False)
-    upload_id = db.Column(db.String)
-    type = db.Column(db.Enum(FileTypes))
-    location = db.Column(db.String)
+    customer_id = db.Column(db.String(10), nullable=False, index=True)
+    upload_id = db.Column(db.String(), index=True)
+    type = db.Column(db.Enum(FileTypes), index=True)
+    location = db.Column(db.String(), index=True)
 
     def get_file(self):
         """
@@ -28,7 +28,7 @@ class FileUpload(BaseModel):
         return FileUpload.query.filter(FileUpload.customer_id==customer_id).all()
 
     @staticmethod
-    def get_by_id(upload_id):
+    def get_by_upload_id(upload_id):
         try:
             return FileUpload.query.filter(FileUpload.upload_id==upload_id).one()
         except NoResultFound:

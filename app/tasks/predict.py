@@ -16,23 +16,24 @@ def predict_task(self, customer_id, upload_id, prediction_request):
     prediction_task = create_pending_task(self.request.id, customer_id)
     prediction_request, errors = prediction_request_schema.load(prediction_request)
     if errors:
+        logging.warning(errors)
         raise Exception(errors)
-    logging.info("TASK RECEIVED! %s", prediction_task.task_id)
-    logging.info("Prediction request: %s")
+    logging.info("Prediction request %s received: %s", upload_id, prediction_request)
 
-    data = FileUpload.get_by_id(upload_id)
+    data = FileUpload.get_by_upload_id(upload_id)
     if not data:
+        logging.warning("No upload could be found for id %s", upload_id)
         set_task_status(prediction_task, 'FAILED')
         return
 
-    time.sleep(5)
-    logging.info("TASK STARTED! %s", prediction_task.task_id)
+    time.sleep(1)
+    logging.info("*** TASK STARTED! %s", prediction_task.task_id)
     set_task_status(prediction_task, 'STARTED')
-    time.sleep(5)
 
     # *** TASK ACTION START ***
     # file_contents = data.get_file()
     # file_contents.close()
+    time.sleep(1)
     data = {
         'features': prediction_request['features'],
         'start_time': prediction_request['start_time'],
@@ -41,7 +42,7 @@ def predict_task(self, customer_id, upload_id, prediction_request):
     prediction = Oracle().predict(data)
     # *** TASK ACTION END *****
 
-    logging.info("TASK FINISHED! %s", prediction_task.task_id)
+    logging.info("*** TASK FINISHED! %s", prediction_task.task_id)
     set_task_status(prediction_task, 'SUCCESS')
 
     prediction_result = PredictionResult(
@@ -54,11 +55,12 @@ def predict_task(self, customer_id, upload_id, prediction_request):
     return
 
 
-@celery.task(bind=True)
-def prediction_failure(self, uuid):
+@celery.task
+def prediction_failure(uuid):
     result = AsyncResult(uuid)
     with allow_join_result():
         exc = result.get(propagate=False)
+        print(exc)
 
     prediction_task = PredictionTask.get_by_task_id(uuid)
     set_task_status(prediction_task, 'FAILED')

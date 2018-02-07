@@ -14,7 +14,6 @@ def predict(customer_id, upload_id):
     """
     assert request.content_type == 'application/json', abort(400)
     prediction_request, errors = prediction_request_schema.load(request.json)
-    print(errors)
     if errors:
         return jsonify(errors=errors), 400
 

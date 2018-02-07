@@ -9,6 +9,6 @@ services:
     ports:
       - "5432:5432"
     environment:
-      - POSTGRES_USER:'gabalese'
-      - POSTGRES_PASSWORD:'gabalese'
+      - POSTGRES_USER:'postgres'
+      - POSTGRES_PASSWORD:'postgres'
       - POSTGRES_DB:'database'
