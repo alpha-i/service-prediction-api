@@ -19,6 +19,12 @@ and a test celery worker. This needs to change in the future (by abstracting out
 
 `docker-compose up -d`
 
+`export FLASK_APP=run.py`
+
+`export PGUSER=postgres`
+
+`PGPASSWORD=postgres psql -h localhost -U postgres -tc "SELECT 1 FROM pg_database WHERE datname = 'database'" | grep -q 1 || psql -U postgres -h localhost -c "CREATE DATABASE database"`
+
 `flask db upgrade`
 
 `honcho start`
