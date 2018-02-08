@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-md-12">
+            <h2>Welcome, {{ profile.user_name }}</h2>
+        </div>
+    </div>
+    {% include "upload.html" %}
+    <div class="row">
+        <div class="col-md-12">
+            <h3>Latest Files</h3>
+            <table class="table">
+                <thead class="thead-light">
+                    <tr>
+                        <th scope="col">code</th>
+                        <th scope="col">filename</th>
+                        <th scope="col">uploaded</th>
+                        <th scope="col"># tasks</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {%  for file in file_uploaded %}
+                    <tr>
+                        <td scope="row">{{ file.upload_code }}</td>
+                        <td>{{ file.filename }}</td>
+                        <td>{{ file.last_update }}</td>
+                        <td>{{ file.prediction_task_list|length }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+{% endblock %}
