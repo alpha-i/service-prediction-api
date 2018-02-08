@@ -20,7 +20,7 @@ def list_uploads(customer_id):
 
 
 # TODO: temporary view to show the customer tasks
-@customer_blueprint.route('/<string:customer_id>')
+@customer_blueprint.route('/<string:customer_id>/tasks')
 def get_customer_tasks(customer_id):
     """
     List all the tasks for a customer
