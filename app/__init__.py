@@ -10,6 +10,7 @@ celery = Celery(__name__, broker=CELERY_BROKER_URL, backend=CELERY_RESULT_BACKEN
 
 def create_app(config_filename, register_blueprints=True):
     app = Flask(__name__, static_folder='templates')
+    app.url_map.strict_slashes = False
     app.config.from_object(config_filename)
     migrate = Migrate()
 
