@@ -8,10 +8,10 @@ from app.models.user import User
 def requires_access_token(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
-        # the token must be in the json body or in the authorization header
-        # TODO: might have to check the cookies too, for the form?
         if 'Authorization' in request.headers:
             token = request.headers['Authorization']
+        elif 'token' in request.cookies:
+            token = request.cookies.get('token')
         else:
             assert request.content_type == 'application/json'
             token = request.json.get('token')

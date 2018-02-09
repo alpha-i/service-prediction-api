@@ -55,7 +55,7 @@ class TestPredictionAPI(TestCase):
                 f'/upload/{self.TEST_CUSTOMER_ID}',
                 content_type='multipart/form-data',
                 data={'upload': (test_upload_file, 'test_data.csv')},
-                headers={'Authorization': self.token}
+                #headers={'Authorization': self.token}
             )
             assert resp.status_code == 201
             assert resp.json
@@ -84,7 +84,7 @@ class TestPredictionAPI(TestCase):
                 f'/upload/{self.TEST_CUSTOMER_ID}',
                 content_type='multipart/form-data',
                 data={'upload': (test_upload_file, 'test_data.csv')},
-                headers={'Authorization': self.token}
+                #headers={'Authorization': self.token}
             )
 
             upload_id = resp.json['upload_id']
@@ -115,7 +115,10 @@ class TestPredictionAPI(TestCase):
 
         # you can query the task status
         time.sleep(2)
-        resp = self.client.get(f'/predict/status/{task_id}', headers={'Authorization': self.token})
+        resp = self.client.get(
+            f'/predict/status/{task_id}',
+            #headers={'Authorization': self.token}
+        )
         """
         {
             'created_at': 'Wed, 07 Feb 2018 16:00:20 GMT', 
@@ -132,7 +135,10 @@ class TestPredictionAPI(TestCase):
         time.sleep(2)  # wait for the task to finish
 
         # check the result
-        resp = self.client.get(f'/predict/result/{task_id}', headers={'Authorization': self.token})
+        resp = self.client.get(
+            f'/predict/result/{task_id}',
+            #headers={'Authorization': self.token}
+        )
 
         """
         {

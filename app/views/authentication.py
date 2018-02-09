@@ -1,8 +1,11 @@
+import datetime
+
 from flask import Blueprint, request, abort, jsonify, url_for, g
 
 from app.core.auth import requires_access_token
 from app.db import db
 from app.models.user import User
+from config import TOKEN_EXPIRATION
 
 authentication_blueprint = Blueprint('authentication', __name__)
 
@@ -49,10 +52,12 @@ def get_new_token():
     if not user.verify_password(password):
         abort(401)
 
-    token = user.generate_auth_token()
+    token = user.generate_auth_token(expiration=TOKEN_EXPIRATION)
+    ascii_token = token.decode('ascii')
 
-    return jsonify(
-        {
-            'token': token.decode('ascii')
-        }
+    response = jsonify({'token': ascii_token})
+    response.set_cookie(
+        'token', ascii_token,
+        expires=datetime.datetime.now() + datetime.timedelta(minutes=TOKEN_EXPIRATION)
     )
+    return response, 200
