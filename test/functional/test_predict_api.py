@@ -24,12 +24,38 @@ class TestPredictionAPI(TestCase):
         db.session.remove()
         db.drop_all()
 
+    def register(self):
+        resp = self.client.post(
+            '/auth/register',
+            content_type='application/json',
+            data=json.dumps({
+                'username': 'test_user',
+                'password': 'password'
+            })
+        )
+        assert resp.status_code == 201
+
+    def login(self):
+        self.register()
+        # we now require a token authorization for the endpoints
+        resp = self.client.post(
+            '/auth/login',
+            content_type='application/json',
+            data=json.dumps({'username': 'test_user', 'password': 'password'})
+        )
+
+        assert resp.status_code == 200
+
+        self.token = resp.json['token']
+
     def test_upload_file_for_customer(self):
+        self.login()
         with open(os.path.join(HERE, '../resources/test_data.csv'), 'rb') as test_upload_file:
             resp = self.client.post(
                 f'/upload/{self.TEST_CUSTOMER_ID}',
                 content_type='multipart/form-data',
-                data={'upload': (test_upload_file, 'test_data.csv')}
+                data={'upload': (test_upload_file, 'test_data.csv')},
+                #headers={'Authorization': self.token}
             )
             assert resp.status_code == 201
             assert resp.json
@@ -51,12 +77,14 @@ class TestPredictionAPI(TestCase):
             os.unlink(file_location)
 
     def test_predict_on_a_file(self):
+        self.login()
         # first you upload a file
         with open(os.path.join(HERE, '../resources/test_data.csv'), 'rb') as test_upload_file:
             resp = self.client.post(
                 f'/upload/{self.TEST_CUSTOMER_ID}',
                 content_type='multipart/form-data',
-                data={'upload': (test_upload_file, 'test_data.csv')}
+                data={'upload': (test_upload_file, 'test_data.csv')},
+                #headers={'Authorization': self.token}
             )
 
             upload_id = resp.json['upload_id']
@@ -68,8 +96,8 @@ class TestPredictionAPI(TestCase):
             data=json.dumps({
                 "features": ["number_people"],
                 "start_time": "2017-01-01T00:00:00",
-                "end_time": "2017-01-02T00:00:00"
-            })
+                "end_time": "2017-01-02T00:00:00"}),
+            headers={'Authorization': self.token}
         )
         assert resp.status_code == 202
 
@@ -87,7 +115,10 @@ class TestPredictionAPI(TestCase):
 
         # you can query the task status
         time.sleep(2)
-        resp = self.client.get(f'/predict/status/{task_id}')
+        resp = self.client.get(
+            f'/predict/status/{task_id}',
+            #headers={'Authorization': self.token}
+        )
         """
         {
             'created_at': 'Wed, 07 Feb 2018 16:00:20 GMT', 
@@ -104,7 +135,10 @@ class TestPredictionAPI(TestCase):
         time.sleep(2)  # wait for the task to finish
 
         # check the result
-        resp = self.client.get(f'/predict/result/{task_id}')
+        resp = self.client.get(
+            f'/predict/result/{task_id}',
+            #headers={'Authorization': self.token}
+        )
 
         """
         {

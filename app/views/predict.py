@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, make_response, url_for, request, abort
 
+from app.core.auth import requires_access_token
 from app.core.schemas import prediction_request_schema
 from app.models.prediction import PredictionTask, PredictionResult
 from app.tasks.predict import predict_task, prediction_failure
@@ -8,6 +9,7 @@ predict_blueprint = Blueprint('predict', __name__)
 
 
 @predict_blueprint.route('/<string:customer_id>/<string:upload_id>', methods=['POST'])
+@requires_access_token
 def predict(customer_id, upload_id):
     """
     Submit a prediction task for a customer
@@ -29,6 +31,7 @@ def predict(customer_id, upload_id):
 
 
 @predict_blueprint.route('/status/<string:task_id>')
+@requires_access_token
 def get_task_status(task_id):
     """
     Get the status of a particular task
@@ -41,6 +44,7 @@ def get_task_status(task_id):
 
 
 @predict_blueprint.route('/result/<string:task_id>')
+@requires_access_token
 def get_result(task_id):
     """
     Get the result of an individual task
