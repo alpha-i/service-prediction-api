@@ -1,12 +1,41 @@
 <div class="row">
-    <div class="col-md-12"><h4>Upload a new file</h4></div>
-    <div class="col-md-12">
-        <form action="/upload" method="post" enctype="multipart/form-data" class="form-inline">
-            <label class="custom-file">
-              <input type="file" name="upload" id="upload" class="custom-file-input">
-              <span class="custom-file-control"></span>
-            </label>
-            <input class="btn btn-primary" type="submit" value="Upload file" name="submit">
-        </form>
+    <div class="col-xs-12">
+        <div class="box">
+            <h3 class="box-header with-border">Update data source</h3>
+            <div class="box-body">
+                <form action="/upload" method="post" enctype="multipart/form-data" class="form-inline">
+                    <div class="form-group">
+                        <div class="col-md-8">
+                            <div class="input-group">
+                                <input type="text" id="file_path" class="form-control" placeholder="Browse...">
+                                <span class="input-group-btn">
+                                    <button class="btn btn-default" type="button" id="file_browser">
+                                    <i class="fa fa-search"></i> Browse</button>
+                                </span>
+
+                            </div>
+                            <input type="file" class="hidden" name="upload" id="upload">
+                        </div>
+                        <div class="col-md-4">
+                             <input class="btn btn-primary" type="submit" value="Upload file" name="submit">
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
+<script>
+    $('#file_browser').click(function(e){
+        e.preventDefault();
+        $('#upload').click();
+    });
+
+    $('#file').change(function(){
+        $('#file_path').val($(this).val());
+    });
+
+    $('#file_path').click(function(){
+        $('#file_browser').click();
+    });
+    </script>

@@ -1,37 +1,79 @@
-{% extends "base.html" %}
+{% extends "layout.html" %}
 
-{% block title %}Dashboard{% endblock %}
+{% block page_header %}
+  <h1>
+    Overview
+    <small>Here's the overview of your status</small>
+  </h1>
+{% endblock %}
+{% block breadcrumb_items %}
+    {{ super() }}
+{% endblock %}
 
 {% block content %}
     <div class="row">
         <div class="col-md-12">
-            <h2>Welcome, {{ profile.user_name }}</h2>
+            <div class="box box-primary">
+                <h3 class="box-header with-border">Data source</h3>
+                <div class="box-body">
+                    <table class="table table-bordered">
+                        <tbody>
+                        <tr>
+                            <th>filename</th>
+                            <th>type</th>
+                            <th>start date</th>
+                            <th>end date</th>
+                            <th>last updated</th>
+                            <th>action</th>
+                        </tr>
+                        <tr>
+                            <td>file_name_of_datasource.csv</td>
+                            <td>file system</td>
+                            <td>2017-01-01</td>
+                            <td>2018-01-01</td>
+                            <td>2018-02-01 15:00:00</td>
+                            <td><span class="fa fa-upload"></span></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
         </div>
     </div>
-    {% include "upload.html" %}
     <div class="row">
         <div class="col-md-12">
-            <h3>Latest Files</h3>
-            <table class="table">
-                <thead class="thead-light">
-                    <tr>
-                        <th scope="col">code</th>
-                        <th scope="col">filename</th>
-                        <th scope="col">uploaded</th>
-                        <th scope="col"># tasks</th>
-                    </tr>
-                </thead>
-                <tbody>
-                {%  for file in file_uploaded %}
-                    <tr>
-                        <td scope="row">{{ file.upload_code }}</td>
-                        <td>{{ file.filename }}</td>
-                        <td>{{ file.last_update }}</td>
-                        <td>{{ file.prediction_task_list|length }}</td>
-                    </tr>
-                {% endfor %}
-                </tbody>
-            </table>
+            <div class="box box-success">
+                    <h3 class="box-header with-border">Tasks</h3>
+                    <div class="box-body">
+                        {%  if file_upload|length > 0 %}
+                        <table class="table table-bordered">
+                            <tbody>
+                            <tr>
+                                <th>code</th>
+                                <th>filename</th>
+                                <th>uploaded</th>
+                                <th># tasks</th>
+                            </tr>
+                            {%  for file in file_uploaded %}
+                                <tr>
+                                    <td scope="row">{{ file.upload_code }}</td>
+                                    <td>{{ file.filename }}</td>
+                                    <td>{{ file.last_update }}</td>
+                                    <td>{{ file.prediction_task_list|length }}</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                        {%  else %}
+                            <div class="callout callout-info">
+                              <h4>No task yet</h4>
+                              <p>As soon as you'll create some tasks you will be able to access them to visualize the result</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
