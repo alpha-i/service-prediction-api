@@ -1,4 +1,17 @@
-<div class="row">
+{% extends "layout.html" %}
+
+{% block page_header %}
+  <h1>
+    Update Datasource    <small>Update your datasource</small>
+  </h1>
+{% endblock %}
+{% block breadcrumb_items %}
+    {{ super() }}
+    <li><a class="active"><i class="fa fa-upload"></i> Upload Datasource</a></li>
+{% endblock %}
+
+{% block content %}
+   <div class="row">
     <div class="col-xs-12">
         <div class="box">
             <h3 class="box-header with-border">Update data source</h3>
@@ -25,17 +38,24 @@
         </div>
     </div>
 </div>
-<script>
-    $('#file_browser').click(function(e){
-        e.preventDefault();
-        $('#upload').click();
-    });
+{% endblock %}
 
-    $('#file').change(function(){
-        $('#file_path').val($(this).val());
-    });
 
-    $('#file_path').click(function(){
-        $('#file_browser').click();
-    });
+
+{% block footer_js %}
+    {{ super() }}
+    <script>
+        $('#file_browser').click(function (e) {
+            e.preventDefault();
+            $('#upload').click();
+        });
+
+        $('#file').change(function () {
+            $('#file_path').val($(this).val());
+        });
+
+        $('#file_path').click(function () {
+            $('#file_browser').click();
+        });
     </script>
+{% endblock %}

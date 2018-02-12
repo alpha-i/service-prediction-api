@@ -28,12 +28,12 @@
                             <th>action</th>
                         </tr>
                         <tr>
-                            <td>file_name_of_datasource.csv</td>
-                            <td>file system</td>
-                            <td>2017-01-01</td>
-                            <td>2018-01-01</td>
-                            <td>2018-02-01 15:00:00</td>
-                            <td><a class="btn btn-primary nounderline" href=""><span class="fa fa-upload"></span>  update</a></td>
+                            <td>{{ datasource.filename }}</td>
+                            <td>{{ datasource.type }}</td>
+                            <td>{{ datasource.start_date }}</td>
+                            <td>{{ datasource.end_date }}</td>
+                            <td>{{ datasource.last_update.strftime('%Y-%m-%d %H:%M:%S')  }}</td>
+                            <td><a class="btn btn-primary nounderline" href="{{ url_for('customer.upload') }}"><span class="fa fa-upload"></span>  update</a></td>
                         </tr>
                         </tbody>
                     </table>
@@ -42,7 +42,7 @@
                           <h4>No datasource set</h4>
                           <p>To use our prediction engine you need a datasource</p>
                         </div>
-                       <p><a class="btn btn-primary nounderline" href=""><span class="fa fa-upload"></span> Upload</a></p>
+                       <p><a class="btn btn-primary nounderline" href="{{ url_for('customer.upload') }}"><span class="fa fa-upload"></span> update</a></p>
                     {% endif %}
                 </div>
             </div>
