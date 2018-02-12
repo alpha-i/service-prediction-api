@@ -21,11 +21,21 @@ def dashboard():
     context = {
         'user_id': g.customer.id,
         'profile': {'user_name': g.customer.username, 'email': 'changeme@soon.com'},
-        'file_uploaded': DataSource.get_for_customer(g.customer.id)
+        'datasource': g.customer.current_data_source
     }
 
     return render_template('dashboard.html', **context)
 
+@customer_blueprint.route('/upload')
+@requires_access_token
+def upload():
+    context = {
+        'user_id': g.customer.id,
+        'profile': {'user_name': g.customer.username, 'email': 'changeme@soon.com'},
+        'file_uploaded': DataSource.get_for_customer(g.customer.id)
+    }
+
+    return render_template('datasource_upload.html', **context)
 
 # TODO: temporary view to show the uploads for this customer
 @customer_blueprint.route('/uploads')
