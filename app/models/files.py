@@ -1,3 +1,4 @@
+from sqlalchemy.orm import relationship
 from sqlalchemy.orm.exc import NoResultFound
 
 from app.db import db
@@ -12,9 +13,12 @@ class FileTypes(Enum):
 
 class FileUpload(BaseModel):
     customer_id = db.Column(db.String(10), nullable=False, index=True)
-    upload_id = db.Column(db.String(), index=True)
+    upload_code = db.Column(db.String(), index=True)
     type = db.Column(db.Enum(FileTypes), index=True)
     location = db.Column(db.String(), index=True)
+    filename = db.Column(db.String(), nullable=False)
+
+    prediction_task_list = relationship('PredictionTask', back_populates='upload')
 
     def get_file(self):
         """
@@ -25,14 +29,19 @@ class FileUpload(BaseModel):
 
     @staticmethod
     def get_for_customer(customer_id):
-        return FileUpload.query.filter(FileUpload.customer_id==customer_id).all()
+        return FileUpload.query.filter(FileUpload.customer_id == str(customer_id)).all()
 
     @staticmethod
-    def get_by_upload_id(upload_id):
+    def get_by_upload_code(upload_code):
         try:
-            return FileUpload.query.filter(FileUpload.upload_id==upload_id).one()
+            return FileUpload.query.filter(FileUpload.upload_code == upload_code).one()
         except NoResultFound:
             return None
+
+    @staticmethod
+    def generate_filename(upload_code, original_filename):
+
+        return f"{upload_code}_{original_filename}"
 
     def to_dict(self):
         model_dict = super(FileUpload, self).to_dict()

@@ -1,6 +1,7 @@
 from celery import Celery
 from flask import Flask
 from flask_migrate import Migrate
+from flask_bootstrap import Bootstrap
 
 from app.core.utils import CustomJSONEncoder
 from config import CELERY_BROKER_URL, CELERY_RESULT_BACKEND
@@ -9,9 +10,12 @@ celery = Celery(__name__, broker=CELERY_BROKER_URL, backend=CELERY_RESULT_BACKEN
 
 
 def create_app(config_filename, register_blueprints=True):
-    app = Flask(__name__, static_folder='templates')
+    app = Flask(__name__)
     app.url_map.strict_slashes = False
+    Bootstrap(app)
+
     app.config.from_object(config_filename)
+
     migrate = Migrate()
 
     # Init Flask-SQLAlchemy

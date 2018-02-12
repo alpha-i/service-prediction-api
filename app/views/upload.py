@@ -13,20 +13,23 @@ upload_blueprint = Blueprint('upload', __name__)
 @upload_blueprint.route('/<int:customer_id>', methods=['POST'])
 @requires_access_token
 def upload_file(customer_id):
-    upload_file = request.files['upload']
 
-    upload_id = str(uuid.uuid4())
-    filename = f"{upload_id}_{upload_file.filename}"
+    uploaded_file = request.files['upload']
+    upload_code = str(uuid.uuid4())
+
+    filename = FileUpload.generate_filename(upload_code, uploaded_file.filename)
+
     saved_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
-
-    upload_file.save(saved_path)
+    uploaded_file.save(saved_path)
 
     upload = FileUpload(
         customer_id=customer_id,
-        upload_id=upload_id,
+        upload_code=upload_code,
         type=FileTypes.FILESYSTEM,
-        location=saved_path
+        location=saved_path,
+        filename=filename
     )
+
     db.session.add(upload)
     db.session.commit()
     return jsonify(upload), 201
