@@ -11,4 +11,4 @@ SQLALCHEMY_DATABASE_URI = 'postgresql://localhost:5432/database'
 UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads')  # changeme!
 ALLOWED_EXTENSIONS = {'csv', 'txt', 'zip', 'tar', 'hdf5'}
 SECRET_KEY = 'DcNKg9UgXG14kBw2BQYgfVrkq6ZICr7S'
-TOKEN_EXPIRATION = 1440  # minutes
+TOKEN_EXPIRATION = 3600  # seconds

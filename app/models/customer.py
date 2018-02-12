@@ -2,6 +2,7 @@ from itsdangerous import (
     TimedJSONWebSignatureSerializer as Serializer, BadSignature, SignatureExpired
 )
 from passlib.apps import custom_app_context as pwd_context
+from sqlalchemy.orm import relationship
 from sqlalchemy.orm.exc import NoResultFound
 
 from app.db import db
@@ -12,6 +13,9 @@ from config import SECRET_KEY
 class Customer(BaseModel):
     username = db.Column(db.String(32), index=True)
     password_hash = db.Column(db.String(128))
+    tasks = relationship('PredictionTask', back_populates='customer')
+    results = relationship('PredictionResult', back_populates='customer')
+    data_sources = relationship('DataSource', back_populates='customer')
 
     def hash_password(self, password):
         self.password_hash = pwd_context.encrypt(password)
