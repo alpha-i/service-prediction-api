@@ -9,7 +9,7 @@ from app.models.base import BaseModel
 from config import SECRET_KEY
 
 
-class User(BaseModel):
+class Customer(BaseModel):
     username = db.Column(db.String(32), index=True)
     password_hash = db.Column(db.String(128))
 
@@ -33,12 +33,12 @@ class User(BaseModel):
         except BadSignature:
             return None
 
-        user = User.query.get(data['id'])
+        user = Customer.query.get(data['id'])
         return user
 
     @staticmethod
-    def get_user_by_username(username):
+    def get_customer_by_username(username):
         try:
-            return User.query.filter(User.username==username).one()
+            return Customer.query.filter(Customer.username == username).one()
         except NoResultFound:
             return None

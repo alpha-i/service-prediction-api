@@ -2,7 +2,7 @@ from functools import wraps
 
 from flask import request, g, abort
 
-from app.models.user import User
+from app.models.customer import Customer
 
 
 def requires_access_token(fn):
@@ -19,9 +19,9 @@ def requires_access_token(fn):
             abort(401)
             return None
 
-        user = User.verify_auth_token(token)
-        if not user:
+        customer = Customer.verify_auth_token(token)
+        if not customer:
             abort(401)
-        g.user = user
+        g.customer = customer
         return fn(*args, **kwargs)
     return wrapper
