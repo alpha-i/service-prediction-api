@@ -2,6 +2,7 @@ from itsdangerous import (
     TimedJSONWebSignatureSerializer as Serializer, BadSignature, SignatureExpired
 )
 from passlib.apps import custom_app_context as pwd_context
+from sqlalchemy.orm import relationship
 from sqlalchemy.orm.exc import NoResultFound
 
 from app.db import db
@@ -12,6 +13,9 @@ from config import SECRET_KEY
 class Customer(BaseModel):
     username = db.Column(db.String(32), index=True)
     password_hash = db.Column(db.String(128))
+    tasks = relationship('PredictionTask', back_populates='customer')
+    results = relationship('PredictionResult', back_populates='customer')
+    data_sources = relationship('DataSource', back_populates='customer')
 
     def hash_password(self, password):
         self.password_hash = pwd_context.encrypt(password)
@@ -22,6 +26,11 @@ class Customer(BaseModel):
     def generate_auth_token(self, expiration=3600):  # TODO: change this!
         s = Serializer(SECRET_KEY, expires_in=expiration)
         return s.dumps({'id': self.id})
+
+    @property
+    def current_data_source(self):
+        if len(self.data_sources):
+            return self.data_sources[-1]
 
     @staticmethod
     def verify_auth_token(token):
@@ -42,3 +51,9 @@ class Customer(BaseModel):
             return Customer.query.filter(Customer.username == username).one()
         except NoResultFound:
             return None
+
+    def to_dict(self):
+        dictionary = super(Customer, self).to_dict()
+        dictionary['data_sources'] = self.data_sources
+        dictionary['current_data_source'] = self.current_data_source
+        return dictionary

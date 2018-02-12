@@ -1,3 +1,4 @@
+import logging
 from functools import wraps
 
 from flask import request, g, abort
@@ -16,8 +17,8 @@ def requires_access_token(fn):
             assert request.content_type == 'application/json'
             token = request.json.get('token')
         if not token:
+            logging.info("No token provided!")
             abort(401)
-            return None
 
         customer = Customer.verify_auth_token(token)
         if not customer:

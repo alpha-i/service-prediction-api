@@ -1,6 +1,6 @@
 import datetime
 
-from flask import Blueprint, request, abort, jsonify, url_for, g
+from flask import Blueprint, request, abort, jsonify, g
 
 from app.core.auth import requires_access_token
 from app.db import db
@@ -12,7 +12,8 @@ authentication_blueprint = Blueprint('authentication', __name__)
 
 @authentication_blueprint.route('/register', methods=['POST'])
 def register_new_user():
-    assert request.content_type == 'application/json', abort(400)
+    if not request.content_type == 'application/json':
+        abort(400)
     username = request.json.get('username')
     password = request.json.get('password')
 

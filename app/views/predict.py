@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, make_response, url_for, request, abort
+from flask import Blueprint, jsonify, make_response, url_for, request, abort, g
 
 from app.core.auth import requires_access_token
 from app.core.schemas import prediction_request_schema
@@ -8,13 +8,18 @@ from app.tasks.predict import predict_task, prediction_failure
 predict_blueprint = Blueprint('predict', __name__)
 
 
-@predict_blueprint.route('/<string:customer_id>/<string:upload_code>', methods=['POST'])
+@predict_blueprint.route('/', methods=['POST'])
 @requires_access_token
-def predict(customer_id, upload_code):
+def predict():
     """
     Submit a prediction task for a customer
     """
     assert request.content_type == 'application/json', abort(400)
+    customer_id = g.customer.id
+
+    # the user can only predict against the _latest_ datasource
+    upload_code = g.customer.current_data_source.upload_code
+
     prediction_request, errors = prediction_request_schema.load(request.json)
     if errors:
         return jsonify(errors=errors), 400
@@ -26,7 +31,7 @@ def predict(customer_id, upload_code):
     return jsonify({
         'task_code': celery_prediction_task.id,
         'task_status': url_for('.get_task_status', task_code=celery_prediction_task.id, _external=True),
-        'result': url_for('.get_result', task_code=celery_prediction_task.id, _external=True)
+        'result': url_for('.get_task_result', task_code=celery_prediction_task.id, _external=True)
     }), 202
 
 
@@ -45,7 +50,7 @@ def get_task_status(task_code):
 
 @predict_blueprint.route('/result/<string:task_code>')
 @requires_access_token
-def get_result(task_code):
+def get_task_result(task_code):
     """
     Get the result of an individual task
     """

@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: b14687229dc1
+Revision ID: 87948ce9b68e
 Revises: 
-Create Date: 2018-02-12 12:35:40.489416
+Create Date: 2018-02-12 17:33:24.777963
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'b14687229dc1'
+revision = '87948ce9b68e'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -29,71 +29,93 @@ def upgrade():
     op.create_index(op.f('ix_customer_created_at'), 'customer', ['created_at'], unique=False)
     op.create_index(op.f('ix_customer_last_update'), 'customer', ['last_update'], unique=False)
     op.create_index(op.f('ix_customer_username'), 'customer', ['username'], unique=False)
-    op.create_table('file_upload',
+    op.create_table('data_source',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('last_update', sa.DateTime(), nullable=True),
-    sa.Column('customer_id', sa.String(length=10), nullable=False),
+    sa.Column('customer_id', sa.Integer(), nullable=True),
     sa.Column('upload_code', sa.String(), nullable=True),
-    sa.Column('type', sa.Enum('FILESYSTEM', 'BLOBSTORE', name='filetypes'), nullable=True),
+    sa.Column('type', sa.Enum('FILESYSTEM', 'BLOBSTORE', name='uploadtypes'), nullable=True),
     sa.Column('location', sa.String(), nullable=True),
     sa.Column('filename', sa.String(), nullable=False),
+    sa.Column('start_date', sa.DateTime(), nullable=True),
+    sa.Column('end_date', sa.DateTime(), nullable=True),
+    sa.ForeignKeyConstraint(['customer_id'], ['customer.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_index(op.f('ix_file_upload_created_at'), 'file_upload', ['created_at'], unique=False)
-    op.create_index(op.f('ix_file_upload_customer_id'), 'file_upload', ['customer_id'], unique=False)
-    op.create_index(op.f('ix_file_upload_last_update'), 'file_upload', ['last_update'], unique=False)
-    op.create_index(op.f('ix_file_upload_location'), 'file_upload', ['location'], unique=False)
-    op.create_index(op.f('ix_file_upload_type'), 'file_upload', ['type'], unique=False)
-    op.create_index(op.f('ix_file_upload_upload_code'), 'file_upload', ['upload_code'], unique=False)
+    op.create_index(op.f('ix_data_source_created_at'), 'data_source', ['created_at'], unique=False)
+    op.create_index(op.f('ix_data_source_end_date'), 'data_source', ['end_date'], unique=False)
+    op.create_index(op.f('ix_data_source_last_update'), 'data_source', ['last_update'], unique=False)
+    op.create_index(op.f('ix_data_source_location'), 'data_source', ['location'], unique=False)
+    op.create_index(op.f('ix_data_source_start_date'), 'data_source', ['start_date'], unique=False)
+    op.create_index(op.f('ix_data_source_type'), 'data_source', ['type'], unique=False)
+    op.create_index(op.f('ix_data_source_upload_code'), 'data_source', ['upload_code'], unique=False)
     op.create_table('prediction_task',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('last_update', sa.DateTime(), nullable=True),
-    sa.Column('customer_id', sa.Integer(), nullable=False),
+    sa.Column('customer_id', sa.Integer(), nullable=True),
     sa.Column('task_code', sa.String(length=60), nullable=False),
-    sa.Column('status', sa.String(length=10), nullable=False),
-    sa.Column('upload_id', sa.Integer(), nullable=False),
-    sa.ForeignKeyConstraint(['upload_id'], ['file_upload.id'], ),
+    sa.Column('datasource_id', sa.Integer(), nullable=False),
+    sa.Column('prediction_request', sa.JSON(), nullable=True),
+    sa.ForeignKeyConstraint(['customer_id'], ['customer.id'], ),
+    sa.ForeignKeyConstraint(['datasource_id'], ['data_source.id'], ),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('task_code')
     )
     op.create_index(op.f('ix_prediction_task_created_at'), 'prediction_task', ['created_at'], unique=False)
-    op.create_index(op.f('ix_prediction_task_customer_id'), 'prediction_task', ['customer_id'], unique=False)
     op.create_index(op.f('ix_prediction_task_last_update'), 'prediction_task', ['last_update'], unique=False)
     op.create_table('prediction_result',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('last_update', sa.DateTime(), nullable=True),
-    sa.Column('customer_id', sa.String(), nullable=True),
+    sa.Column('customer_id', sa.Integer(), nullable=True),
     sa.Column('task_code', sa.String(length=60), nullable=True),
     sa.Column('result', sa.JSON(), nullable=True),
     sa.Column('prediction_task_id', sa.Integer(), nullable=False),
+    sa.ForeignKeyConstraint(['customer_id'], ['customer.id'], ),
     sa.ForeignKeyConstraint(['prediction_task_id'], ['prediction_task.id'], ),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('task_code')
     )
     op.create_index(op.f('ix_prediction_result_created_at'), 'prediction_result', ['created_at'], unique=False)
     op.create_index(op.f('ix_prediction_result_last_update'), 'prediction_result', ['last_update'], unique=False)
+    op.create_table('task_status',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.Column('last_update', sa.DateTime(), nullable=True),
+    sa.Column('prediction_task_id', sa.Integer(), nullable=True),
+    sa.Column('state', sa.String(length=10), nullable=True),
+    sa.Column('message', sa.JSON(), nullable=True),
+    sa.ForeignKeyConstraint(['prediction_task_id'], ['prediction_task.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_index(op.f('ix_task_status_created_at'), 'task_status', ['created_at'], unique=False)
+    op.create_index(op.f('ix_task_status_last_update'), 'task_status', ['last_update'], unique=False)
+    op.create_index(op.f('ix_task_status_state'), 'task_status', ['state'], unique=False)
     # ### end Alembic commands ###
 
 
 def downgrade():
     # ### commands auto generated by Alembic - please adjust! ###
+    op.drop_index(op.f('ix_task_status_state'), table_name='task_status')
+    op.drop_index(op.f('ix_task_status_last_update'), table_name='task_status')
+    op.drop_index(op.f('ix_task_status_created_at'), table_name='task_status')
+    op.drop_table('task_status')
     op.drop_index(op.f('ix_prediction_result_last_update'), table_name='prediction_result')
     op.drop_index(op.f('ix_prediction_result_created_at'), table_name='prediction_result')
     op.drop_table('prediction_result')
     op.drop_index(op.f('ix_prediction_task_last_update'), table_name='prediction_task')
-    op.drop_index(op.f('ix_prediction_task_customer_id'), table_name='prediction_task')
     op.drop_index(op.f('ix_prediction_task_created_at'), table_name='prediction_task')
     op.drop_table('prediction_task')
-    op.drop_index(op.f('ix_file_upload_upload_code'), table_name='file_upload')
-    op.drop_index(op.f('ix_file_upload_type'), table_name='file_upload')
-    op.drop_index(op.f('ix_file_upload_location'), table_name='file_upload')
-    op.drop_index(op.f('ix_file_upload_last_update'), table_name='file_upload')
-    op.drop_index(op.f('ix_file_upload_customer_id'), table_name='file_upload')
-    op.drop_index(op.f('ix_file_upload_created_at'), table_name='file_upload')
-    op.drop_table('file_upload')
+    op.drop_index(op.f('ix_data_source_upload_code'), table_name='data_source')
+    op.drop_index(op.f('ix_data_source_type'), table_name='data_source')
+    op.drop_index(op.f('ix_data_source_start_date'), table_name='data_source')
+    op.drop_index(op.f('ix_data_source_location'), table_name='data_source')
+    op.drop_index(op.f('ix_data_source_last_update'), table_name='data_source')
+    op.drop_index(op.f('ix_data_source_end_date'), table_name='data_source')
+    op.drop_index(op.f('ix_data_source_created_at'), table_name='data_source')
+    op.drop_table('data_source')
     op.drop_index(op.f('ix_customer_username'), table_name='customer')
     op.drop_index(op.f('ix_customer_last_update'), table_name='customer')
     op.drop_index(op.f('ix_customer_created_at'), table_name='customer')

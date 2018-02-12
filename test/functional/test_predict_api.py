@@ -52,7 +52,7 @@ class TestPredictionAPI(TestCase):
         self.login()
         with open(os.path.join(HERE, '../resources/test_data.csv'), 'rb') as test_upload_file:
             resp = self.client.post(
-                f'/upload/{self.TEST_CUSTOMER_ID}',
+                f'/upload',
                 content_type='multipart/form-data',
                 data={'upload': (test_upload_file, 'test_data.csv')},
                 #headers={'Authorization': self.token}
@@ -72,7 +72,7 @@ class TestPredictionAPI(TestCase):
                 'upload_code': 'a033d3ae-cd6c-4435-b00b-0bbc9ab09fe6'
             }
             """
-            assert resp.json['customer_id'] == '99'
+            assert resp.json['customer_id'] == 1
             file_location = resp.json['location']
             os.unlink(file_location)
 
@@ -81,7 +81,7 @@ class TestPredictionAPI(TestCase):
         # first you upload a file
         with open(os.path.join(HERE, '../resources/test_data.csv'), 'rb') as test_upload_file:
             resp = self.client.post(
-                f'/upload/{self.TEST_CUSTOMER_ID}',
+                f'/upload',
                 content_type='multipart/form-data',
                 data={'upload': (test_upload_file, 'test_data.csv')},
                 #headers={'Authorization': self.token}
@@ -89,9 +89,11 @@ class TestPredictionAPI(TestCase):
 
             upload_code = resp.json['upload_code']
             file_location = resp.json['location']
+            assert upload_code
+            assert file_location
 
         resp = self.client.post(
-            f'/predict/{self.TEST_CUSTOMER_ID}/{upload_code}',
+            '/predict/',
             content_type='application/json',
             data=json.dumps({
                 "features": ["number_people"],
@@ -130,7 +132,7 @@ class TestPredictionAPI(TestCase):
         }
         """
         assert resp.status_code == 200
-        assert resp.json['customer_id'] == 99
+        assert resp.json['customer_id'] == 1
 
         time.sleep(2)  # wait for the task to finish
 
@@ -170,6 +172,6 @@ class TestPredictionAPI(TestCase):
         """
 
         assert resp.status_code == 200
-        assert resp.json['customer_id'] == "99"  # TODO: why is this a string?
+        assert resp.json['customer_id'] == 1
         assert len(resp.json['result']) == 2
         os.unlink(file_location)
