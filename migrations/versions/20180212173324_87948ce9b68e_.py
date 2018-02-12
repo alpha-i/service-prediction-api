@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: fa4744a57949
+Revision ID: 87948ce9b68e
 Revises: 
-Create Date: 2018-02-12 16:27:28.283509
+Create Date: 2018-02-12 17:33:24.777963
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'fa4744a57949'
+revision = '87948ce9b68e'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -38,12 +38,16 @@ def upgrade():
     sa.Column('type', sa.Enum('FILESYSTEM', 'BLOBSTORE', name='uploadtypes'), nullable=True),
     sa.Column('location', sa.String(), nullable=True),
     sa.Column('filename', sa.String(), nullable=False),
+    sa.Column('start_date', sa.DateTime(), nullable=True),
+    sa.Column('end_date', sa.DateTime(), nullable=True),
     sa.ForeignKeyConstraint(['customer_id'], ['customer.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_data_source_created_at'), 'data_source', ['created_at'], unique=False)
+    op.create_index(op.f('ix_data_source_end_date'), 'data_source', ['end_date'], unique=False)
     op.create_index(op.f('ix_data_source_last_update'), 'data_source', ['last_update'], unique=False)
     op.create_index(op.f('ix_data_source_location'), 'data_source', ['location'], unique=False)
+    op.create_index(op.f('ix_data_source_start_date'), 'data_source', ['start_date'], unique=False)
     op.create_index(op.f('ix_data_source_type'), 'data_source', ['type'], unique=False)
     op.create_index(op.f('ix_data_source_upload_code'), 'data_source', ['upload_code'], unique=False)
     op.create_table('prediction_task',
@@ -106,8 +110,10 @@ def downgrade():
     op.drop_table('prediction_task')
     op.drop_index(op.f('ix_data_source_upload_code'), table_name='data_source')
     op.drop_index(op.f('ix_data_source_type'), table_name='data_source')
+    op.drop_index(op.f('ix_data_source_start_date'), table_name='data_source')
     op.drop_index(op.f('ix_data_source_location'), table_name='data_source')
     op.drop_index(op.f('ix_data_source_last_update'), table_name='data_source')
+    op.drop_index(op.f('ix_data_source_end_date'), table_name='data_source')
     op.drop_index(op.f('ix_data_source_created_at'), table_name='data_source')
     op.drop_table('data_source')
     op.drop_index(op.f('ix_customer_username'), table_name='customer')

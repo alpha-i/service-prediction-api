@@ -8,14 +8,18 @@ from app.tasks.predict import predict_task, prediction_failure
 predict_blueprint = Blueprint('predict', __name__)
 
 
-@predict_blueprint.route('/<string:upload_code>', methods=['POST'])
+@predict_blueprint.route('/', methods=['POST'])
 @requires_access_token
-def predict(upload_code):
+def predict():
     """
     Submit a prediction task for a customer
     """
     assert request.content_type == 'application/json', abort(400)
     customer_id = g.customer.id
+
+    # the user can only predict against the _latest_ datasource
+    upload_code = g.customer.data_source.upload_code
+
     prediction_request, errors = prediction_request_schema.load(request.json)
     if errors:
         return jsonify(errors=errors), 400

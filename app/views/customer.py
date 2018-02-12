@@ -6,6 +6,14 @@ from app.models.datasource import DataSource
 customer_blueprint = Blueprint('customer', __name__)
 
 
+# TODO: get rid of me before committing
+@customer_blueprint.route('/')
+@requires_access_token
+def get_user_profile():
+    customer = g.customer
+    return jsonify(customer)
+
+
 @customer_blueprint.route('/dashboard')
 @requires_access_token
 def dashboard():

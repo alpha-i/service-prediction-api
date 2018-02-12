@@ -27,6 +27,11 @@ class Customer(BaseModel):
         s = Serializer(SECRET_KEY, expires_in=expiration)
         return s.dumps({'id': self.id})
 
+    @property
+    def data_source(self):
+        if len(self.data_sources):
+            return self.data_sources[-1]
+
     @staticmethod
     def verify_auth_token(token):
         s = Serializer(SECRET_KEY)
@@ -46,3 +51,9 @@ class Customer(BaseModel):
             return Customer.query.filter(Customer.username == username).one()
         except NoResultFound:
             return None
+
+    def to_dict(self):
+        dictionary = super(Customer, self).to_dict()
+        dictionary['data_sources'] = self.data_sources
+        dictionary['data_source'] = self.data_source
+        return dictionary

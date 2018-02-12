@@ -89,9 +89,11 @@ class TestPredictionAPI(TestCase):
 
             upload_code = resp.json['upload_code']
             file_location = resp.json['location']
+            assert upload_code
+            assert file_location
 
         resp = self.client.post(
-            f'/predict/{upload_code}',
+            '/predict/',
             content_type='application/json',
             data=json.dumps({
                 "features": ["number_people"],

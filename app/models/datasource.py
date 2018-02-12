@@ -3,8 +3,8 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from app.db import db
 from app.models.base import BaseModel
-from app.models.customer import Customer
 from enum import Enum
+from app.models.customer import Customer
 
 
 class UploadTypes(Enum):
@@ -19,6 +19,9 @@ class DataSource(BaseModel):
     type = db.Column(db.Enum(UploadTypes), index=True)
     location = db.Column(db.String(), index=True)
     filename = db.Column(db.String(), nullable=False)
+
+    start_date = db.Column(db.DateTime, index=True, nullable=True)
+    end_date = db.Column(db.DateTime, index=True, nullable=True)
 
     prediction_task_list = relationship('PredictionTask', back_populates='datasource')
 

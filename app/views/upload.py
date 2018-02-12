@@ -16,7 +16,6 @@ def upload_file():
     customer_id = g.customer.id
     uploaded_file = request.files['upload']
     upload_code = str(uuid.uuid4())
-
     filename = DataSource.generate_filename(upload_code, uploaded_file.filename)
 
     saved_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
