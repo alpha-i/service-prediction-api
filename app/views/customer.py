@@ -12,9 +12,9 @@ customer_blueprint = Blueprint('customer', __name__)
 def dashboard():
 
     context = {
-        'user_id': g.user.id,
-        'profile': {'user_name': g.user.username, 'email': 'changeme@soon.com'},
-        'file_uploaded': FileUpload.get_for_customer(g.user.id)
+        'user_id': g.customer.id,
+        'profile': {'user_name': g.customer.username, 'email': 'changeme@soon.com'},
+        'file_uploaded': FileUpload.get_for_customer(g.customer.id)
     }
 
     return render_template('dashboard.html', **context)
