@@ -16,6 +16,7 @@
             <div class="box box-primary">
                 <h3 class="box-header with-border">Data source</h3>
                 <div class="box-body">
+                    {% if datasource %}
                     <table class="table table-bordered">
                         <tbody>
                         <tr>
@@ -32,10 +33,17 @@
                             <td>2017-01-01</td>
                             <td>2018-01-01</td>
                             <td>2018-02-01 15:00:00</td>
-                            <td><span class="fa fa-upload"></span></td>
+                            <td><a class="btn btn-primary nounderline" href=""><span class="fa fa-upload"></span>  update</a></td>
                         </tr>
                         </tbody>
                     </table>
+                    {% else %}
+                      <div class="callout callout-warning">
+                          <h4>No datasource set</h4>
+                          <p>To use our prediction engine you need a datasource</p>
+                        </div>
+                       <p><a class="btn btn-primary nounderline" href=""><span class="fa fa-upload"></span> Upload</a></p>
+                    {% endif %}
                 </div>
             </div>
 
@@ -66,7 +74,7 @@
                             </tbody>
                         </table>
                         {%  else %}
-                            <div class="callout callout-info">
+                            <div class="callout callout-warning">
                               <h4>No task yet</h4>
                               <p>As soon as you'll create some tasks you will be able to access them to visualize the result</p>
                             </div>
