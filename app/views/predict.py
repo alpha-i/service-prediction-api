@@ -18,7 +18,7 @@ def predict():
     customer_id = g.customer.id
 
     # the user can only predict against the _latest_ datasource
-    upload_code = g.customer.data_source.upload_code
+    upload_code = g.customer.current_data_source.upload_code
 
     prediction_request, errors = prediction_request_schema.load(request.json)
     if errors:

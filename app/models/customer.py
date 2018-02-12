@@ -28,7 +28,7 @@ class Customer(BaseModel):
         return s.dumps({'id': self.id})
 
     @property
-    def data_source(self):
+    def current_data_source(self):
         if len(self.data_sources):
             return self.data_sources[-1]
 
@@ -55,5 +55,5 @@ class Customer(BaseModel):
     def to_dict(self):
         dictionary = super(Customer, self).to_dict()
         dictionary['data_sources'] = self.data_sources
-        dictionary['data_source'] = self.data_source
+        dictionary['current_data_source'] = self.current_data_source
         return dictionary
