@@ -22,7 +22,10 @@ def parse_request_data(fn):
         if request.is_json:
             g.json = request.json
         elif request.form:
-            g.json = dict(request.form.items())
+            g.json = {
+                key: value[0] if len(value) == 1 else value
+                for key, value in request.form.lists()
+            }
         else:
             abort(400)
         return fn(*args, **kwargs)

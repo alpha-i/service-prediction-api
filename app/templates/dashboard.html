@@ -1,5 +1,7 @@
 {% extends "layout.html" %}
 
+{% block page_title %}Dashboard{% endblock %}
+
 {% block page_header %}
   <h1>
     Overview
@@ -32,7 +34,7 @@
                             <td>{{ datasource.type }}</td>
                             <td>{{ datasource.start_date }}</td>
                             <td>{{ datasource.end_date }}</td>
-                            <td>{{ datasource.last_update.strftime('%Y-%m-%d %H:%M:%S')  }}</td>
+                            <td>{{ macros.format_date(datasource.last_update) }}</td>
                             <td><a class="btn btn-primary nounderline" href="{{ url_for('customer.upload') }}"><span class="fa fa-upload"></span>  update</a></td>
                         </tr>
                         </tbody>
@@ -57,21 +59,21 @@
                         <div class="mb-3">
                             <a class="btn btn-primary" href="{{ url_for('customer.new_prediction') }}"><i class="fa fa-plus"></i> new prediction</a>
                         </div>
-                        {%  if file_upload|length > 0 %}
+                        {%  if task_list|length > 0 %}
                         <table class="table table-bordered">
                             <tbody>
                             <tr>
                                 <th>code</th>
-                                <th>filename</th>
-                                <th>uploaded</th>
-                                <th># tasks</th>
+                                <th>created</th>
+                                <th>datasource</th>
+                                <th>status</th>
                             </tr>
-                            {%  for file in file_uploaded %}
+                            {%  for task in task_list %}
                                 <tr>
-                                    <td scope="row">{{ file.upload_code }}</td>
-                                    <td>{{ file.filename }}</td>
-                                    <td>{{ file.last_update }}</td>
-                                    <td>{{ file.prediction_task_list|length }}</td>
+                                    <td scope="row">{{ task.task_code }}</td>
+                                    <td>{{ macros.format_datetime(task.created_at) }}</td>
+                                    <td>{{ task.datasource.upload_code }}</td>
+                                    <td>{{ task.statuses[-1].state }}</td>
                                 </tr>
                             {% endfor %}
                             </tbody>

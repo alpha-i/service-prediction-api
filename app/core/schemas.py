@@ -14,8 +14,8 @@ class PredictionSchema(Schema):
 
 class PredictionRequestSchema(Schema):
     features = fields.List(fields.String(), required=True)
-    start_time = fields.DateTime(required=True)
-    end_time = fields.DateTime(required=True)
+    start_time = fields.Date(required=True)
+    end_time = fields.Date(required=True)
 
 
 prediction_request_schema = PredictionRequestSchema()

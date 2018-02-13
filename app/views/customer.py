@@ -49,9 +49,17 @@ def new_prediction():
     context = {
         'user_id': g.customer.id,
         'profile': {'user_name': g.customer.username, 'email': 'changeme@soon.com'},
+        'datasource': g.customer.current_data_source
     }
 
-    return render_template('create_task.html', **context)
+    return render_template('new_prediction.html', **context)
+
+@customer_blueprint.route('/prediction/<int:prediction_id>')
+@requires_access_token
+def view_prediction(prediction_id):
+
+
+    return render_template('prediction.html')
 
 # TODO: temporary view to show the uploads for this customer
 @customer_blueprint.route('/uploads')

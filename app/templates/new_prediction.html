@@ -1,5 +1,7 @@
 {% extends "layout.html" %}
 
+{% block page_title %}New Prediction{% endblock %}
+
 {% block page_header %}
   <h1>
     New Prediction
@@ -27,30 +29,26 @@
             <div class="box box-primary">
                 <h3 class="box-header with-border">Submit new prediction</h3>
                 <div class="box-body">
-                    <form class="form-inline">
+                    <form class="form-inline" method="post" action="{{ url_for('predict.predict') }}">
                         <div class="form-group">
                             <label for="features">Select features</label>
-                            <select name="features"  id="features"  class="selectpicker dropdown-primary" multiple data-live-search="true">
-                                <option value="" disabled selected>Select features</option>
-                                <option value="1">feature-1</option>
-                                <option value="2">feature-2</option>
-                                <option value="3">feature-3</option>
-                                <option value="4">feature-4</option>
-                                <option value="5">feature-5</option>
+                            <select name="features"  id="features"  class="selectpicker dropdown-primary" multiple data-live-search="true" required>
+                                <option value="feature-1">feature-1</option>
+                                <option value="feature-2">feature-2</option>
+                                <option value="feature-3">feature-3</option>
+                                <option value="feature-4">feature-4</option>
+                                <option value="feature-5">feature-5</option>
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="">Start time</label>
-                            <div class="input-group date" data-provide="datepicker">
-                                <input type="text" class="form-control" name="start_time" >
-                                <span class="input-group-addon">
-                                    <i class="glyphicon glyphicon-th"></i>
-                                </span>
+                            <label for="start_time">Start time</label>
+                            <div class="input-group">
+                                <input readonly="true" required type="text" class="form-control" name="start_time" value="{{ macros.format_date(datasource.end_date) }}">
                             </div>
                         </div>
                         <div class="form-group">
                             <label for="end_time">End time</label>
-                            <div class="input-group date" data-provide="datepicker">
+                            <div class="input-group date" data-provide="datepicker" data-date-format="yyyy-mm-dd" required>
                                 <input type="text" class="form-control" name="end_time" id="end_time">
                                 <span class="input-group-addon">
                                     <i class="glyphicon glyphicon-th"></i>

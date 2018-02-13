@@ -1,26 +1,36 @@
+import logging
 from flask import Blueprint, jsonify, make_response, url_for, request, abort, g
 
 from app.core.auth import requires_access_token
 from app.core.schemas import prediction_request_schema
+from app.core.utils import parse_request_data
 from app.models.prediction import PredictionTask, PredictionResult
 from app.tasks.predict import predict_task, prediction_failure
 
+DATE_FORMAT = '%Y-%m-%d'
+DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
+
 predict_blueprint = Blueprint('predict', __name__)
 
+logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 @predict_blueprint.route('/', methods=['POST'])
 @requires_access_token
+@parse_request_data
 def predict():
     """
     Submit a prediction task for a customer
     """
-    assert request.content_type == 'application/json', abort(400)
+
     customer_id = g.customer.id
 
     # the user can only predict against the _latest_ datasource
     upload_code = g.customer.current_data_source.upload_code
 
-    prediction_request, errors = prediction_request_schema.load(request.json)
+    logging.debug(g.json)
+
+    prediction_request, errors = prediction_request_schema.load(g.json)
+
     if errors:
         return jsonify(errors=errors), 400
 
