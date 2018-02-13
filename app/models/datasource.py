@@ -1,9 +1,10 @@
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm.exc import NoResultFound
+from enum import Enum
+import pandas as pd
 
 from app.db import db
 from app.models.base import BaseModel
-from enum import Enum
 from app.models.customer import Customer
 
 
@@ -26,11 +27,7 @@ class DataSource(BaseModel):
     prediction_task_list = relationship('PredictionTask', back_populates='datasource')
 
     def get_file(self):
-        """
-        Given the file location and its type, return a reference to that file
-        :rtype File
-        """
-        return open(self.location, 'r')
+        return pd.HDFStore(self.location)
 
     @staticmethod
     def get_for_customer(customer_id):

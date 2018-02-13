@@ -1,7 +1,7 @@
 import datetime
 import logging
 
-from flask import Blueprint, request, abort, jsonify, g, redirect, url_for
+from flask import Blueprint, request, abort, jsonify, g, redirect, url_for, Response
 
 from app.core.auth import requires_access_token
 from app.db import db
@@ -45,12 +45,8 @@ def get_customer():
 
 @authentication_blueprint.route('/login', methods=['POST'])
 def get_new_token():
-
-    allowed_request_content = ['application/x-www-form-urlencoded', 'application/json']
-    assert request.content_type in allowed_request_content, abort(400)
-
-    is_form_request = True if request.content_type == allowed_request_content[0] else False
-    is_json_request = True if request.content_type == allowed_request_content[1] else False
+    is_form_request = True if request.content_type == 'application/x-www-form-urlencoded' else False
+    is_json_request = True if request.content_type == 'application/json' else False
 
     if is_form_request:
         username = request.form.get('username')
@@ -58,26 +54,27 @@ def get_new_token():
     elif is_json_request:
         username = request.json.get('username')
         password = request.json.get('password')
+    else:
+        abort(400)
 
     customer = Customer.get_customer_by_username(username)  # type: Customer
     if not customer:
+        logging.warning("No customer found for %s", username)
         abort(401)
 
     if not customer.verify_password(password):
+        logging.warning("Incorrect password for %s", username)
         abort(401)
 
     token = customer.generate_auth_token(expiration=TOKEN_EXPIRATION)
     ascii_token = token.decode('ascii')
 
-    if is_form_request:
-        response = redirect(url_for('customer.dashboard'))
-    else :
-        response = jsonify({'token': ascii_token})
-
+    response = jsonify({'token': ascii_token})
     response.set_cookie(
         'token', ascii_token,
         expires=datetime.datetime.now() + datetime.timedelta(minutes=TOKEN_EXPIRATION)
     )
+    response.headers['Location'] = url_for('customer.dashboard')
 
-    return response
+    return response, 303
 

@@ -44,7 +44,7 @@ class TestPredictionAPI(TestCase):
             data=json.dumps({'username': 'test_user', 'password': 'password'})
         )
 
-        assert resp.status_code == 200
+        assert resp.status_code == 303  # in order to redirect to the login page
 
         self.token = resp.json['token']
 
@@ -52,12 +52,12 @@ class TestPredictionAPI(TestCase):
         self.login()
         with open(os.path.join(HERE, '../resources/test_data.csv'), 'rb') as test_upload_file:
             resp = self.client.post(
-                f'/upload',
+                '/upload',
                 content_type='multipart/form-data',
                 data={'upload': (test_upload_file, 'test_data.csv')},
                 #headers={'Authorization': self.token}
             )
-            assert resp.status_code == 201
+            assert resp.status_code == 303  # in order to redirect to the dashboard
             assert resp.json
 
             """
@@ -73,8 +73,21 @@ class TestPredictionAPI(TestCase):
             }
             """
             assert resp.json['customer_id'] == 1
-            file_location = resp.json['location']
-            os.unlink(file_location)
+
+            assert resp.json['start_date'] == 'Sat, 15 Aug 2015 00:00:11 GMT'
+            assert resp.json['end_date'] == 'Sat, 15 Aug 2015 03:21:14 GMT'
+
+        with open(os.path.join(HERE, '../resources/additional_test_data.csv'), 'rb') as updated_data_file:
+            resp = self.client.post(
+                '/upload',
+                content_type='multipart/form-data',
+                data={'upload': (updated_data_file, 'test_data.csv')},
+                # headers={'Authorization': self.token}
+            )
+            assert resp.status_code == 303  # in order to redirect to the dashboard
+            assert resp.json
+            assert resp.json['start_date'] == 'Sat, 15 Aug 2015 00:00:11 GMT'
+            assert resp.json['end_date'] == 'Tue, 15 Aug 2017 03:21:14 GMT'
 
     def test_predict_on_a_file(self):
         self.login()

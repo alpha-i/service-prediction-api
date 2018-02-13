@@ -31,6 +31,7 @@ class Customer(BaseModel):
     def current_data_source(self):
         if len(self.data_sources):
             return self.data_sources[-1]
+        return None
 
     @staticmethod
     def verify_auth_token(token):

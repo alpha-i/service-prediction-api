@@ -1,5 +1,5 @@
 from celery import Celery
-from flask import Flask
+from flask import Flask, request
 from flask_migrate import Migrate
 from flask_bootstrap import Bootstrap
 
@@ -34,6 +34,14 @@ def create_app(config_filename, register_blueprints=True):
         app.register_blueprint(customer_blueprint, url_prefix='/customer')
         app.register_blueprint(upload_blueprint, url_prefix='/upload')
         app.register_blueprint(authentication_blueprint, url_prefix='/auth')
+
+        @app.before_request
+        def before_request():
+            # When you import jinja2 macros, they get cached which is annoying for local
+            # development, so wipe the cache every request.
+            if 'localhost' in request.host_url or '0.0.0.0' in request.host_url:
+                app.jinja_env.cache = {}
+
     app.json_encoder = CustomJSONEncoder
     return app
 
