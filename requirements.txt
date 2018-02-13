@@ -37,3 +37,5 @@ wcwidth==0.1.7
 Werkzeug==0.14.1
 marshmallow==2.15.0
 passlib==1.7.1
+pandas==0.22.0
+tables==3.4.2
