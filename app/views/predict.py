@@ -29,8 +29,6 @@ def predict():
     # the user can only predict against the _latest_ datasource
     upload_code = g.customer.current_data_source.upload_code
 
-    logging.debug(g.json)
-
     prediction_request, errors = prediction_request_schema.load(g.json)
 
     if errors:
@@ -50,7 +48,7 @@ def predict():
     response.headers['Location'] = url_for('customer.dashboard')
     time.sleep(1)
 
-    return response, 301
+    return response, 303
 
 @predict_blueprint.route('/status/<string:task_code>')
 @requires_access_token

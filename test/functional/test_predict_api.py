@@ -74,8 +74,8 @@ class TestPredictionAPI(TestCase):
             """
             assert resp.json['customer_id'] == 1
 
-            assert resp.json['start_date'] == 'Sat, 15 Aug 2015 00:00:11 GMT'
-            assert resp.json['end_date'] == 'Sat, 15 Aug 2015 03:21:14 GMT'
+            assert resp.json['start_date'] == '2015-08-15T00:00:11Z'
+            assert resp.json['end_date'] == '2015-08-15T03:21:14Z'
 
         with open(os.path.join(HERE, '../resources/additional_test_data.csv'), 'rb') as updated_data_file:
             resp = self.client.post(
@@ -86,8 +86,8 @@ class TestPredictionAPI(TestCase):
             )
             assert resp.status_code == 303  # in order to redirect to the dashboard
             assert resp.json
-            assert resp.json['start_date'] == 'Sat, 15 Aug 2015 00:00:11 GMT'
-            assert resp.json['end_date'] == 'Tue, 15 Aug 2017 03:21:14 GMT'
+            assert resp.json['start_date'] == '2015-08-15T00:00:11Z'
+            assert resp.json['end_date'] == '2017-08-15T03:21:14Z'
 
     def test_predict_on_a_file(self):
         self.login()
@@ -114,7 +114,7 @@ class TestPredictionAPI(TestCase):
                 "end_time": "2017-01-02T00:00:00"}),
             headers={'Authorization': self.token}
         )
-        assert resp.status_code == 202
+        assert resp.status_code == 303
 
         """
         Response looks like:
@@ -129,7 +129,7 @@ class TestPredictionAPI(TestCase):
         task_code = resp.json['task_code']
 
         # you can query the task status
-        time.sleep(2)
+        time.sleep(4)
         resp = self.client.get(
             f'/predict/status/{task_code}',
             #headers={'Authorization': self.token}

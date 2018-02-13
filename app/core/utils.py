@@ -16,7 +16,7 @@ class CustomJSONEncoder(JSONEncoder):
             return obj.value
         if isinstance(obj, datetime):
             return obj.strftime('%Y-%m-%dT%H:%M:%SZ')
-        elif isinstance(obj, date):
+        if isinstance(obj, date):
             return obj.strftime('%Y-%m-%d')
         return super(CustomJSONEncoder, self).default(obj)
 
