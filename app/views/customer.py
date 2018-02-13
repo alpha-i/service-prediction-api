@@ -4,6 +4,7 @@ from app.core.auth import requires_access_token
 from app.db import db
 from app.models.customer import CustomerConfiguration
 from app.models.datasource import DataSource
+from app.models.prediction import PredictionTask
 
 customer_blueprint = Blueprint('customer', __name__)
 
@@ -24,7 +25,7 @@ def dashboard():
         'user_id': g.customer.id,
         'profile': {'user_name': g.customer.username, 'email': 'changeme@soon.com'},
         'datasource': g.customer.current_data_source,
-        'task_list': g.customer.tasks
+        'task_list': list(reversed(g.customer.tasks))[:5]
     }
 
     return render_template('dashboard.html', **context)
@@ -36,7 +37,7 @@ def upload():
     context = {
         'user_id': g.customer.id,
         'profile': {'user_name': g.customer.username, 'email': 'changeme@soon.com'},
-        'file_uploaded': DataSource.get_for_customer(g.customer.id)
+        'file_uploaded': g.customer.current_data_source
     }
 
     return render_template('datasource_upload.html', **context)
@@ -54,12 +55,34 @@ def new_prediction():
 
     return render_template('new_prediction.html', **context)
 
-@customer_blueprint.route('/prediction/<int:prediction_id>')
+
+@customer_blueprint.route('/prediction/<string:prediction_code>')
 @requires_access_token
-def view_prediction(prediction_id):
+def view_prediction(prediction_code):
+
+    context = {
+        'user_id': g.customer.id,
+        'profile': {'user_name': g.customer.username, 'email': 'changeme@soon.com'},
+        'datasource': g.customer.current_data_source,
+        'prediction': PredictionTask.get_by_task_code(prediction_code)
+    }
+
+    return render_template('prediction/view.html', **context)
 
 
-    return render_template('prediction.html')
+@customer_blueprint.route('/prediction')
+@requires_access_token
+def list_predictions():
+
+    context = {
+        'user_id': g.customer.id,
+        'profile': {'user_name': g.customer.username, 'email': 'changeme@soon.com'},
+        'datasource': g.customer.current_data_source,
+        'task_list': list(reversed(g.customer.tasks))
+    }
+
+    return render_template("prediction/list.html", **context)
+
 
 # TODO: temporary view to show the uploads for this customer
 @customer_blueprint.route('/uploads')

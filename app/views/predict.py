@@ -1,4 +1,6 @@
 import logging
+
+import time
 from flask import Blueprint, jsonify, make_response, url_for, request, abort, g
 
 from app.core.auth import requires_access_token
@@ -46,6 +48,8 @@ def predict():
         })
 
     response.headers['Location'] = url_for('customer.dashboard')
+    time.sleep(1)
+
     return response, 301
 
 @predict_blueprint.route('/status/<string:task_code>')
