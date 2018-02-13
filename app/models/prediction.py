@@ -1,11 +1,14 @@
 from enum import Enum
 
+from sqlalchemy import event
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm.exc import NoResultFound
 
 from app.db import db
 from app.models.base import BaseModel
-from app.models.customer import Customer
+# noinspection PyUnresolvedReferences
+from app.models.customer import Customer, CustomerAction, Actions
+# noinspection PyUnresolvedReferences
 from app.models.datasource import DataSource
 
 
@@ -79,3 +82,16 @@ class PredictionResult(BaseModel):
         dictionary = super(PredictionResult, self).to_dict()
         dictionary['prediction_task'] = self.prediction_task
         return dictionary
+
+
+def update_user_action(mapper, connection, self):
+    session = db.create_scoped_session()
+    action = CustomerAction(
+        customer_id=self.customer_id,
+        action=Actions.PREDICTION_STARTED
+    )
+    session.add(action)
+    session.commit()
+
+
+event.listen(PredictionTask, 'after_insert', update_user_action)
