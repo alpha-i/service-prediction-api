@@ -52,8 +52,11 @@
     <div class="row">
         <div class="col-md-12">
             <div class="box box-success">
-                    <h3 class="box-header with-border">Tasks</h3>
+                    <h3 class="box-header with-border">Predictions</h3>
                     <div class="box-body">
+                        <div class="mb-3">
+                            <a class="btn btn-primary" href="{{ url_for('customer.new_prediction') }}"><i class="fa fa-plus"></i> new prediction</a>
+                        </div>
                         {%  if file_upload|length > 0 %}
                         <table class="table table-bordered">
                             <tbody>
