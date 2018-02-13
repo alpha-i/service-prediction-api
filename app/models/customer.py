@@ -16,6 +16,7 @@ class Customer(BaseModel):
     tasks = relationship('PredictionTask', back_populates='customer')
     results = relationship('PredictionResult', back_populates='customer')
     data_sources = relationship('DataSource', back_populates='customer')
+    configuration = relationship('CustomerConfiguration', back_populates='customer', uselist=False)
 
     def hash_password(self, password):
         self.password_hash = pwd_context.encrypt(password)
@@ -57,4 +58,11 @@ class Customer(BaseModel):
         dictionary = super(Customer, self).to_dict()
         dictionary['data_sources'] = self.data_sources
         dictionary['current_data_source'] = self.current_data_source
+        dictionary['configuration'] = self.configuration.configuration
         return dictionary
+
+
+class CustomerConfiguration(BaseModel):
+    customer_id = db.Column(db.ForeignKey('customer.id'))
+    customer = relationship('Customer')
+    configuration = db.Column(db.JSON)
