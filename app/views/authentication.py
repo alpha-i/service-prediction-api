@@ -4,6 +4,7 @@ import logging
 from flask import Blueprint, request, abort, jsonify, g, redirect, url_for, Response
 
 from app.core.auth import requires_access_token
+from app.core.utils import parse_request_data
 from app.db import db
 from app.models.customer import Customer
 from config import TOKEN_EXPIRATION
@@ -14,11 +15,10 @@ logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
 @authentication_blueprint.route('/register', methods=['POST'])
+@parse_request_data
 def register_new_user():
-    if not request.content_type == 'application/json':
-        abort(400)
-    username = request.json.get('username')
-    password = request.json.get('password')
+    username = g.json.get('username')
+    password = g.json.get('password')
 
     assert username and password, abort(400)
 
@@ -44,18 +44,10 @@ def get_customer():
 
 
 @authentication_blueprint.route('/login', methods=['POST'])
+@parse_request_data
 def get_new_token():
-    is_form_request = True if request.content_type == 'application/x-www-form-urlencoded' else False
-    is_json_request = True if request.content_type == 'application/json' else False
-
-    if is_form_request:
-        username = request.form.get('username')
-        password = request.form.get('password')
-    elif is_json_request:
-        username = request.json.get('username')
-        password = request.json.get('password')
-    else:
-        abort(400)
+    username = g.json.get('username')
+    password = g.json.get('password')
 
     customer = Customer.get_customer_by_username(username)  # type: Customer
     if not customer:
