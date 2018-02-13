@@ -38,12 +38,15 @@ def predict():
         (customer_id, upload_code, prediction_request),
         link_error=prediction_failure.s()
     )
-    return jsonify({
-        'task_code': celery_prediction_task.id,
-        'task_status': url_for('.get_task_status', task_code=celery_prediction_task.id, _external=True),
-        'result': url_for('.get_task_result', task_code=celery_prediction_task.id, _external=True)
-    }), 202
 
+    response = jsonify({
+            'task_code': celery_prediction_task.id,
+            'task_status': url_for('.get_task_status', task_code=celery_prediction_task.id, _external=True),
+            'result': url_for('.get_task_result', task_code=celery_prediction_task.id, _external=True)
+        })
+
+    response.headers['Location'] = url_for('customer.dashboard')
+    return response, 301
 
 @predict_blueprint.route('/status/<string:task_code>')
 @requires_access_token
