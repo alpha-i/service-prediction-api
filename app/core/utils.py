@@ -1,3 +1,4 @@
+from datetime import datetime, date
 from enum import Enum
 from functools import wraps
 
@@ -13,6 +14,10 @@ class CustomJSONEncoder(JSONEncoder):
             return obj.to_dict()
         if issubclass(obj.__class__, Enum):
             return obj.value
+        if isinstance(obj, datetime):
+            return obj.strftime('%Y-%m-%dT%H:%M:%SZ')
+        if isinstance(obj, date):
+            return obj.strftime('%Y-%m-%d')
         return super(CustomJSONEncoder, self).default(obj)
 
 
@@ -22,7 +27,10 @@ def parse_request_data(fn):
         if request.is_json:
             g.json = request.json
         elif request.form:
-            g.json = dict(request.form.items())
+            g.json = {
+                key: value[0] if len(value) == 1 else value
+                for key, value in request.form.lists()
+            }
         else:
             abort(400)
         return fn(*args, **kwargs)

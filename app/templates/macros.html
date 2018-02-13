@@ -1,0 +1,9 @@
+{% macro format_datetime(datetime) -%}
+    {{ datetime.strftime('%Y-%m-%d %H:%M:%S') }}
+{%- endmacro %}
+
+
+{% macro format_date(datetime) -%}
+    {{ datetime.strftime('%Y-%m-%d') }}
+{%- endmacro %}
+

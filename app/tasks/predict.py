@@ -28,7 +28,7 @@ def predict_task(self, customer_id, upload_code, prediction_request):
         logging.warning(errors)
         raise Exception(errors)
 
-    prediction_task.prediction_request = json.dumps(prediction_request)
+    prediction_task.prediction_request = json.loads(json.dumps(prediction_request))
 
     db.session.add(prediction_task)
     db.session.commit()

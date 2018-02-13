@@ -1,5 +1,7 @@
 {% extends "layout.html" %}
 
+{% block page_title %}Dashboard{% endblock %}
+
 {% block page_header %}
   <h1>
     Overview
@@ -32,7 +34,7 @@
                             <td>{{ datasource.type }}</td>
                             <td>{{ datasource.start_date }}</td>
                             <td>{{ datasource.end_date }}</td>
-                            <td>{{ datasource.last_update.strftime('%Y-%m-%d %H:%M:%S')  }}</td>
+                            <td>{{ macros.format_datetime(datasource.last_update) }}</td>
                             <td><a class="btn btn-primary nounderline" href="{{ url_for('customer.upload') }}"><span class="fa fa-upload"></span>  update</a></td>
                         </tr>
                         </tbody>
@@ -52,37 +54,50 @@
     <div class="row">
         <div class="col-md-12">
             <div class="box box-success">
-                    <h3 class="box-header with-border">Tasks</h3>
-                    <div class="box-body">
-                        {%  if file_upload|length > 0 %}
-                        <table class="table table-bordered">
-                            <tbody>
-                            <tr>
-                                <th>code</th>
-                                <th>filename</th>
-                                <th>uploaded</th>
-                                <th># tasks</th>
-                            </tr>
-                            {%  for file in file_uploaded %}
-                                <tr>
-                                    <td scope="row">{{ file.upload_code }}</td>
-                                    <td>{{ file.filename }}</td>
-                                    <td>{{ file.last_update }}</td>
-                                    <td>{{ file.prediction_task_list|length }}</td>
-                                </tr>
-                            {% endfor %}
-                            </tbody>
-                        </table>
-                        {%  else %}
-                            <div class="callout callout-warning">
-                              <h4>No task yet</h4>
-                              <p>As soon as you'll create some tasks you will be able to access them to visualize the result</p>
-                            </div>
-                        {% endif %}
+                <h3 class="box-header with-border">Predictions</h3>
+                <div class="box-body">
+                    <div class="mb-3">
+                        <a class="btn btn-primary" href="{{ url_for('customer.new_prediction') }}"><i class="fa fa-plus"></i> new prediction</a>
                     </div>
+                    {%  if task_list|length > 0 %}
+                    <h4>Last 5 prediction</h4>
+                    <table class="table table-bordered">
+                        <tbody>
+                        <tr>
+                            <th>code</th>
+                            <th>created</th>
+                            <th>datasource</th>
+                            <th>status</th>
+                            <th></th>
+                        </tr>
+                        {%  for task in task_list %}
+                            <tr>
+                                <td scope="row">{{ task.task_code }}</td>
+                                <td>{{ macros.format_datetime(task.created_at) }}</td>
+                                <td>{{ task.datasource.upload_code }}</td>
+                                <td>{{ task.statuses[-1].state }}</td>
+                                <td>
+                                    <a href="{{ url_for('customer.view_prediction', prediction_code=task.task_code) }}">
+                                        <i class="fa fa-list"></i>
+                                    </a>
+                                </td>
+                                </tr>
+                        {% endfor %}
+                         <tr>
+                            <td colspan="4"><a class="btn btn-primary" href="{{ url_for('customer.list_predictions') }}">View All</a></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    {%  else %}
+                        <div class="callout callout-warning">
+                          <h4>No task yet</h4>
+                          <p>As soon as you'll create some tasks you will be able to access them to visualize the result</p>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
+
 
 {% endblock %}
