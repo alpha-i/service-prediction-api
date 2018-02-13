@@ -1,6 +1,8 @@
-from flask import Blueprint, jsonify, render_template, g
+from flask import Blueprint, jsonify, render_template, g, request, abort
 
 from app.core.auth import requires_access_token
+from app.db import db
+from app.models.customer import CustomerConfiguration
 from app.models.datasource import DataSource
 
 customer_blueprint = Blueprint('customer', __name__)
@@ -17,7 +19,6 @@ def get_user_profile():
 @customer_blueprint.route('/dashboard')
 @requires_access_token
 def dashboard():
-
     context = {
         'user_id': g.customer.id,
         'profile': {'user_name': g.customer.username, 'email': 'changeme@soon.com'},
@@ -25,6 +26,7 @@ def dashboard():
     }
 
     return render_template('dashboard.html', **context)
+
 
 @customer_blueprint.route('/upload')
 @requires_access_token
@@ -36,6 +38,7 @@ def upload():
     }
 
     return render_template('datasource_upload.html', **context)
+
 
 # TODO: temporary view to show the uploads for this customer
 @customer_blueprint.route('/uploads')
@@ -57,3 +60,23 @@ def list_customer_tasks():
 @requires_access_token
 def list_customer_results():
     return jsonify(g.customer.results)
+
+
+@customer_blueprint.route('/configuration', methods=['GET', 'POST'])
+@requires_access_token
+def customer_configuration():
+    customer = g.customer
+    if request.method == 'GET':
+        return jsonify(customer.configuration), 200
+    assert request.is_json, abort(400)
+    new_configuration = request.json  # TODO: needs to implement a schema!
+    configuration_entity = customer.configuration
+    if not configuration_entity:
+        configuration_entity = CustomerConfiguration(
+            customer_id=customer.id
+        )
+    configuration_entity.configuration = new_configuration
+    db.session.add(configuration_entity)
+    db.session.add(customer)  # TODO: needs to be decoupled!
+    db.session.commit()  # maybe follow implement a repository/entity pattern
+    return jsonify(customer.configuration), 201

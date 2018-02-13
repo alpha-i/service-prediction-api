@@ -1,3 +1,4 @@
+from enum import Enum
 from functools import wraps
 
 from flask import request, g, abort
@@ -10,6 +11,8 @@ class CustomJSONEncoder(JSONEncoder):
     def default(self, obj):
         if isinstance(obj.__class__, DeclarativeMeta):
             return obj.to_dict()
+        if issubclass(obj.__class__, Enum):
+            return obj.value
         return super(CustomJSONEncoder, self).default(obj)
 
 

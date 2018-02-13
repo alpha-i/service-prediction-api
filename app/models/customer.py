@@ -1,3 +1,5 @@
+from enum import Enum
+
 from itsdangerous import (
     TimedJSONWebSignatureSerializer as Serializer, BadSignature, SignatureExpired
 )
@@ -10,12 +12,20 @@ from app.models.base import BaseModel
 from config import SECRET_KEY
 
 
+class Actions(Enum):
+    FILE_UPLOAD = 'FILE_UPLOAD'
+    PREDICTION_STARTED = 'PREDICTION_STARTED'
+    CONFIGURATION_UPDATE = 'CONFIGURATION_UPDATE'
+
+
 class Customer(BaseModel):
     username = db.Column(db.String(32), index=True)
     password_hash = db.Column(db.String(128))
     tasks = relationship('PredictionTask', back_populates='customer')
     results = relationship('PredictionResult', back_populates='customer')
     data_sources = relationship('DataSource', back_populates='customer')
+    actions = relationship('CustomerAction', back_populates='customer')
+    configuration = relationship('CustomerConfiguration', back_populates='customer', uselist=False)
 
     def hash_password(self, password):
         self.password_hash = pwd_context.encrypt(password)
@@ -57,4 +67,21 @@ class Customer(BaseModel):
         dictionary = super(Customer, self).to_dict()
         dictionary['data_sources'] = self.data_sources
         dictionary['current_data_source'] = self.current_data_source
+        dictionary['configuration'] = getattr(self.configuration, 'configuration', None)
+        dictionary['actions'] = self.actions
         return dictionary
+
+
+class CustomerAction(BaseModel):
+    customer_id = db.Column(db.ForeignKey('customer.id'))
+    customer = relationship('Customer')
+    action = db.Column(db.Enum(Actions))
+
+
+class CustomerConfiguration(BaseModel):
+    customer_id = db.Column(db.ForeignKey('customer.id'))
+    customer = relationship('Customer')
+    configuration = db.Column(db.JSON)
+
+
+

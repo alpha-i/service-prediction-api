@@ -40,7 +40,7 @@ def upload_file():
     if customer.current_data_source:
         logging.warning('User already has a data source')
         existing_data_frame = customer.current_data_source.get_file()
-        existing_data = existing_data_frame['data']
+        existing_data = existing_data_frame[current_app.config['HDF5_STORE_INDEX']]
         data_frame = pd.concat([existing_data, data_frame])
 
     saved_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename + '.hdf5')
