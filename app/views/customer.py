@@ -66,11 +66,11 @@ def new_prediction():
     return render_template('prediction/new.html', **context)
 
 
-@customer_blueprint.route('/prediction/<string:prediction_code>')
+@customer_blueprint.route('/prediction/<string:task_code>')
 @requires_access_token
-def view_prediction(prediction_code):
+def view_prediction(task_code):
 
-    prediction = PredictionTask.get_by_task_code(prediction_code)
+    prediction = PredictionTask.get_by_task_code(task_code)
     context = {
         'user_id': g.customer.id,
         'profile': {'user_name': g.customer.username, 'email': 'changeme@soon.com'},
