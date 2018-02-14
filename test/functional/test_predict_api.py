@@ -109,7 +109,7 @@ class TestPredictionAPI(TestCase):
             '/predict/',
             content_type='application/json',
             data=json.dumps({
-                "features": ["number_people"],
+                "features": "number_people",
                 "start_time": "2017-01-01T00:00:00",
                 "end_time": "2017-01-02T00:00:00"}),
             headers={'Authorization': self.token}

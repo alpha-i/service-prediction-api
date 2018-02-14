@@ -11,7 +11,7 @@ class Oracle:
         # Completely bogus prediction
         start = data['start_time']
         end = data['end_time']
-        features = data['features']
+        feature = data['features']
         list_of_days = list(rrule.rrule(freq=rrule.DAILY, dtstart=start, until=end))
 
         prediction = []
@@ -19,16 +19,15 @@ class Oracle:
             datapoint = {}
             datapoint['timestamp'] = str(day)
             datapoint['prediction'] = []
-            for feature in features:
-                random_value = random.randint(1, 6)
-                datapoint['prediction'].append(
-                    {
-                        'feature': feature,
-                        'value': random_value,
-                        'upper': random_value + 1,
-                        'lower': random_value - 1
-                    }
-                )
+            random_value = random.randint(1, 6)
+            datapoint['prediction'].append(
+                {
+                    'feature': feature,
+                    'value': random_value,
+                    'upper': random_value + 1,
+                    'lower': random_value - 1
+                }
+            )
             prediction.append(datapoint)
 
         return prediction

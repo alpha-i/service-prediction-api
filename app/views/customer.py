@@ -1,3 +1,8 @@
+import hashlib
+import logging
+from datetime import timedelta
+
+import pandas as pd
 from flask import Blueprint, jsonify, render_template, g, request, abort
 
 from app.core.auth import requires_access_token
@@ -37,7 +42,7 @@ def upload():
     context = {
         'user_id': g.customer.id,
         'profile': {'user_name': g.customer.username, 'email': 'changeme@soon.com'},
-        'file_uploaded': g.customer.current_data_source
+        'current_datasource': g.customer.current_data_source
     }
 
     return render_template('datasource_upload.html', **context)
@@ -47,24 +52,63 @@ def upload():
 @requires_access_token
 def new_prediction():
 
-    context = {
-        'user_id': g.customer.id,
-        'profile': {'user_name': g.customer.username, 'email': 'changeme@soon.com'},
-        'datasource': g.customer.current_data_source
-    }
-
-    return render_template('new_prediction.html', **context)
-
-
-@customer_blueprint.route('/prediction/<string:prediction_code>')
-@requires_access_token
-def view_prediction(prediction_code):
+    min_date = g.customer.current_data_source.end_date
+    max_date = min_date + timedelta(days=30)
 
     context = {
         'user_id': g.customer.id,
         'profile': {'user_name': g.customer.username, 'email': 'changeme@soon.com'},
         'datasource': g.customer.current_data_source,
-        'prediction': PredictionTask.get_by_task_code(prediction_code)
+        'min_date': min_date,
+        'max_date': max_date
+    }
+
+    return render_template('prediction/new.html', **context)
+
+
+@customer_blueprint.route('/prediction/<string:task_code>')
+@requires_access_token
+def view_prediction(task_code):
+
+    prediction = PredictionTask.get_by_task_code(task_code)
+    context = {
+        'user_id': g.customer.id,
+        'profile': {'user_name': g.customer.username, 'email': 'changeme@soon.com'},
+        'datasource': g.customer.current_data_source,
+        'prediction': prediction
+    }
+
+    result = []
+    for prediction_element in prediction.prediction_result.result:
+        features_in_prediction = {}
+        for prediction_data in prediction_element['prediction']:
+            features_in_prediction.update({
+                prediction_data['feature']: {
+                    'lower': prediction_data['lower'],
+                    'value': prediction_data['value'],
+                    'upper': prediction_data['upper']
+                }
+            })
+
+        ordered_feature_list = sorted(features_in_prediction.keys())
+
+        row = [
+            prediction_element['timestamp'],
+        ]
+
+        for feature in ordered_feature_list:
+            feature_data = features_in_prediction[feature]
+            row += [[feature_data['lower'], feature_data['value'], feature_data['upper']]]
+
+        result.append(row)
+
+    header = ['timestamp'] + ordered_feature_list
+    timestamp_list = [row[0] for row in result]
+    context['formatted_result'] = {
+        'data': result,
+        'header': header,
+        'features': ordered_feature_list,
+        'timestamp_range': [timestamp_list[0], timestamp_list[-1]]
     }
 
     return render_template('prediction/view.html', **context)

@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 
-{% block page_title %}New Prediction{% endblock %}
+{% set page_title %}New Prediction{% endset %}
 
 {% block page_header %}
   <h1>
@@ -11,6 +11,7 @@
 
 {% block breadcrumb_items %}
     {{ super() }}
+    <li><a href="{{ url_for('customer.list_predictions') }}"><i class="fa fa-list"></i>Prediction List</a></li>
     <li><a class="active">New Prediction</a></li>
 {% endblock %}
 
@@ -18,9 +19,11 @@
  <div class="row">
         <div class="col-md-12">
             <div class="box box-primary">
-                <h3 class="box-header with-border">Data source preview</h3>
-                <div class="box-body">
-                    [ DATASOURCE PREVIEW ]
+                <div class="box box-success">
+                    <h3 class="box-header with-border">Used Data Source</h3>
+                    <div class="box-body">
+                       {{ macros.print_datasource_info(datasource) }}
+                    </div>
                 </div>
             </div>
         </div>
@@ -32,7 +35,7 @@
                     <form class="form-inline" method="post" action="{{ url_for('predict.predict') }}">
                         <div class="form-group">
                             <label for="features">Select features</label>
-                            <select name="features"  id="features"  class="selectpicker dropdown-primary" multiple data-live-search="true" required>
+                            <select name="features"  id="features"  class="selectpicker dropdown-primary" data-live-search="true" required>
                                 <option value="feature-1">feature-1</option>
                                 <option value="feature-2">feature-2</option>
                                 <option value="feature-3">feature-3</option>
@@ -43,12 +46,12 @@
                         <div class="form-group">
                             <label for="start_time">Start time</label>
                             <div class="input-group">
-                                <input readonly="true" required type="text" class="form-control" name="start_time" value="{{ macros.format_date(datasource.end_date) }}">
+                                <input readonly="true" required type="text" class="form-control" name="start_time" value="{{ macros.format_date(min_date) }}">
                             </div>
                         </div>
                         <div class="form-group">
                             <label for="end_time">End time</label>
-                            <div class="input-group date" data-provide="datepicker" data-date-format="yyyy-mm-dd" required>
+                            <div class="input-group date" data-provide="datepicker" data-date-format="yyyy-mm-dd" required data-date-end-date="{{ macros.format_date(max_date) }}">
                                 <input type="text" class="form-control" name="end_time" id="end_time">
                                 <span class="input-group-addon">
                                     <i class="glyphicon glyphicon-th"></i>
