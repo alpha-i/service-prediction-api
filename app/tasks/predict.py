@@ -1,6 +1,6 @@
 import logging
 import time
-from flask import json
+from app.core.utils import json_reload
 
 from celery.result import AsyncResult, allow_join_result
 
@@ -28,7 +28,7 @@ def predict_task(self, customer_id, upload_code, prediction_request):
         logging.warning(errors)
         raise Exception(errors)
 
-    prediction_task.prediction_request = json.loads(json.dumps(prediction_request))
+    prediction_task.prediction_request = json_reload(prediction_request)
 
     db.session.add(prediction_task)
     db.session.commit()
@@ -57,7 +57,7 @@ def predict_task(self, customer_id, upload_code, prediction_request):
     prediction_result = PredictionResult(
         customer_id=customer_id,
         task_code=prediction_task.task_code,
-        result=prediction,
+        result=json_reload(prediction),
         prediction_task_id=prediction_task.id
     )
     db.session.add(prediction_result)
