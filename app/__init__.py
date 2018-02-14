@@ -29,11 +29,13 @@ def create_app(config_filename, register_blueprints=True):
         from app.views.customer import customer_blueprint
         from app.views.upload import upload_blueprint
         from app.views.authentication import authentication_blueprint
+        from app.views.filters import to_pretty_json
         app.register_blueprint(home_blueprint, url_prefix='/')
         app.register_blueprint(predict_blueprint, url_prefix='/predict')
         app.register_blueprint(customer_blueprint, url_prefix='/customer')
         app.register_blueprint(upload_blueprint, url_prefix='/upload')
         app.register_blueprint(authentication_blueprint, url_prefix='/auth')
+        app.jinja_env.filters['tojson_pretty'] = to_pretty_json
 
         @app.before_request
         def before_request():

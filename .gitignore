@@ -185,3 +185,4 @@ venv.bak/
 .idea/*
 env/__pycache__/
 .pytest_cache/
+/src

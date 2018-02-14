@@ -31,10 +31,11 @@ jobs:
           - v1-dependencies-
 
       - run:
-          name: install psql
+          name: install psql and gsl
           command: |
             sudo apt-get update -y
             sudo apt-get install -y postgresql-client
+            sudo apt-get install -y gsl-bin libgsl0-dev
 
       - run:
           name: install dependencies

@@ -16,15 +16,19 @@ class Oracle:
 
         prediction = []
         for day in list_of_days:
-            prediction.append(
-                {
-                    'timestamp': day.strftime('%Y-%m-%d'),
-                    'prediction': [
-                        {'feature': feature,
-                         'value': random.randint(1, 6),
-                         'confidence': random.random()
-                         } for feature in features]
-                }
-            )
+            datapoint = {}
+            datapoint['timestamp'] = str(day)
+            datapoint['prediction'] = []
+            for feature in features:
+                random_value = random.randint(1, 6)
+                datapoint['prediction'].append(
+                    {
+                        'feature': feature,
+                        'value': random_value,
+                        'upper': random_value + 1,
+                        'lower': random_value - 1
+                    }
+                )
+            prediction.append(datapoint)
 
         return prediction

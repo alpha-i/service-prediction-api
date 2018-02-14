@@ -2,7 +2,7 @@ from datetime import datetime, date
 from enum import Enum
 from functools import wraps
 
-from flask import request, g, abort
+from flask import request, g, abort, json
 from flask.json import JSONEncoder
 from sqlalchemy.ext.declarative import DeclarativeMeta
 
@@ -36,3 +36,7 @@ def parse_request_data(fn):
         return fn(*args, **kwargs)
 
     return wrapper
+
+
+def json_reload(json_as_a_dict):
+    return json.loads(json.dumps(json_as_a_dict))
