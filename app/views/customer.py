@@ -1,4 +1,5 @@
 import hashlib
+import logging
 from datetime import timedelta
 
 import pandas as pd
@@ -52,7 +53,7 @@ def upload():
 def new_prediction():
 
     min_date = g.customer.current_data_source.end_date
-    max_date = min_date + timedelta(days=15)
+    max_date = min_date + timedelta(days=30)
 
     context = {
         'user_id': g.customer.id,
@@ -77,28 +78,38 @@ def view_prediction(prediction_code):
         'prediction': prediction
     }
 
-    formatted_result = {
-        'labels': [],
-        'dataset': {}
-    }
-    feature_dict = {}
-    for current_prediction in prediction.prediction_result.result:
-        formatted_result['labels'].append(current_prediction['timestamp'])
-        for single_prediction in current_prediction['prediction']:
-            feature_name = single_prediction['feature']
-            value = single_prediction['value']
-            if not feature_dict.get(feature_name):
-                feature_dict[feature_name] = {
-                    'label': feature_name,
-                    'data': [],
-                    'border_color': hashlib.md5(feature_name.encode('utf-8')).hexdigest()[0:6]
+    result = []
+    for prediction_element in prediction.prediction_result.result:
+        features_in_prediction = {}
+        for prediction_data in prediction_element['prediction']:
+            features_in_prediction.update({
+                prediction_data['feature']: {
+                    'lower': prediction_data['lower'],
+                    'value': prediction_data['value'],
+                    'upper': prediction_data['upper']
                 }
-            else:
-                feature_dict[feature_name]['data'].append(value)
+            })
 
-    formatted_result['dataset'] = list(feature_dict.values())
+        ordered_feature_list = sorted(features_in_prediction.keys())
 
-    context['formatted_result'] = formatted_result
+        row = [
+            prediction_element['timestamp'],
+        ]
+
+        for feature in ordered_feature_list:
+            feature_data = features_in_prediction[feature]
+            row += [[feature_data['lower'], feature_data['value'], feature_data['upper']]]
+
+        result.append(row)
+
+    header = ['timestamp'] + ordered_feature_list
+    timestamp_list = [row[0] for row in result]
+    context['formatted_result'] = {
+        'data': result,
+        'header': header,
+        'features': ordered_feature_list,
+        'timestamp_range': [timestamp_list[0], timestamp_list[-1]]
+    }
 
     return render_template('prediction/view.html', **context)
 
