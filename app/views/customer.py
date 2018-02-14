@@ -1,3 +1,6 @@
+import hashlib
+
+import pandas as pd
 from flask import Blueprint, jsonify, render_template, g, request, abort
 
 from app.core.auth import requires_access_token
@@ -60,12 +63,36 @@ def new_prediction():
 @requires_access_token
 def view_prediction(prediction_code):
 
+    prediction = PredictionTask.get_by_task_code(prediction_code)
     context = {
         'user_id': g.customer.id,
         'profile': {'user_name': g.customer.username, 'email': 'changeme@soon.com'},
         'datasource': g.customer.current_data_source,
-        'prediction': PredictionTask.get_by_task_code(prediction_code)
+        'prediction': prediction
     }
+
+    formatted_result = {
+        'labels': [],
+        'dataset': {}
+    }
+    feature_dict = {}
+    for current_prediction in prediction.prediction_result.result:
+        formatted_result['labels'].append(current_prediction['timestamp'])
+        for single_prediction in current_prediction['prediction']:
+            feature_name = single_prediction['feature']
+            value = single_prediction['value']
+            if not feature_dict.get(feature_name):
+                feature_dict[feature_name] = {
+                    'label': feature_name,
+                    'data': [],
+                    'border_color': hashlib.md5(feature_name.encode('utf-8')).hexdigest()[0:6]
+                }
+            else:
+                feature_dict[feature_name]['data'].append(value)
+
+    formatted_result['dataset'] = list(feature_dict.values())
+
+    context['formatted_result'] = formatted_result
 
     return render_template('prediction/view.html', **context)
 
