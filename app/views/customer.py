@@ -37,7 +37,7 @@ def upload():
     context = {
         'user_id': g.customer.id,
         'profile': {'user_name': g.customer.username, 'email': 'changeme@soon.com'},
-        'file_uploaded': g.customer.current_data_source
+        'current_datasource': g.customer.current_data_source
     }
 
     return render_template('datasource_upload.html', **context)
