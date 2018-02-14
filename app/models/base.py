@@ -7,8 +7,8 @@ class BaseModel(db.Model):
     __abstract__ = True
 
     id = db.Column(db.Integer, autoincrement=True, primary_key=True)
-    created_at = db.Column(db.DateTime, default=db.func.now(), index=True)
-    last_update = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now(), index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=db.func.now(), index=True)
+    last_update = db.Column(db.DateTime(timezone=True), default=db.func.now(), onupdate=db.func.now(), index=True)
 
     def to_dict(self):
         return {
