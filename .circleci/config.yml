@@ -25,7 +25,10 @@ jobs:
 
       # Download and cache dependencies
       - restore_cache:
-          key: deps1-{{ .Branch }}-{{ checksum "dev-requirements.txt" }}
+          keys:
+          - v1-dependencies-{{ checksum "dev-requirements.txt" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-dependencies-
 
       - run:
           name: install psql
@@ -33,17 +36,22 @@ jobs:
             sudo apt-get update -y
             sudo apt-get install -y postgresql-client
 
-      - save_cache:
-          key: deps1-{{ .Branch }}-{{ checksum "dev-requirements.txt" }}
-          paths:
-            - "venv"
-
       - run:
-          name: run tests
+          name: install dependencies
           command: |
             python3 -m venv venv
             . venv/bin/activate
             pip install -r dev-requirements.txt
+
+      - save_cache:
+          paths:
+            - ./venv
+          key: v1-dependencies-{{ checksum "dev-requirements.txt" }}
+
+      - run:
+          name: run tests
+          command: |
+            . venv/bin/activate
             sh ./test-circle.sh
 
       - store_artifacts:
