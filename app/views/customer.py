@@ -1,4 +1,5 @@
 import hashlib
+from datetime import timedelta
 
 import pandas as pd
 from flask import Blueprint, jsonify, render_template, g, request, abort
@@ -50,10 +51,15 @@ def upload():
 @requires_access_token
 def new_prediction():
 
+    min_date = g.customer.current_data_source.end_date
+    max_date = min_date + timedelta(days=15)
+
     context = {
         'user_id': g.customer.id,
         'profile': {'user_name': g.customer.username, 'email': 'changeme@soon.com'},
-        'datasource': g.customer.current_data_source
+        'datasource': g.customer.current_data_source,
+        'min_date': min_date,
+        'max_date': max_date
     }
 
     return render_template('prediction/new.html', **context)
