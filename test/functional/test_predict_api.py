@@ -74,8 +74,8 @@ class TestPredictionAPI(TestCase):
             """
             assert resp.json['customer_id'] == 1
 
-            assert resp.json['start_date'] == '2015-08-15T00:00:11Z'
-            assert resp.json['end_date'] == '2015-08-15T03:21:14Z'
+            assert resp.json['start_date'] == '2015-08-15T00:00:11'
+            assert resp.json['end_date'] == '2015-08-15T03:21:14'
 
         with open(os.path.join(HERE, '../resources/additional_test_data.csv'), 'rb') as updated_data_file:
             resp = self.client.post(
@@ -86,8 +86,8 @@ class TestPredictionAPI(TestCase):
             )
             assert resp.status_code == 303  # in order to redirect to the dashboard
             assert resp.json
-            assert resp.json['start_date'] == '2015-08-15T00:00:11Z'
-            assert resp.json['end_date'] == '2017-08-15T03:21:14Z'
+            assert resp.json['start_date'] == '2015-08-15T00:00:11'
+            assert resp.json['end_date'] == '2017-08-15T03:21:14'
 
     def test_predict_on_a_file(self):
         self.login()
