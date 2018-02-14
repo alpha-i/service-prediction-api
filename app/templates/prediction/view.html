@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 
-{% block page_title %}List Prediction{% endblock %}
+{% set page_title %}List Prediction{% endset %}
 
 {% block page_header %}
     <h1>
@@ -10,7 +10,7 @@
 {% endblock %}
 {% block breadcrumb_items %}
     {{ super() }}
-    <li><a href="{{ url_for('customer.list_predictions') }}"><i class="fa fa-list"></i>Prediction</a></li>
+    <li><a href="{{ url_for('customer.list_predictions') }}"><i class="fa fa-list"></i>Prediction List</a></li>
     <li><a class="active"><i class="fa fa-rocket"></i>Prediction</a></li>
 
 {% endblock %}

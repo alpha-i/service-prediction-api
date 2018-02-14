@@ -53,7 +53,7 @@ def new_prediction():
         'datasource': g.customer.current_data_source
     }
 
-    return render_template('new_prediction.html', **context)
+    return render_template('prediction/new.html', **context)
 
 
 @customer_blueprint.route('/prediction/<string:prediction_code>')

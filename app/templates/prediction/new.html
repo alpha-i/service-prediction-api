@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 
-{% block page_title %}New Prediction{% endblock %}
+{% set page_title %}New Prediction{% endset %}
 
 {% block page_header %}
   <h1>
@@ -11,6 +11,7 @@
 
 {% block breadcrumb_items %}
     {{ super() }}
+    <li><a href="{{ url_for('customer.list_predictions') }}"><i class="fa fa-list"></i>Prediction List</a></li>
     <li><a class="active">New Prediction</a></li>
 {% endblock %}
 
@@ -18,10 +19,39 @@
  <div class="row">
         <div class="col-md-12">
             <div class="box box-primary">
-                <h3 class="box-header with-border">Data source preview</h3>
+                <div class="box box-success">
+                <h3 class="box-header with-border">Used Data Source</h3>
                 <div class="box-body">
-                    [ DATASOURCE PREVIEW ]
+                    <div class="row">
+                        <div class="col-xs-3"><h4>Code</h4></div>
+                        <div class="col-xs-9">{{ datasource.upload_code }}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-3"><h4>Created</h4></div>
+                        <div class="col-xs-9">{{ macros.format_datetime(datasource.created_at) }}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-3"><h4>Type</h4></div>
+                        <div class="col-xs-9">{{ datasource.type }}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-3"><h4>Location</h4></div>
+                        <div class="col-xs-9">{{ datasource.location }}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-3"><h4>File</h4></div>
+                        <div class="col-xs-9">{{ datasource.filename }}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-3"><h4>Start Date</h4></div>
+                        <div class="col-xs-9">{{ datasource.start_date }}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-3"><h4>End Date</h4></div>
+                        <div class="col-xs-9">{{ datasource.end_date }}</div>
+                    </div>
                 </div>
+            </div>
             </div>
         </div>
 
