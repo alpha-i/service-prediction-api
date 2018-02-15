@@ -1,6 +1,7 @@
 from enum import Enum
 
 import pandas as pd
+from flask import current_app
 from flask_sqlalchemy import event
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm.exc import NoResultFound
@@ -9,6 +10,8 @@ from app.db import db
 from app.models.base import BaseModel
 # noinspection PyUnresolvedReferences
 from app.models.customer import Customer, CustomerAction, Actions
+
+STORE_INDEX = 'data'
 
 
 class UploadTypes(Enum):
@@ -30,7 +33,10 @@ class DataSource(BaseModel):
     prediction_task_list = relationship('PredictionTask', back_populates='datasource')
 
     def get_file(self):
-        return pd.HDFStore(self.location)
+
+        with pd.HDFStore(self.location) as hdf_store:
+            dataframe = hdf_store[STORE_INDEX]
+            return dataframe
 
     @staticmethod
     def get_for_customer(customer_id):

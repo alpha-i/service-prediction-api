@@ -4,7 +4,7 @@ import unittest
 
 import pytest
 
-from app.core.interpreter import prediction_interpreter
+from app.core.interpreters import prediction_interpreter
 
 HERE = os.path.join(os.path.dirname(__file__))
 
