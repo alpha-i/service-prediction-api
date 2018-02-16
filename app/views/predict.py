@@ -30,7 +30,6 @@ def predict():
     upload_code = g.customer.current_data_source.upload_code
 
     prediction_request, errors = prediction_request_schema.load(g.json)
-    logging.debug(prediction_request)
     if errors:
         return jsonify(errors=errors), 400
 
