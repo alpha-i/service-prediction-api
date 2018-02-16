@@ -123,7 +123,7 @@ def predict_task(self, customer_id, upload_code, prediction_request):
         logging.warning("No upload could be found for code %s", upload_code)
         return
 
-    prediction_task = create_task(self.request.id, customer_id, uploaded_file.id)
+    prediction_task = create_task(self.request.id, customer_id, uploaded_file.id, prediction_request['name'])
     set_task_status(prediction_task, TaskStatusTypes.queued)
     prediction_request, errors = prediction_request_schema.load(prediction_request)
 
@@ -189,11 +189,12 @@ def prediction_failure(uuid):
     print('Task {0} raised exception: {1!r}\n{2!r}'.format(uuid, exc, result.traceback))
 
 
-def create_task(task_code, customer_id, upload_code):
+def create_task(task_code, customer_id, upload_code, name):
     new_task = PredictionTask(
         task_code=task_code,
         customer_id=customer_id,
-        datasource_id=upload_code
+        datasource_id=upload_code,
+        name=name
     )
     db.session.add(new_task)
     db.session.commit()
