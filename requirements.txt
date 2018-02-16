@@ -46,6 +46,6 @@ sklearn
 alphai_finance==2.0.0
 alphai_delphi==1.1.6
 alphai_covariance>=0.1.3
+alphai_feature_generation==1.4.0-dev-gym
 tensorflow==1.4.0
--e git+git@github.com:alpha-i/oracle-cromulon-python.git@feature/linear_probability#egg=alphai_cromulon_oracle
--e git+git@github.com:alpha-i/library-feature-generation.git@dev/gym-feature-generation#egg=alphai_feature_generation
+alphai_cromulon_oracle==0.0.1
