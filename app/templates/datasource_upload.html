@@ -3,9 +3,10 @@
 {% set page_title %}Update Datasource{% endset %}
 
 {% block page_header %}
-  <h1>
-    Update Datasource    <small>Update your datasource</small>
-  </h1>
+    <h1>
+        Update Datasource
+        <small>Update your datasource</small>
+    </h1>
 {% endblock %}
 {% block breadcrumb_items %}
     {{ super() }}
@@ -13,45 +14,54 @@
 {% endblock %}
 
 {% block content %}
-<div class="row">
-   <div class="col-xs-12">
-       <div class="box box-primary">
-            <div class="box box-success">
-                <h3 class="box-header with-border">Current Data Source</h3>
-                <div class="box-body">
-                   {{ macros.print_datasource_info(current_datasource) }}
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="box box-primary">
+                <div class="box box-success">
+                    <h3 class="box-header with-border">Current Data Source</h3>
+                    <div class="box-body">
+
+                        {% if current_datasource %}
+                            {{ macros.print_datasource_info(current_datasource) }}
+                        {% else %}
+                            <div class="callout callout-warning">
+                                <h4>No datasource set</h4>
+                                <p>To use our prediction engine you need a datasource</p>
+                            </div>
+                        {% endif %}
+
+                    </div>
                 </div>
             </div>
         </div>
-   </div>
-</div>
-<div class="row">
-    <div class="col-xs-12">
-        <div class="box">
-            <h3 class="box-header with-border">Update data source</h3>
-            <div class="box-body">
-                <form action="/upload" method="post" enctype="multipart/form-data" class="form-inline">
-                    <div class="form-group">
-                        <div class="col-xs-10">
-                            <div class="input-group">
-                                <input type="text" id="file_path" class="form-control" placeholder="Browse...">
-                                <span class="input-group-btn">
+    </div>
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="box">
+                <h3 class="box-header with-border">Update data source</h3>
+                <div class="box-body">
+                    <form action="/upload" method="post" enctype="multipart/form-data" class="form-inline">
+                        <div class="form-group">
+                            <div class="col-xs-10">
+                                <div class="input-group">
+                                    <input type="text" id="file_path" class="form-control" placeholder="Browse...">
+                                    <span class="input-group-btn">
                                     <button class="btn btn-default" type="button" id="file_browser">
                                     <i class="fa fa-search"></i> Browse</button>
                                 </span>
 
+                                </div>
+                                <input type="file" class="hidden" name="upload" id="upload">
                             </div>
-                            <input type="file" class="hidden" name="upload" id="upload">
+                            <div class="col-xs-2">
+                                <input class="btn btn-primary" type="submit" value="Upload file" name="submit">
+                            </div>
                         </div>
-                        <div class="col-xs-2">
-                             <input class="btn btn-primary" type="submit" value="Upload file" name="submit">
-                        </div>
-                    </div>
-                </form>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
-</div>
 {% endblock %}
 
 

@@ -2,6 +2,7 @@ from datetime import datetime, date
 from enum import Enum
 from functools import wraps
 
+import numpy
 from flask import request, g, abort, json
 from flask.json import JSONEncoder
 from sqlalchemy.ext.declarative import DeclarativeMeta
@@ -18,6 +19,8 @@ class CustomJSONEncoder(JSONEncoder):
             return obj.strftime('%Y-%m-%dT%H:%M:%S%z')
         if isinstance(obj, date):
             return obj.strftime('%Y-%m-%d')
+        if isinstance(obj, numpy.float32):
+            return obj.tolist()
         return super(CustomJSONEncoder, self).default(obj)
 
 

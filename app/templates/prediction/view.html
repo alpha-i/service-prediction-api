@@ -21,20 +21,24 @@
                 <h3 class="box-header with-border">Prediction</h3>
                 <div class="box-body">
                     <div class="row">
+                        <div class="col-xs-3"><h4>Name:</h4></div>
+                        <div class="col-xs-9">{{ prediction.name }}</div>
+                    </div>
+                    <div class="row">
                         <div class="col-xs-3"><h4>Created:</h4></div>
                         <div class="col-xs-9">{{ macros.format_datetime(prediction.created_at) }}</div>
                     </div>
                     <div class="row">
-                            <div class="col-xs-3"><h4>Start Time:</h4></div>
-                            <div class="col-xs-9">{{ prediction.prediction_request['start_time'] }}</div>
-                        </div>
-                    <div class="row">
-                            <div class="col-xs-3"><h4>End Time:</h4></div>
-                            <div class="col-xs-9">{{ prediction.prediction_request['end_time'] }}</div>
+                        <div class="col-xs-3"><h4>Start Time:</h4></div>
+                        <div class="col-xs-9">{{ prediction.prediction_request['start_time'] }}</div>
                     </div>
                     <div class="row">
-                            <div class="col-xs-3"><h4>Feature List:</h4></div>
-                            <div class="col-xs-9">{{ prediction.prediction_request['features'] }}</div>
+                        <div class="col-xs-3"><h4>End Time:</h4></div>
+                        <div class="col-xs-9">{{ prediction.prediction_request['end_time'] }}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-3"><h4>Feature List:</h4></div>
+                        <div class="col-xs-9">{{ prediction.prediction_request['features'] }}</div>
                     </div>
                 </div>
             </div>
@@ -53,68 +57,93 @@
             <div class="box">
                 <h3 class="box-header with-border">Statuses</h3>
                 <div class="box-body">
-                     <table class="table table-bordered">
-                            <tbody>
-                            <tr>
-                                <th>created</th>
-                                <th>status</th>
-                                <th>message</th>
-                            </tr>
-
-                    {%  for status in prediction.statuses %}
+                    <table class="table table-bordered">
+                        <tbody>
                         <tr>
-                            <td>{{ macros.format_datetime(status.created_at) }}</td>
-                            <td>{{ status.state }}</td>
-                            <td>{{ status.message }}</td>
+                            <th>created</th>
+                            <th>status</th>
+                            <th>message</th>
                         </tr>
-                    {% endfor %}
-                            </tbody>
+
+                        {% for status in prediction.statuses %}
+                            <tr>
+                                <td>{{ macros.format_datetime(status.created_at) }}</td>
+                                <td>{{ status.state }}</td>
+                                <td>{{ status.message }}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
                     </table>
                 </div>
             </div>
         </div>
     </div>
     <div class="row">
-        <div class="col-md-9">
+        <div class="col-md-12">
             <div class="box">
                 <h3 class="box-header with-border">Result</h3>
                 <div class="box-body">
-                <div id="graphdiv" style="width:100%"></div>
-                <script type="text/javascript">
-                    var data = [
-                        {% for row in formatted_result.data -%}[
-                            {%- for i in range(row|length) -%}
-                                    {%- if i == 0 %}new Date('{{ row[i] }}'){% else %}{{ row[i]|safe }}{% endif -%},
-                            {%- endfor -%}
-                            ],
-                        {%- endfor %}
-                    ]
-                    g = new Dygraph(
-                        document.getElementById("graphdiv"),
-                        data,
-                        {
-                            labels: {{ formatted_result.header|safe }},
-                            customBars: true
-                        }
-                    );
-                </script>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-                <div class="box">
-                    <h3 class="box-header with-border">Result</h3>
-                    <div class="box-body">
-                        <div class="row">
-                            <div class="col-xs-3"><h4>Feature Predicted</h4></div>
-                            <div class="col-xs-9">{{ formatted_result.features }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-xs-3"><h4>Date Range</h4></div>
-                            <div class="col-xs-9">{{ formatted_result.timestamp_range }}</div>
-                        </div>
+
+                    <div class="row">
+                        {%  set prediction_status = formatted_result.prediction_status %}
+                        {% if prediction_status == 'SUCCESSFUL' %}
+                            <div class="col-md-3">
+                                <h4>Data</h4>
+                                <div class="row">
+                                    <div class="col-xs-4"><strong>Feature Predicted</strong></div>
+                                    <div class="col-xs-8">{{ formatted_result.features }}</div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-xs-4"><strong>Date Range</strong></div>
+                                    <div class="col-xs-8">{{ formatted_result.timestamp_range }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-9">
+                                <h4>Graph</h4>
+                                <div id="graphdiv" style="width:100%"></div>
+                                <script type="text/javascript">
+                                    var data = [
+                                            {% for row in formatted_result.data -%}[
+                                                {%- for i in range(row|length) -%}
+                                                    {%- if i == 0 %}new Date('{{ row[i] }}'){% else %}{{ row[i]|safe }}{% endif -%},
+                                                {%- endfor -%}
+                                                ],
+                                            {%- endfor %}
+                                    ]
+                                    g = new Dygraph(
+                                        document.getElementById("graphdiv"),
+                                        data,
+                                        {
+                                            labels: {{ formatted_result.header|safe }},
+                                            customBars: true
+                                        }
+                                    );
+                                </script>
+                            </div>
+                        {% else %}
+
+                            <div class="col-md-12">
+
+                                {% if prediction_status in ['QUEUED', 'STARTED'] %}
+                                    <div class="callout callout-info">
+                                        <h4>Processing</h4>
+                                        <p>
+                                            Current status of the prediction is {{ prediction_status }}
+                                            &nbsp;
+                                            <a class="btn btn-primary" href=""><i class="fa fa-refresh"></i></a>
+                                        </p>
+                                    </div>
+                                {% elif prediction_status == 'FAILED' %}
+                                    <div class="callout callout-danger">
+                                        <h4>Failed</h4>
+                                        <p>This prediction has failed so no result displayed</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
+        </div>
     </div>
 {% endblock %}

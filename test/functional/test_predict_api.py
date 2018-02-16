@@ -92,11 +92,11 @@ class TestPredictionAPI(TestCase):
     def test_predict_on_a_file(self):
         self.login()
         # first you upload a file
-        with open(os.path.join(HERE, '../resources/test_data.csv'), 'rb') as test_upload_file:
+        with open(os.path.join(HERE, '../resources/test_full_data.csv'), 'rb') as test_upload_file:
             resp = self.client.post(
                 f'/upload',
                 content_type='multipart/form-data',
-                data={'upload': (test_upload_file, 'test_data.csv')},
+                data={'upload': (test_upload_file, 'test_full_data.csv')},
                 #headers={'Authorization': self.token}
             )
 
@@ -109,6 +109,7 @@ class TestPredictionAPI(TestCase):
             '/predict/',
             content_type='application/json',
             data=json.dumps({
+                "name": "TESTPREDICTION",
                 "features": "number_people",
                 "start_time": "2017-01-01T00:00:00",
                 "end_time": "2017-01-02T00:00:00"}),
@@ -147,7 +148,15 @@ class TestPredictionAPI(TestCase):
         assert resp.status_code == 200
         assert resp.json['customer_id'] == 1
 
-        time.sleep(2)  # wait for the task to finish
+        task_status = resp.json['status']
+
+        while task_status not in ['SUCCESSFUL', 'FAILED']:
+            time.sleep(2)
+            resp = self.client.get(
+                f'/predict/status/{task_code}',
+                # headers={'Authorization': self.token}
+            )
+            task_status = resp.json['status']
 
         # check the result
         resp = self.client.get(
@@ -186,5 +195,5 @@ class TestPredictionAPI(TestCase):
 
         assert resp.status_code == 200
         assert resp.json['customer_id'] == 1
-        assert len(resp.json['result']) == 2
+        assert resp.json['result']
         os.unlink(file_location)

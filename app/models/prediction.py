@@ -20,6 +20,8 @@ class TaskStatusTypes(Enum):
 
 
 class PredictionTask(BaseModel):
+
+    name = db.Column(db.String(60), nullable=False)
     customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'))
     customer = relationship('Customer', back_populates='tasks')
 

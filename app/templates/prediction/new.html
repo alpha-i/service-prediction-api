@@ -33,6 +33,12 @@
                 <h3 class="box-header with-border">Submit new prediction</h3>
                 <div class="box-body">
                     <form class="form-inline" method="post" action="{{ url_for('predict.predict') }}">
+                         <div class="form-group">
+                            <label for="start_time">Name</label>
+                            <div class="input-group">
+                                <input required type="text" class="form-control" name="name">
+                            </div>
+                        </div>
                         <div class="form-group">
                             <label for="features">Select features</label>
                             <select name="features"  id="features"  class="selectpicker dropdown-primary" data-live-search="true" required>
