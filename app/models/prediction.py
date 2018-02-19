@@ -22,7 +22,7 @@ class TaskStatusTypes(Enum):
 class PredictionTask(BaseModel):
 
     name = db.Column(db.String(60), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     user = relationship('User', back_populates='tasks')
 
     task_code = db.Column(db.String(60), unique=True, nullable=False)
@@ -58,14 +58,14 @@ class PredictionTask(BaseModel):
 
 
 class TaskStatus(BaseModel):
-    prediction_task_id = db.Column(db.Integer, db.ForeignKey('prediction_task.id'))
+    prediction_task_id = db.Column(db.Integer, db.ForeignKey('prediction_task.id'), nullable=False)
     prediction_task = relationship('PredictionTask', back_populates='statuses')
     state = db.Column(db.String(10), index=True)
     message = db.Column(db.JSON, nullable=True)
 
 
 class PredictionResult(BaseModel):
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     user = relationship('User', back_populates='results')
     task_code = db.Column(db.String(60), unique=True)
     result = db.Column(db.JSON)

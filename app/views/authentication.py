@@ -39,7 +39,7 @@ def register_new_user():
     if user is not None:
         abort(400)
 
-    user = User(email=email, confirmed=False)
+    user = User(email=email, confirmed=False, company_id=company.id)
 
     user.hash_password(password)
 

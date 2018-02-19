@@ -20,7 +20,7 @@ class UploadTypes(Enum):
 
 
 class DataSource(BaseModel):
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     user = relationship('User')
     upload_code = db.Column(db.String(), index=True)
     type = db.Column(db.Enum(UploadTypes), index=True)

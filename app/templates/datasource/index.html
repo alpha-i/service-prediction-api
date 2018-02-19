@@ -40,7 +40,7 @@
             <div class="box">
                 <h3 class="box-header with-border">Update your historical data</h3>
                 <div class="box-body">
-                    <form action="/upload" method="post" enctype="multipart/form-data" class="form-inline">
+                    <form action="{{ url_for('upload.upload_file') }}" method="post" enctype="multipart/form-data" class="form-inline">
                         <div class="form-group">
                             <div class="col-xs-10">
                                 <div class="input-group">
