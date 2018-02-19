@@ -1,6 +1,11 @@
-from datetime import timedelta
+from datetime import timedelta, datetime
+
+import pytz
+from dateutil import parser
 
 from flask import Blueprint, jsonify, render_template, g, request, abort
+
+from app import DATETIME_FORMAT, DATE_FORMAT, DATETIME_TZ_FORMAT
 
 from app.core.auth import requires_access_token
 from app.db import db
@@ -76,31 +81,40 @@ def view_prediction(task_code):
         'prediction': prediction
     }
 
+    request_start_time = prediction.prediction_request['start_time']
+    prediction_start_time = datetime.strptime(request_start_time, DATE_FORMAT).astimezone(pytz.utc)
+
+    request_end_time = prediction.prediction_request['end_time']
+    prediction_end_time = datetime.strptime(request_end_time, DATE_FORMAT).astimezone(pytz.utc)
+    prediction_end_time = prediction_end_time + timedelta(days=1)
+
     result = []
     ordered_feature_list = []
     if prediction.prediction_result:
         for prediction_element in prediction.prediction_result.result:
-            features_in_prediction = {}
-            for prediction_data in prediction_element['prediction']:
-                features_in_prediction.update({
-                    prediction_data['feature']: {
-                        'lower': prediction_data['lower'],
-                        'value': prediction_data['value'],
-                        'upper': prediction_data['upper']
-                    }
-                })
+            result_timestamp = parser.parse(prediction_element['timestamp'])
+            if prediction_start_time < result_timestamp <= prediction_end_time:
+                features_in_prediction = {}
+                for prediction_data in prediction_element['prediction']:
+                    features_in_prediction.update({
+                        prediction_data['feature']: {
+                            'lower': prediction_data['lower'],
+                            'value': prediction_data['value'],
+                            'upper': prediction_data['upper']
+                        }
+                    })
 
-            ordered_feature_list = sorted(features_in_prediction.keys())
+                ordered_feature_list = sorted(features_in_prediction.keys())
 
-            row = [
-                prediction_element['timestamp'],
-            ]
+                row = [
+                    prediction_element['timestamp'],
+                ]
 
-            for feature in ordered_feature_list:
-                feature_data = features_in_prediction[feature]
-                row += [[feature_data['lower'], feature_data['value'], feature_data['upper']]]
+                for feature in ordered_feature_list:
+                    feature_data = features_in_prediction[feature]
+                    row += [[feature_data['lower'], feature_data['value'], feature_data['upper']]]
 
-            result.append(row)
+                result.append(row)
 
     header = ['timestamp'] + ordered_feature_list
     timestamp_list = [row[0] for row in result]

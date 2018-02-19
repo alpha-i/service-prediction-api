@@ -9,9 +9,6 @@ from app.core.utils import parse_request_data
 from app.models.prediction import PredictionTask, PredictionResult
 from app.tasks.predict import predict_task, prediction_failure
 
-DATE_FORMAT = '%Y-%m-%d'
-DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
-
 predict_blueprint = Blueprint('predict', __name__)
 
 
