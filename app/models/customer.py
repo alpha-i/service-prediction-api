@@ -24,8 +24,6 @@ class Company(BaseModel):
     logo = db.Column(db.String)
     domain = db.Column(db.String, nullable=False)
     profile = db.Column(db.JSON)
-
-    user_id = db.Column(db.ForeignKey('user.id'))
     users = relationship('User', back_populates='company')
 
     @staticmethod
@@ -48,6 +46,7 @@ class User(BaseModel):
     data_sources = relationship('DataSource', back_populates='user')
     actions = relationship('CustomerAction', back_populates='user')
     configuration = relationship('UserConfiguration', back_populates='user', uselist=False)
+    company_id = db.Column(db.ForeignKey('company.id'), nullable=False)
     company = relationship('Company')
     profile = relationship('UserProfile', uselist=False)
 
@@ -95,21 +94,22 @@ class User(BaseModel):
         dictionary['current_data_source'] = self.current_data_source
         dictionary['configuration'] = getattr(self.configuration, 'configuration', None)
         dictionary['actions'] = self.actions
+        dictionary['company'] = self.company
         return dictionary
 
 
 class CustomerAction(BaseModel):
-    user_id = db.Column(db.ForeignKey('user.id'))
+    user_id = db.Column(db.ForeignKey('user.id'), nullable=False)
     user = relationship('User')
     action = db.Column(db.Enum(Actions))
 
 
 class UserConfiguration(BaseModel):
-    user_id = db.Column(db.ForeignKey('user.id'))
+    user_id = db.Column(db.ForeignKey('user.id'), nullable=False)
     user = relationship('User')
     configuration = db.Column(db.JSON)
 
 
 class UserProfile(BaseModel):
-    user_id = db.Column(db.ForeignKey('user.id'))
+    user_id = db.Column(db.ForeignKey('user.id'), nullable=False)
     user = relationship('User')

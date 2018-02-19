@@ -43,7 +43,7 @@ def is_user_logged():
 
     user = User.verify_auth_token(token)
     if not user:
-        abort(401)
+        return None
     return user
 
 
