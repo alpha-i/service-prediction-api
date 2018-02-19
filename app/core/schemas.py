@@ -23,7 +23,7 @@ prediction_request_schema = PredictionRequestSchema()
 
 
 class PredictionResultSchema(Schema):
-    customer_id = fields.String(required=True)
+    user_id = fields.String(required=True)
     task_code = fields.UUID(required=True)
     prediction = fields.Nested(PredictionSchema)
 

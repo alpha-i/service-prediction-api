@@ -1,20 +1,24 @@
 import datetime
 import logging
 
-from flask import Blueprint, abort, jsonify, g, url_for
+from flask import Blueprint, abort, jsonify, g, url_for, redirect
 
-from app.core.auth import requires_access_token
+from app.core.auth import requires_access_token, generate_confirmation_token, confirm_token, is_valid_email_for_company
 from app.core.utils import parse_request_data
 from app.db import db
-from app.models.customer import Customer
+from app.models.customer import User, Company
 from config import TOKEN_EXPIRATION
 
 authentication_blueprint = Blueprint('authentication', __name__)
 
-logging.getLogger(__name__).addHandler(logging.NullHandler())
+
+@authentication_blueprint.route('/customer')
+@requires_access_token
+def get_customer():
+    return jsonify(g.user)
 
 
-@authentication_blueprint.route('/register', methods=['POST'])
+@authentication_blueprint.route('/register-user', methods=['POST'])
 @parse_request_data
 def register_new_user():
     email = g.json.get('email')
@@ -22,25 +26,65 @@ def register_new_user():
 
     assert email and password, abort(400)
 
-    customer = Customer.get_customer_by_email(email)
-    if customer is not None:
+    company = Company.get_for_email(email)
+    if not company:
+        logging.warning("No company could be found for %s", email)
+        abort(401)
+
+    if not is_valid_email_for_company(email, company):
+        logging.warning("Invalid email %s for company: %s", email, company.domain)
+        abort(401)
+
+    user = User.get_user_by_email(email)
+    if user is not None:
         abort(400)
 
-    customer = Customer(email=email)
+    user = User(email=email, confirmed=False)
 
-    customer.hash_password(password)
+    user.hash_password(password)
 
-    db.session.add(customer)
+    db.session.add(user)
     db.session.commit()
+    confirmation_token = generate_confirmation_token(user.email)
+    logging.info("Confirmation token for %s: %s", user.email, confirmation_token)
 
     return jsonify(
-        {'email': customer.email, 'userid': customer.id}), 201
+        {
+            'email': user.email,
+            'userid': user.id,
+            'confirmation_token': confirmation_token,  # TODO: we won't show this on the template!
+        }
+    ), 201
 
 
-@authentication_blueprint.route('/customer')
-@requires_access_token
-def get_customer():
-    return jsonify(g.customer)
+@authentication_blueprint.route('/register-company', methods=['POST'])
+@parse_request_data
+def register_new_company():
+    company_name = g.json.get('name')
+    domain = g.json.get('domain')
+
+    assert company_name and domain, abort(400)
+
+    company = Company(name=company_name, domain=domain)
+    db.session.add(company)
+    db.session.commit()
+
+    return jsonify(company), 201
+
+
+@authentication_blueprint.route('/confirm/<string:token>')
+def confirm_user_registration(token):
+    email = confirm_token(token)
+    if not email:
+        abort(401)
+
+    user = User.get_user_by_email(email)
+    if user.confirmed:
+        abort(400)
+    user.confirmed = True
+    db.session.add(user)
+    db.session.commit()
+    return jsonify(user), 200
 
 
 @authentication_blueprint.route('/login', methods=['POST'])
@@ -49,16 +93,20 @@ def get_new_token():
     email = g.json.get('email')
     password = g.json.get('password')
 
-    customer = Customer.get_customer_by_email(email)  # type: Customer
-    if not customer:
-        logging.warning("No customer found for %s", email)
+    user = User.get_user_by_email(email)  # type: User
+    if not user:
+        logging.warning("No user found for %s", email)
         abort(401)
 
-    if not customer.verify_password(password):
+    if not user.verify_password(password):
         logging.warning("Incorrect password for %s", email)
         abort(401)
 
-    token = customer.generate_auth_token(expiration=TOKEN_EXPIRATION)
+    if not user.confirmed:
+        logging.warning("User %s hasn't been confirmed!", user.email)
+        abort(401)
+
+    token = user.generate_auth_token(expiration=TOKEN_EXPIRATION)
     ascii_token = token.decode('ascii')
 
     response = jsonify({'token': ascii_token})

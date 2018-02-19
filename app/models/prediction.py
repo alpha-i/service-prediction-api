@@ -7,7 +7,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from app.db import db
 from app.models.base import BaseModel
 # noinspection PyUnresolvedReferences
-from app.models.customer import Customer, CustomerAction, Actions
+from app.models.customer import User, CustomerAction, Actions
 # noinspection PyUnresolvedReferences
 from app.models.datasource import DataSource
 
@@ -22,8 +22,8 @@ class TaskStatusTypes(Enum):
 class PredictionTask(BaseModel):
 
     name = db.Column(db.String(60), nullable=False)
-    customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'))
-    customer = relationship('Customer', back_populates='tasks')
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user = relationship('User', back_populates='tasks')
 
     task_code = db.Column(db.String(60), unique=True, nullable=False)
     statuses = relationship('TaskStatus')
@@ -45,8 +45,8 @@ class PredictionTask(BaseModel):
             return None
 
     @staticmethod
-    def get_by_customer_id(customer_id):
-        return PredictionTask.query.filter(PredictionTask.customer_id == customer_id).all()
+    def get_by_user_id(user_id):
+        return PredictionTask.query.filter(PredictionTask.user_id == user_id).all()
 
     def to_dict(self):
         # TODO: switch to marshmallow serialize
@@ -65,8 +65,8 @@ class TaskStatus(BaseModel):
 
 
 class PredictionResult(BaseModel):
-    customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'))
-    customer = relationship('Customer', back_populates='results')
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user = relationship('User', back_populates='results')
     task_code = db.Column(db.String(60), unique=True)
     result = db.Column(db.JSON)
 
@@ -89,7 +89,7 @@ class PredictionResult(BaseModel):
 def update_user_action(mapper, connection, self):
     session = db.create_scoped_session()
     action = CustomerAction(
-        customer_id=self.customer_id,
+        user_id=self.user_id,
         action=Actions.PREDICTION_STARTED
     )
     session.add(action)

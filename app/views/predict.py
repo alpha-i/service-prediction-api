@@ -1,7 +1,6 @@
-import logging
-
 import time
-from flask import Blueprint, jsonify, make_response, url_for, request, abort, g
+
+from flask import Blueprint, jsonify, make_response, url_for, g
 
 from app.core.auth import requires_access_token
 from app.core.schemas import prediction_request_schema
@@ -14,7 +13,6 @@ DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 
 predict_blueprint = Blueprint('predict', __name__)
 
-logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 @predict_blueprint.route('/', methods=['POST'])
 @requires_access_token
@@ -24,30 +22,31 @@ def predict():
     Submit a prediction task for a customer
     """
 
-    customer_id = g.customer.id
+    user_id = g.user.id
 
     # the user can only predict against the _latest_ datasource
-    upload_code = g.customer.current_data_source.upload_code
+    upload_code = g.user.current_data_source.upload_code
 
     prediction_request, errors = prediction_request_schema.load(g.json)
     if errors:
         return jsonify(errors=errors), 400
 
     celery_prediction_task = predict_task.apply_async(
-        (customer_id, upload_code, prediction_request),
+        (user_id, upload_code, prediction_request),
         link_error=prediction_failure.s()
     )
 
     response = jsonify({
-            'task_code': celery_prediction_task.id,
-            'task_status': url_for('.get_task_status', task_code=celery_prediction_task.id, _external=True),
-            'result': url_for('.get_task_result', task_code=celery_prediction_task.id, _external=True)
-        })
+        'task_code': celery_prediction_task.id,
+        'task_status': url_for('.get_task_status', task_code=celery_prediction_task.id, _external=True),
+        'result': url_for('.get_task_result', task_code=celery_prediction_task.id, _external=True)
+    })
 
     response.headers['Location'] = url_for('customer.dashboard')
     time.sleep(1)
 
     return response, 303
+
 
 @predict_blueprint.route('/status/<string:task_code>')
 @requires_access_token
@@ -73,7 +72,7 @@ def get_task_result(task_code):
         return make_response("Result not found!"), 404
 
     return jsonify({
-        'customer_id': prediction_result.customer_id,
+        'user_id': prediction_result.user_id,
         'task_code': prediction_result.task_code,
         'result': prediction_result.result,
     })

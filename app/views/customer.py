@@ -4,7 +4,7 @@ from flask import Blueprint, jsonify, render_template, g, request, abort
 
 from app.core.auth import requires_access_token
 from app.db import db
-from app.models.customer import CustomerConfiguration
+from app.models.customer import UserConfiguration
 from app.models.datasource import DataSource
 from app.models.prediction import PredictionTask
 
@@ -38,8 +38,6 @@ def view_datasource():
     context = {
         'user_id': g.user.id,
         'profile': {'email': g.user.email},
-        'current_datasource': g.user.current_data_source
-        'profile': {'user_name': g.user.username, 'email': 'changeme@soon.com'},
         'current_datasource': g.user.current_data_source,
         'datasource_history': g.user.data_sources
     }
@@ -132,8 +130,8 @@ def list_predictions():
 @customer_blueprint.route('/uploads')
 @requires_access_token
 def list_customer_uploads():
-    customer_id = g.user.id
-    uploads = DataSource.get_for_customer(customer_id)
+    user_id = g.user.id
+    uploads = DataSource.get_for_user(user_id)
     return jsonify(uploads)
 
 
@@ -153,18 +151,18 @@ def list_customer_results():
 @customer_blueprint.route('/configuration', methods=['GET', 'POST'])
 @requires_access_token
 def customer_configuration():
-    customer = g.user
+    user = g.user
     if request.method == 'GET':
-        return jsonify(customer.configuration), 200
+        return jsonify(user.configuration), 200
     assert request.is_json, abort(400)
     new_configuration = request.json  # TODO: needs to implement a schema!
-    configuration_entity = customer.configuration
+    configuration_entity = user.configuration
     if not configuration_entity:
-        configuration_entity = CustomerConfiguration(
-            customer_id=customer.id
+        configuration_entity = UserConfiguration(
+            user_id=user.id
         )
     configuration_entity.configuration = new_configuration
     db.session.add(configuration_entity)
-    db.session.add(customer)  # TODO: needs to be decoupled!
+    db.session.add(user)  # TODO: needs to be decoupled!
     db.session.commit()  # maybe follow implement a repository/entity pattern
-    return jsonify(customer.configuration), 201
+    return jsonify(user.configuration), 201
