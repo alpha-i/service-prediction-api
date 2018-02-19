@@ -36,16 +36,17 @@ def dashboard():
     return render_template('dashboard.html', **context)
 
 
-@customer_blueprint.route('/upload')
+@customer_blueprint.route('/datasource')
 @requires_access_token
-def upload():
+def view_datasource():
     context = {
         'user_id': g.customer.id,
         'profile': {'user_name': g.customer.username, 'email': 'changeme@soon.com'},
-        'current_datasource': g.customer.current_data_source
+        'current_datasource': g.customer.current_data_source,
+        'datasource_history': g.customer.data_sources
     }
 
-    return render_template('datasource_upload.html', **context)
+    return render_template('datasource/index.html', **context)
 
 
 @customer_blueprint.route('/new-prediction')
