@@ -31,11 +31,11 @@
                         </tr>
                         <tr>
                             <td>{{ datasource.filename }}</td>
-                            <td>{{ datasource.type }}</td>
+                            <td>{{ datasource.type.value|capitalize }}</td>
                             <td>{{ datasource.start_date }}</td>
                             <td>{{ datasource.end_date }}</td>
                             <td>{{ macros.format_datetime(datasource.last_update) }}</td>
-                            <td><a class="btn btn-primary nounderline" href="{{ url_for('customer.upload') }}"><span class="fa fa-upload"></span>  update</a></td>
+                            <td><a href="{{ url_for('customer.view_datasource') }}"><span class="fa fa-file"></span></a></td>
                         </tr>
                         </tbody>
                     </table>

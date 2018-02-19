@@ -4,8 +4,8 @@
 
 {% block page_header %}
     <h1>
-        Update Datasource
-        <small>Update your datasource</small>
+        Your Data
+        <small>An overview of your historical data</small>
     </h1>
 {% endblock %}
 {% block breadcrumb_items %}
@@ -18,7 +18,7 @@
         <div class="col-xs-12">
             <div class="box box-primary">
                 <div class="box box-success">
-                    <h3 class="box-header with-border">Current Data Source</h3>
+                    <h3 class="box-header with-border">Overview</h3>
                     <div class="box-body">
 
                         {% if current_datasource %}
@@ -38,7 +38,7 @@
     <div class="row">
         <div class="col-xs-12">
             <div class="box">
-                <h3 class="box-header with-border">Update data source</h3>
+                <h3 class="box-header with-border">Update your historical data</h3>
                 <div class="box-body">
                     <form action="/upload" method="post" enctype="multipart/form-data" class="form-inline">
                         <div class="form-group">
@@ -58,6 +58,37 @@
                             </div>
                         </div>
                     </form>
+                </div>
+            </div>
+        </div>
+    </div>
+     <div class="row">
+        <div class="col-xs-12">
+            <div class="box">
+                <h3 class="box-header with-border">Upload log</h3>
+                <div class="box-body">
+
+                    <table class="table table-bordered">
+                        <tbody>
+                            <tr>
+                                <th>filename</th>
+                                <th>type</th>
+                                <th>start date</th>
+                                <th>end date</th>
+                                <th>last updated</th>
+                            </tr>
+                          {%  for datasource in datasource_history %}
+                            <tr>
+                                <td>{{ datasource.filename }}</td>
+                                <td>{{ datasource.type.value }}</td>
+                                <td>{{ datasource.start_date }}</td>
+                                <td>{{ datasource.end_date }}</td>
+                                <td>{{ macros.format_datetime(datasource.last_update) }}</td>
+
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>

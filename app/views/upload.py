@@ -58,5 +58,5 @@ def upload_file():
     db.session.add(upload)
     db.session.commit()
     response = jsonify(upload)
-    response.headers['Location'] = url_for('customer.dashboard')
+    response.headers['Location'] = url_for('customer.view_datasource')
     return response, 303
