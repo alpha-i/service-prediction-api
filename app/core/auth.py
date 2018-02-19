@@ -1,7 +1,7 @@
 import logging
 from functools import wraps
 
-from flask import request, g, abort
+from flask import request, g, abort, redirect, url_for
 
 from app.models.customer import Customer
 
@@ -9,20 +9,40 @@ from app.models.customer import Customer
 def requires_access_token(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
-        if 'Authorization' in request.headers:
-            token = request.headers['Authorization']
-        elif 'token' in request.cookies:
-            token = request.cookies.get('token')
-        else:
-            assert request.content_type == 'application/json'
-            token = request.json.get('token')
-        if not token:
-            logging.info("No token provided!")
-            abort(401)
+        customer = is_user_logged()
 
-        customer = Customer.verify_auth_token(token)
-        if not customer:
+        if isinstance(customer, Customer):
+            g.customer = customer
+            return fn(*args, **kwargs)
+        elif request.content_type == 'application/json':
             abort(401)
-        g.customer = customer
-        return fn(*args, **kwargs)
+        else:
+            return redirect(url_for('main.home'))
+
     return wrapper
+
+
+def is_user_logged():
+    """
+    Check if user is logged if the token exists and is valid
+
+    :return customer|False:
+    """
+    token = None
+    if 'Authorization' in request.headers:
+        token = request.headers['Authorization']
+    elif 'token' in request.cookies:
+        token = request.cookies.get('token')
+    elif request.content_type == 'application/json':
+        token = request.json.get('token')
+
+    if not token:
+        logging.info("No token provided!")
+        return False
+
+    customer = Customer.verify_auth_token(token)
+
+    if not customer:
+        return False
+
+    return customer
