@@ -19,7 +19,7 @@ class ApiResponse:
             response = make_response(jsonify(context))  # TODO: changeme, needs a content type serializer
             response.status_code = status_code
             if template:
-                response = make_response(render_template(template, context), status_code)
+                response = make_response(render_template(template, **context), status_code)
             if next:
                 response.status_code = 302
                 response.headers.add('Location', next)
@@ -34,4 +34,3 @@ class ApiResponse:
 
     def set_cookie(self, key, value, expires):
         self.response.set_cookie(key, value, expires=expires)
-

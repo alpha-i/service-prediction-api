@@ -20,6 +20,7 @@ class Actions(Enum):
 
 
 class Company(BaseModel):
+
     name = db.Column(db.String, nullable=False)
     logo = db.Column(db.String)
     domain = db.Column(db.String, nullable=False)
@@ -47,6 +48,10 @@ class Company(BaseModel):
 
 
 class User(BaseModel):
+
+    INCLUDE_ATTRIBUTES = ('data_sources', 'current_data_source', 'actions', 'company')
+    EXCLUDE_ATTRIBUTES = ('password_hash',)
+
     email = db.Column(db.String(32), index=True)
     password_hash = db.Column(db.String(128))
     tasks = relationship('PredictionTask', back_populates='user')
@@ -98,11 +103,7 @@ class User(BaseModel):
 
     def to_dict(self):
         dictionary = super(User, self).to_dict()
-        dictionary['data_sources'] = self.data_sources
-        dictionary['current_data_source'] = self.current_data_source
         dictionary['configuration'] = getattr(self.configuration, 'configuration', None)
-        dictionary['actions'] = self.actions
-        dictionary['company'] = self.company
         return dictionary
 
 

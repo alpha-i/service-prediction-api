@@ -2,8 +2,6 @@ import os
 import pickle
 import unittest
 
-import pytest
-
 from app.core.interpreters import prediction_interpreter
 
 HERE = os.path.join(os.path.dirname(__file__))

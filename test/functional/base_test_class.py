@@ -1,4 +1,6 @@
 import json
+
+from flask import url_for
 from flask_testing import TestCase
 
 from app.core.auth import generate_confirmation_token
@@ -22,10 +24,9 @@ class BaseTestClass(TestCase):
         db.session.remove()
         db.drop_all()
 
-
     def register_company(self):
         resp = self.client.post(
-            '/auth/register-company',
+            url_for('company.register'),
             content_type='application/json',
             data=json.dumps(
                 {'name': 'ACME Inc',
@@ -36,10 +37,9 @@ class BaseTestClass(TestCase):
         assert resp.status_code == 201
 
     def register_user(self):
-
         # we won't accept a registration for a user not in the company...
         resp = self.client.post(
-            '/auth/register-user',
+            url_for('user.register'),
             content_type='application/json',
             data=json.dumps({
                 'email': 'test_user@email.co.uk',
@@ -49,9 +49,8 @@ class BaseTestClass(TestCase):
 
         assert resp.status_code == 401
 
-
         resp = self.client.post(
-            '/auth/register-user',
+            url_for('user.register'),
             content_type='application/json',
             data=json.dumps({
                 'email': self.USER_EMAIL,
@@ -63,7 +62,7 @@ class BaseTestClass(TestCase):
 
         # we won't accept a login for a unconfirmed user...
         resp = self.client.post(
-            '/auth/login',
+            url_for('authentication.login'),
             content_type='application/json',
             data=json.dumps({'email': self.USER_EMAIL, 'password': self.PASSWORD})
         )
@@ -71,20 +70,19 @@ class BaseTestClass(TestCase):
 
         # we now require a confirmation for the user
         resp = self.client.get(
-            f'/auth/confirm/{confirmation_token}'
+            url_for('user.confirm', token=confirmation_token)
         )
         assert resp.status_code == 200
 
     def login(self):
         # we now require a token authorization for the endpoints
         resp = self.client.post(
-            '/auth/login',
+            url_for('authentication.login'),
             content_type='application/json',
             data=json.dumps({'email': self.USER_EMAIL, 'password': self.PASSWORD}),
-            headers = {'Accept': 'application/json'}
+            headers={'Accept': 'application/json'}
         )
 
         assert resp.status_code == 200
 
         self.token = resp.json['token']
-
