@@ -7,6 +7,7 @@ from app.db import db
 from app.models.customer import UserConfiguration
 from app.models.datasource import DataSource
 from app.models.prediction import PredictionTask
+from config import MAXIMUM_DAYS_FORECAST
 
 customer_blueprint = Blueprint('customer', __name__)
 
@@ -48,14 +49,16 @@ def view_datasource():
 @customer_blueprint.route('/new-prediction')
 @requires_access_token
 def new_prediction():
-    min_date = g.user.current_data_source.end_date
-    max_date = min_date + timedelta(days=30)
+
+    datasource_min_date = g.user.current_data_source.end_date
+    max_date = datasource_min_date + timedelta(days=MAXIMUM_DAYS_FORECAST)
 
     context = {
         'user_id': g.user.id,
         'profile': {'email': g.user.email},
         'datasource': g.user.current_data_source,
-        'min_date': min_date,
+        'datasource_end_date': datasource_min_date,
+        'min_date': datasource_min_date + timedelta(days=1),
         'max_date': max_date
     }
 
