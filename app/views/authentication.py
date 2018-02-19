@@ -70,3 +70,14 @@ def get_new_token():
 
     return response, 303
 
+
+@authentication_blueprint.route('/logout')
+@requires_access_token
+def logout():
+
+    response = redirect(url_for('main.home'))
+    response.set_cookie('token', '', expires=0)
+
+    return response
+
+
