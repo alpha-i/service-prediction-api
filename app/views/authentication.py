@@ -1,9 +1,10 @@
 import datetime
 import logging
 
-from flask import Blueprint, abort, jsonify, g, url_for, redirect
+from flask import Blueprint, abort, jsonify, g, url_for, redirect, make_response, request
 
 from app.core.auth import requires_access_token, generate_confirmation_token, confirm_token, is_valid_email_for_company
+from app.core.content import ApiResponse
 from app.core.utils import parse_request_data
 from app.db import db
 from app.models.customer import User, Company
@@ -52,7 +53,6 @@ def register_new_user():
         {
             'email': user.email,
             'userid': user.id,
-            'confirmation_token': confirmation_token,  # TODO: we won't show this on the template!
         }
     ), 201
 
@@ -109,23 +109,31 @@ def get_new_token():
     token = user.generate_auth_token(expiration=TOKEN_EXPIRATION)
     ascii_token = token.decode('ascii')
 
-    response = jsonify({'token': ascii_token})
+
+    response = ApiResponse(
+        content_type=request.accept_mimetypes.best,
+        next=url_for('customer.dashboard'),
+        context={'token': ascii_token}
+    )
+
     response.set_cookie(
         'token', ascii_token,
         expires=datetime.datetime.now() + datetime.timedelta(minutes=TOKEN_EXPIRATION)
     )
-    response.headers['Location'] = url_for('customer.dashboard')
 
-    return response, 303
+    return response()
 
 
 @authentication_blueprint.route('/logout')
 @requires_access_token
 def logout():
 
-    response = redirect(url_for('main.home'))
+    response = ApiResponse(
+        content_type=request.accept_mimetypes.best,
+        next=url_for('main.home'),
+    )
     response.set_cookie('token', '', expires=0)
 
-    return response
+    return response()
 
 
