@@ -1,7 +1,7 @@
 import datetime
 import logging
 
-from flask import Blueprint, request, abort, jsonify, g, redirect, url_for, Response
+from flask import Blueprint, abort, jsonify, g, url_for
 
 from app.core.auth import requires_access_token
 from app.core.utils import parse_request_data
@@ -17,16 +17,16 @@ logging.getLogger(__name__).addHandler(logging.NullHandler())
 @authentication_blueprint.route('/register', methods=['POST'])
 @parse_request_data
 def register_new_user():
-    username = g.json.get('username')
+    email = g.json.get('email')
     password = g.json.get('password')
 
-    assert username and password, abort(400)
+    assert email and password, abort(400)
 
-    customer = Customer.get_customer_by_username(username)
+    customer = Customer.get_customer_by_email(email)
     if customer is not None:
         abort(400)
 
-    customer = Customer(username=username)
+    customer = Customer(email=email)
 
     customer.hash_password(password)
 
@@ -34,7 +34,7 @@ def register_new_user():
     db.session.commit()
 
     return jsonify(
-        {'username': customer.username, 'userid': customer.id}), 201
+        {'email': customer.email, 'userid': customer.id}), 201
 
 
 @authentication_blueprint.route('/customer')
@@ -46,16 +46,16 @@ def get_customer():
 @authentication_blueprint.route('/login', methods=['POST'])
 @parse_request_data
 def get_new_token():
-    username = g.json.get('username')
+    email = g.json.get('email')
     password = g.json.get('password')
 
-    customer = Customer.get_customer_by_username(username)  # type: Customer
+    customer = Customer.get_customer_by_email(email)  # type: Customer
     if not customer:
-        logging.warning("No customer found for %s", username)
+        logging.warning("No customer found for %s", email)
         abort(401)
 
     if not customer.verify_password(password):
-        logging.warning("Incorrect password for %s", username)
+        logging.warning("Incorrect password for %s", email)
         abort(401)
 
     token = customer.generate_auth_token(expiration=TOKEN_EXPIRATION)

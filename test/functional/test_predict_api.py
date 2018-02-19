@@ -29,7 +29,7 @@ class TestPredictionAPI(TestCase):
             '/auth/register',
             content_type='application/json',
             data=json.dumps({
-                'username': 'test_user',
+                'email': 'test_user@email.com',
                 'password': 'password'
             })
         )
@@ -41,7 +41,7 @@ class TestPredictionAPI(TestCase):
         resp = self.client.post(
             '/auth/login',
             content_type='application/json',
-            data=json.dumps({'username': 'test_user', 'password': 'password'})
+            data=json.dumps({'email': 'test_user@email.com', 'password': 'password'})
         )
 
         assert resp.status_code == 303  # in order to redirect to the login page

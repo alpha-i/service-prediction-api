@@ -18,14 +18,25 @@ class Actions(Enum):
     CONFIGURATION_UPDATE = 'CONFIGURATION_UPDATE'
 
 
+class Company(BaseModel):
+    name = db.Column(db.String)
+    logo = db.Column(db.String)
+    profile = db.Column(db.JSON)
+
+    customer_id = db.Column(db.ForeignKey('customer.id'))
+    customer = relationship('Customer', back_populates='company')
+
+
 class Customer(BaseModel):
-    username = db.Column(db.String(32), index=True)
+    email = db.Column(db.String(32), index=True)
     password_hash = db.Column(db.String(128))
     tasks = relationship('PredictionTask', back_populates='customer')
     results = relationship('PredictionResult', back_populates='customer')
     data_sources = relationship('DataSource', back_populates='customer')
     actions = relationship('CustomerAction', back_populates='customer')
     configuration = relationship('CustomerConfiguration', back_populates='customer', uselist=False)
+    company = relationship('Company', uselist=False)
+    profile = relationship('CustomerProfile', uselist=False)
 
     def hash_password(self, password):
         self.password_hash = pwd_context.encrypt(password)
@@ -57,9 +68,9 @@ class Customer(BaseModel):
         return user
 
     @staticmethod
-    def get_customer_by_username(username):
+    def get_customer_by_email(email):
         try:
-            return Customer.query.filter(Customer.username == username).one()
+            return Customer.query.filter(Customer.email == email).one()
         except NoResultFound:
             return None
 
@@ -84,4 +95,6 @@ class CustomerConfiguration(BaseModel):
     configuration = db.Column(db.JSON)
 
 
-
+class CustomerProfile(BaseModel):
+    customer_id = db.Column(db.ForeignKey('customer.id'))
+    customer = relationship('Customer')

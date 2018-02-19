@@ -1,8 +1,5 @@
-import hashlib
-import logging
 from datetime import timedelta
 
-import pandas as pd
 from flask import Blueprint, jsonify, render_template, g, request, abort
 
 from app.core.auth import requires_access_token
@@ -18,19 +15,18 @@ customer_blueprint = Blueprint('customer', __name__)
 @customer_blueprint.route('/')
 @requires_access_token
 def get_user_profile():
-    customer = g.customer
+    customer = g.user
     return jsonify(customer)
 
 
 @customer_blueprint.route('/dashboard')
 @requires_access_token
 def dashboard():
-
     context = {
-        'user_id': g.customer.id,
-        'profile': {'user_name': g.customer.username, 'email': 'changeme@soon.com'},
-        'datasource': g.customer.current_data_source,
-        'task_list': list(reversed(g.customer.tasks))[:5]
+        'user_id': g.user.id,
+        'profile': {'email': g.user.email},
+        'datasource': g.user.current_data_source,
+        'task_list': list(reversed(g.user.tasks))[:5]
     }
 
     return render_template('dashboard.html', **context)
@@ -40,10 +36,12 @@ def dashboard():
 @requires_access_token
 def view_datasource():
     context = {
-        'user_id': g.customer.id,
-        'profile': {'user_name': g.customer.username, 'email': 'changeme@soon.com'},
-        'current_datasource': g.customer.current_data_source,
-        'datasource_history': g.customer.data_sources
+        'user_id': g.user.id,
+        'profile': {'email': g.user.email},
+        'current_datasource': g.user.current_data_source
+        'profile': {'user_name': g.user.username, 'email': 'changeme@soon.com'},
+        'current_datasource': g.user.current_data_source,
+        'datasource_history': g.user.data_sources
     }
 
     return render_template('datasource/index.html', **context)
@@ -52,14 +50,13 @@ def view_datasource():
 @customer_blueprint.route('/new-prediction')
 @requires_access_token
 def new_prediction():
-
-    min_date = g.customer.current_data_source.end_date
+    min_date = g.user.current_data_source.end_date
     max_date = min_date + timedelta(days=30)
 
     context = {
-        'user_id': g.customer.id,
-        'profile': {'user_name': g.customer.username, 'email': 'changeme@soon.com'},
-        'datasource': g.customer.current_data_source,
+        'user_id': g.user.id,
+        'profile': {'email': g.user.email},
+        'datasource': g.user.current_data_source,
         'min_date': min_date,
         'max_date': max_date
     }
@@ -70,12 +67,11 @@ def new_prediction():
 @customer_blueprint.route('/prediction/<string:task_code>')
 @requires_access_token
 def view_prediction(task_code):
-
     prediction = PredictionTask.get_by_task_code(task_code)
     context = {
-        'user_id': g.customer.id,
-        'profile': {'user_name': g.customer.username, 'email': 'changeme@soon.com'},
-        'datasource': g.customer.current_data_source,
+        'user_id': g.user.id,
+        'profile': {'email': g.user.email},
+        'datasource': g.user.current_data_source,
         'prediction': prediction
     }
 
@@ -122,12 +118,11 @@ def view_prediction(task_code):
 @customer_blueprint.route('/prediction')
 @requires_access_token
 def list_predictions():
-
     context = {
-        'user_id': g.customer.id,
-        'profile': {'user_name': g.customer.username, 'email': 'changeme@soon.com'},
-        'datasource': g.customer.current_data_source,
-        'task_list': list(reversed(g.customer.tasks))
+        'user_id': g.user.id,
+        'profile': {'email': g.user.email},
+        'datasource': g.user.current_data_source,
+        'task_list': list(reversed(g.user.tasks))
     }
 
     return render_template("prediction/list.html", **context)
@@ -137,7 +132,7 @@ def list_predictions():
 @customer_blueprint.route('/uploads')
 @requires_access_token
 def list_customer_uploads():
-    customer_id = g.customer.id
+    customer_id = g.user.id
     uploads = DataSource.get_for_customer(customer_id)
     return jsonify(uploads)
 
@@ -146,19 +141,19 @@ def list_customer_uploads():
 @customer_blueprint.route('/tasks')
 @requires_access_token
 def list_customer_tasks():
-    return jsonify(g.customer.tasks)
+    return jsonify(g.user.tasks)
 
 
 @customer_blueprint.route('/results')
 @requires_access_token
 def list_customer_results():
-    return jsonify(g.customer.results)
+    return jsonify(g.user.results)
 
 
 @customer_blueprint.route('/configuration', methods=['GET', 'POST'])
 @requires_access_token
 def customer_configuration():
-    customer = g.customer
+    customer = g.user
     if request.method == 'GET':
         return jsonify(customer.configuration), 200
     assert request.is_json, abort(400)
