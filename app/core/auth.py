@@ -1,18 +1,21 @@
 import logging
 from functools import wraps
 
+from flask import request, g, abort
+from itsdangerous import URLSafeTimedSerializer
 from flask import request, g, abort, redirect, url_for
 
-from app.models.customer import Customer
+from app.models.customer import User
+from config import SECRET_KEY
 
 
 def requires_access_token(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
-        customer = is_user_logged()
+        user = is_user_logged()
 
-        if isinstance(customer, Customer):
-            g.customer = customer
+        if isinstance(user, User):
+            g.user = user
             return fn(*args, **kwargs)
         elif request.content_type == 'application/json':
             abort(401)
@@ -28,21 +31,37 @@ def is_user_logged():
 
     :return customer|False:
     """
-    token = None
     if 'Authorization' in request.headers:
         token = request.headers['Authorization']
     elif 'token' in request.cookies:
         token = request.cookies.get('token')
     elif request.content_type == 'application/json':
         token = request.json.get('token')
-
-    if not token:
+    else:
         logging.info("No token provided!")
         return False
 
-    customer = Customer.verify_auth_token(token)
+    user = User.verify_auth_token(token)
+    if not user:
+        abort(401)
+    return user
 
-    if not customer:
+
+def generate_confirmation_token(email):
+    serializer = URLSafeTimedSerializer(SECRET_KEY)
+    return serializer.dumps(email)
+
+
+def confirm_token(token, expiration=3600):
+    serializer = URLSafeTimedSerializer(SECRET_KEY)
+    try:
+        email = serializer.loads(token, max_age=expiration)
+    except:
         return False
+    return email
 
-    return customer
+
+def is_valid_email_for_company(email: str, company):
+    company_domain = company.domain
+    email_domain = email.split('@')[-1]
+    return email_domain == company_domain

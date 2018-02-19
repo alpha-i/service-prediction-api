@@ -9,7 +9,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from app.db import db
 from app.models.base import BaseModel
 # noinspection PyUnresolvedReferences
-from app.models.customer import Customer, CustomerAction, Actions
+from app.models.customer import User, CustomerAction, Actions
 
 STORE_INDEX = 'data'
 
@@ -20,8 +20,8 @@ class UploadTypes(Enum):
 
 
 class DataSource(BaseModel):
-    customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'))
-    customer = relationship('Customer')
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user = relationship('User')
     upload_code = db.Column(db.String(), index=True)
     type = db.Column(db.Enum(UploadTypes), index=True)
     location = db.Column(db.String(), index=True)
@@ -39,8 +39,8 @@ class DataSource(BaseModel):
             return dataframe
 
     @staticmethod
-    def get_for_customer(customer_id):
-        return DataSource.query.filter(DataSource.customer_id == str(customer_id)).all()
+    def get_for_user(user_id):
+        return DataSource.query.filter(DataSource.user_id == str(user_id)).all()
 
     @staticmethod
     def get_by_upload_code(upload_code):
@@ -51,7 +51,6 @@ class DataSource(BaseModel):
 
     @staticmethod
     def generate_filename(upload_code, original_filename):
-
         return f"{upload_code}_{original_filename}"
 
     def to_dict(self):
@@ -63,7 +62,7 @@ class DataSource(BaseModel):
 def update_user_action(mapper, connection, self):
     session = db.create_scoped_session()
     action = CustomerAction(
-        customer_id=self.customer_id,
+        user_id=self.user_id,
         action=Actions.FILE_UPLOAD
     )
     session.add(action)

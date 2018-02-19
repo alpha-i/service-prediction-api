@@ -1,4 +1,3 @@
-import datetime
 import logging
 import time
 
@@ -14,7 +13,6 @@ from app.db import db
 from app.models.datasource import DataSource
 from app.models.prediction import PredictionTask, PredictionResult, TaskStatus, TaskStatusTypes
 from config import MAXIMUM_DAYS_FORECAST
-
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -117,13 +115,13 @@ oracle_config = OracleConfiguration({
 
 
 @celery.task(bind=True)
-def predict_task(self, customer_id, upload_code, prediction_request):
+def predict_task(self, user_id, upload_code, prediction_request):
     uploaded_file = DataSource.get_by_upload_code(upload_code)  # type: DataSource
     if not uploaded_file:
         logging.warning("No upload could be found for code %s", upload_code)
         return
 
-    prediction_task = create_task(self.request.id, customer_id, uploaded_file.id, prediction_request['name'])
+    prediction_task = create_task(self.request.id, user_id, uploaded_file.id, prediction_request['name'])
     set_task_status(prediction_task, TaskStatusTypes.queued)
     prediction_request, errors = prediction_request_schema.load(prediction_request)
 
@@ -144,7 +142,6 @@ def predict_task(self, customer_id, upload_code, prediction_request):
 
     start_time = prediction_request['start_time']
     end_time = prediction_request['end_time']
-
 
     oracle_config.oracle['n_forecasts'] = MAXIMUM_DAYS_FORECAST + 2
 
@@ -167,7 +164,7 @@ def predict_task(self, customer_id, upload_code, prediction_request):
     set_task_status(prediction_task, TaskStatusTypes.successful)
 
     prediction_result = PredictionResult(
-        customer_id=customer_id,
+        user_id=user_id,
         task_code=prediction_task.task_code,
         result=json_reload(prediction_result),
         prediction_task_id=prediction_task.id
@@ -189,10 +186,10 @@ def prediction_failure(uuid):
     print('Task {0} raised exception: {1!r}\n{2!r}'.format(uuid, exc, result.traceback))
 
 
-def create_task(task_code, customer_id, upload_code, name):
+def create_task(task_code, user_id, upload_code, name):
     new_task = PredictionTask(
         task_code=task_code,
-        customer_id=customer_id,
+        user_id=user_id,
         datasource_id=upload_code,
         name=name
     )

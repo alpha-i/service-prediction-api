@@ -7,7 +7,7 @@ import pandas as pd
 
 from app.core.auth import requires_access_token
 from app.db import db
-from app.models.customer import Customer
+from app.models.customer import User
 from app.models.datasource import DataSource, UploadTypes
 
 upload_blueprint = Blueprint('upload', __name__)
@@ -25,8 +25,8 @@ def generate_upload_code():
 @upload_blueprint.route('/', methods=['POST'])
 @requires_access_token
 def upload_file():
-    customer = g.customer  # type: Customer
-    customer_id = customer.id
+    user = g.user  # type: User
+    user_id = user.id
     uploaded_file = request.files['upload']
     if not allowed_extension(uploaded_file.filename):
         abort(400)
@@ -37,16 +37,16 @@ def upload_file():
 
     data_frame = pd.read_csv(uploaded_file, sep=',', index_col='date', parse_dates=True)
 
-    if customer.current_data_source:
+    if user.current_data_source:
         logging.warning('User already has a data source')
-        existing_data_frame = customer.current_data_source.get_file()
+        existing_data_frame = user.current_data_source.get_file()
         data_frame = pd.concat([existing_data_frame, data_frame])
 
     saved_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename + '.hdf5')
     data_frame.to_hdf(saved_path, key=current_app.config['HDF5_STORE_INDEX'])
 
     upload = DataSource(
-        customer_id=customer_id,
+        user_id=user_id,
         upload_code=upload_code,
         type=UploadTypes.FILESYSTEM,
         location=saved_path,

@@ -1,3 +1,4 @@
+import logging
 from enum import Enum
 
 from itsdangerous import (
@@ -18,14 +19,39 @@ class Actions(Enum):
     CONFIGURATION_UPDATE = 'CONFIGURATION_UPDATE'
 
 
-class Customer(BaseModel):
-    username = db.Column(db.String(32), index=True)
+class Company(BaseModel):
+    name = db.Column(db.String, nullable=False)
+    logo = db.Column(db.String)
+    domain = db.Column(db.String, nullable=False)
+    profile = db.Column(db.JSON)
+
+    user_id = db.Column(db.ForeignKey('user.id'))
+    users = relationship('User', back_populates='company')
+
+    @staticmethod
+    def get_for_email(email):
+        domain = email.split('@')[-1]
+        try:
+            logging.info('Searching for a company %s', domain)
+            company = Company.query.filter(Company.domain==domain).one()
+        except NoResultFound:
+            return None
+        return company
+
+
+
+class User(BaseModel):
+    email = db.Column(db.String(32), index=True)
     password_hash = db.Column(db.String(128))
-    tasks = relationship('PredictionTask', back_populates='customer')
-    results = relationship('PredictionResult', back_populates='customer')
-    data_sources = relationship('DataSource', back_populates='customer')
-    actions = relationship('CustomerAction', back_populates='customer')
-    configuration = relationship('CustomerConfiguration', back_populates='customer', uselist=False)
+    tasks = relationship('PredictionTask', back_populates='user')
+    results = relationship('PredictionResult', back_populates='user')
+    data_sources = relationship('DataSource', back_populates='user')
+    actions = relationship('CustomerAction', back_populates='user')
+    configuration = relationship('UserConfiguration', back_populates='user', uselist=False)
+    company = relationship('Company')
+    profile = relationship('UserProfile', uselist=False)
+
+    confirmed = db.Column(db.Boolean, default=False)
 
     def hash_password(self, password):
         self.password_hash = pwd_context.encrypt(password)
@@ -53,18 +79,18 @@ class Customer(BaseModel):
         except BadSignature:
             return None
 
-        user = Customer.query.get(data['id'])
+        user = User.query.get(data['id'])
         return user
 
     @staticmethod
-    def get_customer_by_username(username):
+    def get_user_by_email(email):
         try:
-            return Customer.query.filter(Customer.username == username).one()
+            return User.query.filter(User.email == email).one()
         except NoResultFound:
             return None
 
     def to_dict(self):
-        dictionary = super(Customer, self).to_dict()
+        dictionary = super(User, self).to_dict()
         dictionary['data_sources'] = self.data_sources
         dictionary['current_data_source'] = self.current_data_source
         dictionary['configuration'] = getattr(self.configuration, 'configuration', None)
@@ -73,15 +99,17 @@ class Customer(BaseModel):
 
 
 class CustomerAction(BaseModel):
-    customer_id = db.Column(db.ForeignKey('customer.id'))
-    customer = relationship('Customer')
+    user_id = db.Column(db.ForeignKey('user.id'))
+    user = relationship('User')
     action = db.Column(db.Enum(Actions))
 
 
-class CustomerConfiguration(BaseModel):
-    customer_id = db.Column(db.ForeignKey('customer.id'))
-    customer = relationship('Customer')
+class UserConfiguration(BaseModel):
+    user_id = db.Column(db.ForeignKey('user.id'))
+    user = relationship('User')
     configuration = db.Column(db.JSON)
 
 
-
+class UserProfile(BaseModel):
+    user_id = db.Column(db.ForeignKey('user.id'))
+    user = relationship('User')

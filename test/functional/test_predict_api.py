@@ -12,7 +12,7 @@ HERE = os.path.join(os.path.dirname(__file__))
 
 class TestPredictionAPI(TestCase):
     TESTING = True
-    TEST_CUSTOMER_ID = '99'
+    TEST_USER_ID = '99'
 
     def create_app(self):
         return APP
@@ -24,24 +24,68 @@ class TestPredictionAPI(TestCase):
         db.session.remove()
         db.drop_all()
 
-    def register(self):
+    def register_company(self):
         resp = self.client.post(
-            '/auth/register',
+            '/auth/register-company',
+            content_type='application/json',
+            data=json.dumps(
+                {'name': 'ACME Inc',
+                 'domain': 'email.com'}
+            )
+
+        )
+        assert resp.status_code == 201
+
+
+    def register_user(self):
+
+        # we won't accept a registration for a user not in the company...
+        resp = self.client.post(
+            '/auth/register-user',
             content_type='application/json',
             data=json.dumps({
-                'username': 'test_user',
+                'email': 'test_user@email.co.uk',
+                'password': 'password'
+            })
+        )
+
+        assert resp.status_code == 401
+
+
+        resp = self.client.post(
+            '/auth/register-user',
+            content_type='application/json',
+            data=json.dumps({
+                'email': 'test_user@email.com',
                 'password': 'password'
             })
         )
         assert resp.status_code == 201
+        confirmation_token = resp.json['confirmation_token']
+
+        # we won't accept a login for a unconfirmed user...
+        resp = self.client.post(
+            '/auth/login',
+            content_type='application/json',
+            data=json.dumps({'email': 'test_user@email.com', 'password': 'password'})
+        )
+        assert resp.status_code == 401
+
+        # we now require a confirmation for the user
+        resp = self.client.get(
+            f'/auth/confirm/{confirmation_token}'
+        )
+        assert resp.status_code == 200
+
 
     def login(self):
-        self.register()
+        self.register_company()
+        self.register_user()
         # we now require a token authorization for the endpoints
         resp = self.client.post(
             '/auth/login',
             content_type='application/json',
-            data=json.dumps({'username': 'test_user', 'password': 'password'})
+            data=json.dumps({'email': 'test_user@email.com', 'password': 'password'})
         )
 
         assert resp.status_code == 303  # in order to redirect to the login page
@@ -64,7 +108,7 @@ class TestPredictionAPI(TestCase):
             Response looks like:
             {
                 'created_at': 'Wed, 07 Feb 2018 15:02:39 GMT', 
-                'customer_id': '99', 
+                'user_id': '99', 
                 'id': 1, 
                 'last_update': 'Wed, 07 Feb 2018 15:02:39 GMT', 
                 'location': '/Users/gabalese/projects/service-prediction-api/uploads/a033d3ae-cd6c-4435-b00b-0bbc9ab09fe6_test_data.csv', 
@@ -72,7 +116,7 @@ class TestPredictionAPI(TestCase):
                 'upload_code': 'a033d3ae-cd6c-4435-b00b-0bbc9ab09fe6'
             }
             """
-            assert resp.json['customer_id'] == 1
+            assert resp.json['user_id'] == 1
 
             assert resp.json['start_date'] == '2015-08-15T00:00:11'
             assert resp.json['end_date'] == '2015-08-15T03:21:14'
@@ -94,7 +138,7 @@ class TestPredictionAPI(TestCase):
         # first you upload a file
         with open(os.path.join(HERE, '../resources/test_full_data.csv'), 'rb') as test_upload_file:
             resp = self.client.post(
-                f'/upload',
+                '/upload',
                 content_type='multipart/form-data',
                 data={'upload': (test_upload_file, 'test_full_data.csv')},
                 #headers={'Authorization': self.token}
@@ -138,7 +182,7 @@ class TestPredictionAPI(TestCase):
         """
         {
             'created_at': 'Wed, 07 Feb 2018 16:00:20 GMT', 
-            'customer_id': 99, 
+            'user_id': 99, 
             'id': 1, 
             'last_update': 'Wed, 07 Feb 2018 16:00:20 GMT', 
             'status': 'QUEUED', 
@@ -146,7 +190,7 @@ class TestPredictionAPI(TestCase):
         }
         """
         assert resp.status_code == 200
-        assert resp.json['customer_id'] == 1
+        assert resp.json['user_id'] == 1
 
         task_status = resp.json['status']
 
@@ -166,7 +210,7 @@ class TestPredictionAPI(TestCase):
 
         """
         {
-            "customer_id": "99",
+            "user_id": "99",
             "result": [
                 {
                     "prediction": [
@@ -194,6 +238,6 @@ class TestPredictionAPI(TestCase):
         """
 
         assert resp.status_code == 200
-        assert resp.json['customer_id'] == 1
+        assert resp.json['user_id'] == 1
         assert resp.json['result']
         os.unlink(file_location)
