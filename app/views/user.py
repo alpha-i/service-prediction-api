@@ -71,6 +71,7 @@ def confirm(token):
     user.confirmed = True
     db.session.add(user)
     db.session.commit()
+    logging.info("User %s successfully confirmed!", user.email)
 
     response = ApiResponse(
         content_type=request.accept_mimetypes.best,

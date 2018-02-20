@@ -20,11 +20,13 @@ class Actions(Enum):
 
 
 class Company(BaseModel):
+    INCLUDE_ATTRIBUTES = ('current_configuration',)
+
     name = db.Column(db.String, nullable=False)
     logo = db.Column(db.String)
     domain = db.Column(db.String, nullable=False)
     profile = db.Column(db.JSON)
-    configuration = relationship('CompanyConfiguration', back_populates='company', uselist=False)
+    configuration = relationship('CompanyConfiguration', back_populates='company')
     users = relationship('User', back_populates='company')
 
     @staticmethod
@@ -45,10 +47,10 @@ class Company(BaseModel):
             return None
         return company
 
-    def to_dict(self):
-        dictionary = super().to_dict()
-        dictionary['configuration'] = getattr(self.configuration, 'configuration', None)
-        return dictionary
+    @property
+    def current_configuration(self):
+        if len(self.configuration):
+            return self.configuration[-1]
 
 
 class User(BaseModel):
