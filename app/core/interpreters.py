@@ -96,7 +96,7 @@ def datasource_interpreter(data_source):
         except:
             # already timezone aware
             pass
-        df.index = df.index.tz_convert(pytz.timezone('US/Pacific'))
+
         df = df.loc[~df.index.duplicated(keep='first')]  # Remove duplicate entries
 
         df['date'] = df.index
