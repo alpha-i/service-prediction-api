@@ -34,12 +34,11 @@ class TestOracleResult(unittest.TestCase):
         self.prediction_result = pickle.load(picke_file)
         picke_file.close()
 
-    @pytest.mark.skip("Waiting for a new release of feature transformation library")
     def test_gets_a_prediction_for_an_oracle_result(self):
         result = prediction_interpreter(self.prediction_result)
 
         assert result[0]['timestamp'] == '2008-01-02 02:02:02'
         assert result[0]['prediction'] == [
-            {'feature': 'UCB', 'value': 12.23, 'upper': 13.73, 'lower': 10.73},
-            {'feature': 'Santa Cruz', 'value': 13.1, 'upper': 14.6, 'lower': 11.6}
+            {'feature': 'UCB', 'value': 9.58, 'upper': 11.08, 'lower': 8.08},
+            {'feature': 'Santa Cruz', 'value': 6.74, 'upper': 8.24, 'lower': 5.24}
         ]
