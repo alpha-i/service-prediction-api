@@ -13,12 +13,6 @@ from config import TOKEN_EXPIRATION
 authentication_blueprint = Blueprint('authentication', __name__)
 
 
-@authentication_blueprint.route('/customer')
-@requires_access_token
-def get_customer():
-    return jsonify(g.user)
-
-
 @authentication_blueprint.route('/register-user', methods=['POST'])
 @parse_request_data
 def register_new_user():
