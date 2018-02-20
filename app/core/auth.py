@@ -20,7 +20,7 @@ def requires_access_token(fn):
         elif request.content_type == 'application/json':
             abort(401)
         else:
-            return redirect(url_for('main.home'))
+            return redirect(url_for('main.login'))
 
     return wrapper
 

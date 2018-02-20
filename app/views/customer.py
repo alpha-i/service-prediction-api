@@ -148,12 +148,10 @@ def list_customer_results():
     return jsonify(g.user.results)
 
 
-@customer_blueprint.route('/configuration', methods=['GET', 'POST'])
+@customer_blueprint.route('/configuration', methods=['POST'])
 @requires_access_token
-def customer_configuration():
+def update_customer_configuration():
     user = g.user
-    if request.method == 'GET':
-        return jsonify(user.configuration), 200
     assert request.is_json, abort(400)
     new_configuration = request.json  # TODO: needs to implement a schema!
     configuration_entity = user.configuration
@@ -166,3 +164,8 @@ def customer_configuration():
     db.session.add(user)  # TODO: needs to be decoupled!
     db.session.commit()  # maybe follow implement a repository/entity pattern
     return jsonify(user.configuration), 201
+
+@customer_blueprint.route('/configuration', methods=['GET'])
+@requires_access_token
+def get_customer_configuration():
+    return jsonify(g.user.configuration), 200

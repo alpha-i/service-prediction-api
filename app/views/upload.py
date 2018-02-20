@@ -6,6 +6,7 @@ from flask import Blueprint, request, current_app, jsonify, g, abort, url_for
 import pandas as pd
 
 from app.core.auth import requires_access_token
+from app.core.content import ApiResponse
 from app.db import db
 from app.models.customer import User
 from app.models.datasource import DataSource, UploadTypes
@@ -57,6 +58,11 @@ def upload_file():
 
     db.session.add(upload)
     db.session.commit()
-    response = jsonify(upload)
-    response.headers['Location'] = url_for('customer.view_datasource')
-    return response, 303
+
+    response = ApiResponse(
+        content_type=request.accept_mimetypes.best,
+        context=upload,
+        next=url_for('customer.view_datasource')
+    )
+
+    return response()

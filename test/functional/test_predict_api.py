@@ -2,7 +2,7 @@ import json
 import os
 import time
 
-from flask_testing import TestCase
+from test.functional.base_test_class import BaseTestClass
 
 from app.db import db
 from test.test_app import APP
@@ -10,87 +10,14 @@ from test.test_app import APP
 HERE = os.path.join(os.path.dirname(__file__))
 
 
-class TestPredictionAPI(TestCase):
+class TestPredictionAPI(BaseTestClass):
     TESTING = True
     TEST_USER_ID = '99'
 
-    def create_app(self):
-        return APP
-
     def setUp(self):
-        db.create_all()
-
-    def tearDown(self):
-        db.session.remove()
-        db.drop_all()
-
-    def register_company(self):
-        resp = self.client.post(
-            '/auth/register-company',
-            content_type='application/json',
-            data=json.dumps(
-                {'name': 'ACME Inc',
-                 'domain': 'email.com'}
-            )
-
-        )
-        assert resp.status_code == 201
-
-
-    def register_user(self):
-
-        # we won't accept a registration for a user not in the company...
-        resp = self.client.post(
-            '/auth/register-user',
-            content_type='application/json',
-            data=json.dumps({
-                'email': 'test_user@email.co.uk',
-                'password': 'password'
-            })
-        )
-
-        assert resp.status_code == 401
-
-
-        resp = self.client.post(
-            '/auth/register-user',
-            content_type='application/json',
-            data=json.dumps({
-                'email': 'test_user@email.com',
-                'password': 'password'
-            })
-        )
-        assert resp.status_code == 201
-        confirmation_token = resp.json['confirmation_token']
-
-        # we won't accept a login for a unconfirmed user...
-        resp = self.client.post(
-            '/auth/login',
-            content_type='application/json',
-            data=json.dumps({'email': 'test_user@email.com', 'password': 'password'})
-        )
-        assert resp.status_code == 401
-
-        # we now require a confirmation for the user
-        resp = self.client.get(
-            f'/auth/confirm/{confirmation_token}'
-        )
-        assert resp.status_code == 200
-
-
-    def login(self):
+        super(TestPredictionAPI, self).setUp()
         self.register_company()
         self.register_user()
-        # we now require a token authorization for the endpoints
-        resp = self.client.post(
-            '/auth/login',
-            content_type='application/json',
-            data=json.dumps({'email': 'test_user@email.com', 'password': 'password'})
-        )
-
-        assert resp.status_code == 303  # in order to redirect to the login page
-
-        self.token = resp.json['token']
 
     def test_upload_file_for_customer(self):
         self.login()
@@ -99,9 +26,9 @@ class TestPredictionAPI(TestCase):
                 '/upload',
                 content_type='multipart/form-data',
                 data={'upload': (test_upload_file, 'test_data.csv')},
-                #headers={'Authorization': self.token}
+                headers={'Accept': 'application/html'}
             )
-            assert resp.status_code == 303  # in order to redirect to the dashboard
+            assert resp.status_code == 302  # in order to redirect to the dashboard
             assert resp.json
 
             """
@@ -121,17 +48,24 @@ class TestPredictionAPI(TestCase):
             assert resp.json['start_date'] == '2015-08-15T00:00:11'
             assert resp.json['end_date'] == '2015-08-15T03:21:14'
 
+            first_file_location = resp.json['location']
+
         with open(os.path.join(HERE, '../resources/additional_test_data.csv'), 'rb') as updated_data_file:
             resp = self.client.post(
                 '/upload',
                 content_type='multipart/form-data',
                 data={'upload': (updated_data_file, 'test_data.csv')},
-                # headers={'Authorization': self.token}
+                headers={'Accept': 'application/html'}
             )
-            assert resp.status_code == 303  # in order to redirect to the dashboard
+            assert resp.status_code == 302  # in order to redirect to the dashboard
             assert resp.json
             assert resp.json['start_date'] == '2015-08-15T00:00:11'
             assert resp.json['end_date'] == '2017-08-15T03:21:14'
+
+            second_file_location = resp.json['location']
+
+        os.remove(first_file_location)
+        os.remove(second_file_location)
 
     def test_predict_on_a_file(self):
         self.login()
@@ -141,7 +75,7 @@ class TestPredictionAPI(TestCase):
                 '/upload',
                 content_type='multipart/form-data',
                 data={'upload': (test_upload_file, 'test_full_data.csv')},
-                #headers={'Authorization': self.token}
+                headers={'Accept': 'application/html'}
             )
 
             upload_code = resp.json['upload_code']
@@ -157,9 +91,10 @@ class TestPredictionAPI(TestCase):
                 "features": "number_people",
                 "start_time": "2017-01-01T00:00:00",
                 "end_time": "2017-01-02T00:00:00"}),
-            headers={'Authorization': self.token}
+            headers={'Authorization': self.token,
+                     'Accept': 'application/html'}
         )
-        assert resp.status_code == 303
+        assert resp.status_code == 302
 
         """
         Response looks like:
@@ -240,4 +175,4 @@ class TestPredictionAPI(TestCase):
         assert resp.status_code == 200
         assert resp.json['user_id'] == 1
         assert resp.json['result']
-        os.unlink(file_location)
+        os.remove(file_location)
