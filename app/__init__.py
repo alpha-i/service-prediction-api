@@ -6,10 +6,6 @@ from flask_bootstrap import Bootstrap
 from app.core.utils import CustomJSONEncoder
 from config import CELERY_BROKER_URL, CELERY_RESULT_BACKEND
 
-DATE_FORMAT = '%Y-%m-%d'
-DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
-DATETIME_TZ_FORMAT = '%Y-%m-%dT%H:%M:%S%z'
-
 celery = Celery(__name__, broker=CELERY_BROKER_URL, backend=CELERY_RESULT_BACKEND)
 
 

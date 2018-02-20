@@ -8,7 +8,7 @@ from alphai_cromulon_oracle.oracle import OraclePrediction
 from alphai_delphi.oracle import PredictionResult
 from dateutil import parser
 
-from app import DATE_FORMAT
+from config import DATE_FORMAT
 from app.models.prediction import PredictionTask
 
 DEFAULT_TIME_RESOLUTION = '15T'
