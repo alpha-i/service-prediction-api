@@ -1,5 +1,7 @@
+import logging
 from enum import Enum
 
+from flask import url_for
 from sqlalchemy import event
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm.exc import NoResultFound
@@ -20,6 +22,7 @@ class TaskStatusTypes(Enum):
 
 
 class PredictionTask(BaseModel):
+    INCLUDE_ATTRIBUTES = ('status', 'statuses', 'result')
 
     name = db.Column(db.String(60), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -36,9 +39,6 @@ class PredictionTask(BaseModel):
 
     @staticmethod
     def get_by_task_code(task_code):
-        """
-        :return: PredictionTask the prediction
-        """
         try:
             return PredictionTask.query.filter(PredictionTask.task_code == task_code).one()
         except NoResultFound:
@@ -48,13 +48,18 @@ class PredictionTask(BaseModel):
     def get_by_user_id(user_id):
         return PredictionTask.query.filter(PredictionTask.user_id == user_id).all()
 
-    def to_dict(self):
-        # TODO: switch to marshmallow serialize
-        retvalue = super(PredictionTask, self).to_dict()
+    @property
+    def status(self):
         if len(self.statuses):
-            retvalue['status'] = self.statuses[-1].state
-            retvalue['statuses'] = self.statuses
-        return retvalue
+            return self.statuses[-1].state
+        return None
+
+    @property
+    def result(self):
+        logging.warning(self.status)
+        if self.status in [TaskStatusTypes.successful.value, TaskStatusTypes.failed.value]:
+            return url_for('prediction.result', task_code=self.task_code, _external=True)
+        return None
 
 
 class TaskStatus(BaseModel):

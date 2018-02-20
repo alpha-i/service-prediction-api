@@ -24,6 +24,7 @@ class Company(BaseModel):
     logo = db.Column(db.String)
     domain = db.Column(db.String, nullable=False)
     profile = db.Column(db.JSON)
+    configuration = relationship('CompanyConfiguration', back_populates='company', uselist=False)
     users = relationship('User', back_populates='company')
 
     @staticmethod
@@ -31,7 +32,7 @@ class Company(BaseModel):
         domain = email.split('@')[-1]
         try:
             logging.info('Searching for a company %s', domain)
-            company = Company.query.filter(Company.domain==domain).one()
+            company = Company.query.filter(Company.domain == domain).one()
         except NoResultFound:
             return None
         return company
@@ -39,21 +40,27 @@ class Company(BaseModel):
     @staticmethod
     def get_for_domain(domain):
         try:
-            company = Company.query.filter(Company.domain==domain).one()
+            company = Company.query.filter(Company.domain == domain).one()
         except NoResultFound:
             return None
         return company
 
+    def to_dict(self):
+        dictionary = super().to_dict()
+        dictionary['configuration'] = getattr(self.configuration, 'configuration', None)
+        return dictionary
 
 
 class User(BaseModel):
+    INCLUDE_ATTRIBUTES = ('data_sources', 'current_data_source', 'actions', 'company')
+    EXCLUDE_ATTRIBUTES = ('password_hash',)
+
     email = db.Column(db.String(32), index=True)
     password_hash = db.Column(db.String(128))
     tasks = relationship('PredictionTask', back_populates='user')
     results = relationship('PredictionResult', back_populates='user')
     data_sources = relationship('DataSource', back_populates='user')
     actions = relationship('CustomerAction', back_populates='user')
-    configuration = relationship('UserConfiguration', back_populates='user', uselist=False)
     company_id = db.Column(db.ForeignKey('company.id'), nullable=False)
     company = relationship('Company')
     profile = relationship('UserProfile', uselist=False)
@@ -96,26 +103,11 @@ class User(BaseModel):
         except NoResultFound:
             return None
 
-    def to_dict(self):
-        dictionary = super(User, self).to_dict()
-        dictionary['data_sources'] = self.data_sources
-        dictionary['current_data_source'] = self.current_data_source
-        dictionary['configuration'] = getattr(self.configuration, 'configuration', None)
-        dictionary['actions'] = self.actions
-        dictionary['company'] = self.company
-        return dictionary
-
 
 class CustomerAction(BaseModel):
     user_id = db.Column(db.ForeignKey('user.id'), nullable=False)
     user = relationship('User')
     action = db.Column(db.Enum(Actions))
-
-
-class UserConfiguration(BaseModel):
-    user_id = db.Column(db.ForeignKey('user.id'), nullable=False)
-    user = relationship('User')
-    configuration = db.Column(db.JSON)
 
 
 class UserProfile(BaseModel):

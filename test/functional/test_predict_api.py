@@ -2,6 +2,8 @@ import json
 import os
 import time
 
+from flask import url_for
+
 from test.functional.base_test_class import BaseTestClass
 
 from app.db import db
@@ -23,7 +25,7 @@ class TestPredictionAPI(BaseTestClass):
         self.login()
         with open(os.path.join(HERE, '../resources/test_data.csv'), 'rb') as test_upload_file:
             resp = self.client.post(
-                '/upload',
+                url_for('datasource.upload'),
                 content_type='multipart/form-data',
                 data={'upload': (test_upload_file, 'test_data.csv')},
                 headers={'Accept': 'application/html'}
@@ -52,7 +54,7 @@ class TestPredictionAPI(BaseTestClass):
 
         with open(os.path.join(HERE, '../resources/additional_test_data.csv'), 'rb') as updated_data_file:
             resp = self.client.post(
-                '/upload',
+                url_for('datasource.upload'),
                 content_type='multipart/form-data',
                 data={'upload': (updated_data_file, 'test_data.csv')},
                 headers={'Accept': 'application/html'}
@@ -72,7 +74,7 @@ class TestPredictionAPI(BaseTestClass):
         # first you upload a file
         with open(os.path.join(HERE, '../resources/test_full_data.csv'), 'rb') as test_upload_file:
             resp = self.client.post(
-                '/upload',
+                url_for('datasource.upload'),
                 content_type='multipart/form-data',
                 data={'upload': (test_upload_file, 'test_full_data.csv')},
                 headers={'Accept': 'application/html'}
@@ -84,7 +86,7 @@ class TestPredictionAPI(BaseTestClass):
             assert file_location
 
         resp = self.client.post(
-            '/predict/',
+            url_for('prediction.submit'),
             content_type='application/json',
             data=json.dumps({
                 "name": "TESTPREDICTION",
@@ -111,7 +113,7 @@ class TestPredictionAPI(BaseTestClass):
         # you can query the task status
         time.sleep(4)
         resp = self.client.get(
-            f'/predict/status/{task_code}',
+            url_for('prediction.status', task_code=task_code)
             #headers={'Authorization': self.token}
         )
         """
@@ -132,14 +134,14 @@ class TestPredictionAPI(BaseTestClass):
         while task_status not in ['SUCCESSFUL', 'FAILED']:
             time.sleep(2)
             resp = self.client.get(
-                f'/predict/status/{task_code}',
+                url_for('prediction.status', task_code=task_code),
                 # headers={'Authorization': self.token}
             )
             task_status = resp.json['status']
 
         # check the result
         resp = self.client.get(
-            f'/predict/result/{task_code}',
+            url_for('prediction.result', task_code=task_code),
             #headers={'Authorization': self.token}
         )
 

@@ -12,7 +12,7 @@
   <div class="login-box-body">
     <p class="login-box-msg">Please Log In</p>
 
-    <form action="{{ url_for('authentication.get_new_token') }}" method="post">
+    <form action="{{ url_for('authentication.login') }}" method="post">
       <div class="form-group has-feedback">
         <input type="email" class="form-control" placeholder="email" name="email">
         <span class="glyphicon glyphicon-envelope form-control-feedback"></span>

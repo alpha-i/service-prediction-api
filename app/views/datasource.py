@@ -2,16 +2,15 @@ import logging
 import os
 import uuid
 
-from flask import Blueprint, request, current_app, jsonify, g, abort, url_for
 import pandas as pd
+from flask import Blueprint, request, abort, current_app, url_for, g
 
 from app.core.auth import requires_access_token
 from app.core.content import ApiResponse
 from app.db import db
-from app.models.customer import User
 from app.models.datasource import DataSource, UploadTypes
 
-upload_blueprint = Blueprint('upload', __name__)
+datasource_blueprint = Blueprint('datasource', __name__)
 
 
 def allowed_extension(filename):
@@ -23,10 +22,46 @@ def generate_upload_code():
     return str(uuid.uuid4())
 
 
-@upload_blueprint.route('/', methods=['POST'])
+@datasource_blueprint.route('/')
 @requires_access_token
-def upload_file():
-    user = g.user  # type: User
+def list_datasources():
+    datasources = g.user.data_sources
+    response = ApiResponse(
+        content_type=request.accept_mimetypes.best,
+        context=datasources
+    )
+    return response()
+
+
+@datasource_blueprint.route('/current')
+@requires_access_token
+def current():
+    current_datasource = g.user.current_data_source
+    response = ApiResponse(
+        content_type=request.accept_mimetypes.best,
+        context=current_datasource,
+    )
+    return response()
+
+
+@datasource_blueprint.route('/<string:datasource_id>')
+@requires_access_token
+def get(datasource_id):
+    datasource = DataSource.get_by_upload_code(datasource_id)
+    if not datasource:
+        abort(404)
+
+    response = ApiResponse(
+        content_type=request.accept_mimetypes.best,
+        context=datasource
+    )
+
+    return response()
+
+@datasource_blueprint.route('/upload', methods=['POST'])
+@requires_access_token
+def upload():
+    user = g.user
     user_id = user.id
     uploaded_file = request.files['upload']
     if not allowed_extension(uploaded_file.filename):
