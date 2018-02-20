@@ -84,9 +84,10 @@ class TestPredictionAPI(BaseTestClass):
                 "features": "number_people",
                 "start_time": "2017-01-01T00:00:00",
                 "end_time": "2017-01-02T00:00:00"}),
-            headers={'Authorization': self.token}
+            headers={'Authorization': self.token,
+                     'Accept': 'application/html'}
         )
-        assert resp.status_code == 303
+        assert resp.status_code == 302
 
         """
         Response looks like:

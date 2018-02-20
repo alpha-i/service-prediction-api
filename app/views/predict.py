@@ -1,8 +1,9 @@
 import time
 
-from flask import Blueprint, jsonify, make_response, url_for, g
+from flask import Blueprint, jsonify, make_response, url_for, g, request, abort
 
 from app.core.auth import requires_access_token
+from app.core.content import ApiResponse
 from app.core.schemas import prediction_request_schema
 from app.core.utils import parse_request_data
 from app.models.prediction import PredictionTask, PredictionResult
@@ -17,7 +18,7 @@ predict_blueprint = Blueprint('predict', __name__)
 @predict_blueprint.route('/', methods=['POST'])
 @requires_access_token
 @parse_request_data
-def predict():
+def submit_prediction():
     """
     Submit a prediction task for a customer
     """
@@ -36,16 +37,19 @@ def predict():
         link_error=prediction_failure.s()
     )
 
-    response = jsonify({
-        'task_code': celery_prediction_task.id,
-        'task_status': url_for('.get_task_status', task_code=celery_prediction_task.id, _external=True),
-        'result': url_for('.get_task_result', task_code=celery_prediction_task.id, _external=True)
-    })
+    time.sleep(1)  # wait for task status creation
 
-    response.headers['Location'] = url_for('customer.dashboard')
-    time.sleep(1)
+    response = ApiResponse(
+        content_type=request.accept_mimetypes.best,
+        next=url_for('customer.dashboard'),  # TODO: changeme, it should point to the status
+        context={
+            'task_code': celery_prediction_task.id,
+            'task_status': url_for('.get_task_status', task_code=celery_prediction_task.id, _external=True),
+            'result': url_for('.get_task_result', task_code=celery_prediction_task.id, _external=True)
+        }
+    )
 
-    return response, 303
+    return response()
 
 
 @predict_blueprint.route('/status/<string:task_code>')
@@ -55,10 +59,15 @@ def get_task_status(task_code):
     Get the status of a particular task
     """
     prediction_task = PredictionTask.get_by_task_code(task_code)
-    if prediction_task:
-        return jsonify(prediction_task)
-    else:
-        return make_response("Task not found!"), 404
+    if not prediction_task:
+        return abort(404)
+
+    response = ApiResponse(
+        content_type=request.accept_mimetypes.best,
+        context=prediction_task,
+    )
+
+    return response()
 
 
 @predict_blueprint.route('/result/<string:task_code>')
@@ -69,10 +78,14 @@ def get_task_result(task_code):
     """
     prediction_result = PredictionResult.get_for_task(task_code)
     if not prediction_result:
-        return make_response("Result not found!"), 404
+        abort(404)
 
-    return jsonify({
+    response = ApiResponse(
+        content_type=request.accept_mimetypes.best,
+        context={
         'user_id': prediction_result.user_id,
         'task_code': prediction_result.task_code,
         'result': prediction_result.result,
     })
+
+    return response()
