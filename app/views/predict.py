@@ -88,18 +88,3 @@ def get_task_result(task_code):
     })
 
     return response()
-
-
-@predict_blueprint.route('/result/<string:task_code>/csv')
-@requires_access_token
-def get_task_result_csv(task_code):
-
-    prediction = PredictionTask.get_by_task_code(task_code)
-    result_dataframe = prediction_result_to_dataframe(prediction)
-
-    if isinstance(result_dataframe, pd.DataFrame):
-        return Response(result_dataframe.to_csv(header=False), mimetype='text/plain')
-    else:
-        abort(404)
-
-

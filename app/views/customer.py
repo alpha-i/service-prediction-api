@@ -1,6 +1,6 @@
 from datetime import timedelta, datetime
 
-from flask import Blueprint, jsonify, render_template, g, request, abort
+from flask import Blueprint, jsonify, render_template, g, request, abort, Response
 
 from app.core.auth import requires_access_token
 from app.core.interpreters import prediction_result_to_dataframe
@@ -80,6 +80,7 @@ def view_prediction(task_code):
     result_dataframe = prediction_result_to_dataframe(prediction)
     headers = list(result_dataframe.columns)
     context['result'] = {
+        'data': repr(result_dataframe.to_csv(header=False)),
         'header': ['timestamp'] + headers,
         'timestamp_range': [
             result_dataframe.index[0].strftime(DATETIME_FORMAT),
@@ -89,6 +90,20 @@ def view_prediction(task_code):
     }
 
     return render_template('prediction/view.html', **context)
+
+
+@customer_blueprint.route('/prediction/<string:task_code>/download')
+@requires_access_token
+def download_prediction_csv(task_code):
+    prediction = PredictionTask.get_by_task_code(task_code)
+    result_dataframe = prediction_result_to_dataframe(prediction)
+
+    return Response(
+        result_dataframe.to_csv(),
+        mimetype='text/csv',
+        headers={"Content-disposition": "attachment; filename={}.csv".format(
+            prediction.task_code
+        )})
 
 
 @customer_blueprint.route('/prediction')
