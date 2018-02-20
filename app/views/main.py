@@ -6,7 +6,7 @@ home_blueprint = Blueprint('main', __name__)
 
 
 @home_blueprint.route('/')
-def home():
+def login():
     if is_user_logged():
         return redirect(url_for('customer.dashboard'))
 

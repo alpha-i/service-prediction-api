@@ -8,11 +8,14 @@ from test.test_app import APP
 
 class BaseTestClass(TestCase):
     TESTING = True
+    USER_EMAIL = 'test_user@email.com'
+    PASSWORD = 'password'
 
     def create_app(self):
         return APP
 
     def setUp(self):
+        db.drop_all()
         db.create_all()
 
     def tearDown(self):
@@ -51,8 +54,8 @@ class BaseTestClass(TestCase):
             '/auth/register-user',
             content_type='application/json',
             data=json.dumps({
-                'email': 'test_user@email.com',
-                'password': 'password'
+                'email': self.USER_EMAIL,
+                'password': self.PASSWORD
             })
         )
         assert resp.status_code == 201
@@ -62,7 +65,7 @@ class BaseTestClass(TestCase):
         resp = self.client.post(
             '/auth/login',
             content_type='application/json',
-            data=json.dumps({'email': 'test_user@email.com', 'password': 'password'})
+            data=json.dumps({'email': self.USER_EMAIL, 'password': self.PASSWORD})
         )
         assert resp.status_code == 401
 
@@ -73,13 +76,11 @@ class BaseTestClass(TestCase):
         assert resp.status_code == 200
 
     def login(self):
-        self.register_company()
-        self.register_user()
         # we now require a token authorization for the endpoints
         resp = self.client.post(
             '/auth/login',
             content_type='application/json',
-            data=json.dumps({'email': 'test_user@email.com', 'password': 'password'}),
+            data=json.dumps({'email': self.USER_EMAIL, 'password': self.PASSWORD}),
             headers = {'Accept': 'application/json'}
         )
 

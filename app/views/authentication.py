@@ -49,12 +49,14 @@ def register_new_user():
     confirmation_token = generate_confirmation_token(user.email)
     logging.info("Confirmation token for %s: %s", user.email, confirmation_token)
 
-    return jsonify(
-        {
-            'email': user.email,
-            'userid': user.id,
-        }
-    ), 201
+    response = ApiResponse(
+        content_type=request.accept_mimetypes.best,
+        next=url_for('main.login'),
+        status_code=201,
+        context={'email': user.email, 'id': user.id}
+    )
+
+    return response()
 
 
 @authentication_blueprint.route('/register-company', methods=['POST'])
@@ -65,11 +67,21 @@ def register_new_company():
 
     assert company_name and domain, abort(400)
 
+    existing_company = Company.get_for_domain(domain)
+    if existing_company:
+        abort(400)
+
     company = Company(name=company_name, domain=domain)
     db.session.add(company)
     db.session.commit()
 
-    return jsonify(company), 201
+    response = ApiResponse(
+        content_type=request.accept_mimetypes.best,
+        context=company,
+        status_code=201
+    )
+
+    return response()
 
 
 @authentication_blueprint.route('/confirm/<string:token>')
@@ -84,7 +96,15 @@ def confirm_user_registration(token):
     user.confirmed = True
     db.session.add(user)
     db.session.commit()
-    return jsonify(user), 200
+
+    response = ApiResponse(
+        content_type=request.accept_mimetypes.best,
+        next=url_for('main.login'),
+        context=user,
+    )
+
+
+    return response()
 
 
 @authentication_blueprint.route('/login', methods=['POST'])
@@ -127,10 +147,9 @@ def get_new_token():
 @authentication_blueprint.route('/logout')
 @requires_access_token
 def logout():
-
     response = ApiResponse(
         content_type=request.accept_mimetypes.best,
-        next=url_for('main.home'),
+        next=url_for('main.login')
     )
     response.set_cookie('token', '', expires=0)
 

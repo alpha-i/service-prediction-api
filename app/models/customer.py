@@ -36,6 +36,14 @@ class Company(BaseModel):
             return None
         return company
 
+    @staticmethod
+    def get_for_domain(domain):
+        try:
+            company = Company.query.filter(Company.domain==domain).one()
+        except NoResultFound:
+            return None
+        return company
+
 
 
 class User(BaseModel):

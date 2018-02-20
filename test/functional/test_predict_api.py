@@ -14,6 +14,11 @@ class TestPredictionAPI(BaseTestClass):
     TESTING = True
     TEST_USER_ID = '99'
 
+    def setUp(self):
+        super(TestPredictionAPI, self).setUp()
+        self.register_company()
+        self.register_user()
+
     def test_upload_file_for_customer(self):
         self.login()
         with open(os.path.join(HERE, '../resources/test_data.csv'), 'rb') as test_upload_file:

@@ -2,22 +2,21 @@ import json
 
 from flask import url_for
 
+from app.core.auth import generate_confirmation_token
 from test.functional.base_test_class import BaseTestClass
 
 
 class TestContentNegotiation(BaseTestClass):
 
-    def setUp(self):
-        super(TestContentNegotiation, self).setUp()
+    def test_login_can_deal_with_json_as_default(self):
         self.register_company()
         self.register_user()
-
-    def test_login_can_deal_with_json(self):
         # json request
         resp = self.client.post(
             '/auth/login',
             content_type='application/json',
-            data=json.dumps({'email': 'test_user@email.com', 'password': 'password'})
+            data=json.dumps({'email': self.USER_EMAIL, 'password': self.PASSWORD}),
+            headers={'Accept': 'application/json'}
         )
 
         assert resp.content_type == 'application/json'
@@ -26,10 +25,12 @@ class TestContentNegotiation(BaseTestClass):
         assert resp.status_code == 200
 
     def test_login_can_negotiate(self):
+        self.register_company()
+        self.register_user()
         resp = self.client.post(
             '/auth/login',
             content_type='application/json',
-            data=json.dumps({'email': 'test_user@email.com', 'password': 'password'}),
+            data=json.dumps({'email': self.USER_EMAIL, 'password': self.PASSWORD}),
             headers={'Accept': 'application/html'}
 
         )
@@ -38,8 +39,102 @@ class TestContentNegotiation(BaseTestClass):
 
         resp = self.client.get(
             '/auth/logout',
-            content_type='application/json',  # TODO: changeme!
+            content_type='application/json',  # TODO: changeme! it should accept html requests
             headers={'Accept': 'application/html'}
         )
 
-        assert resp.headers.get('Location') == url_for('main.home', _external=True)
+        assert resp.headers.get('Location') == url_for('main.login', _external=True)
+
+    def test_logout_can_negotiate(self):
+        self.register_company()
+        self.register_user()
+        self.login()
+
+        resp = self.client.get('/auth/logout')
+
+        assert resp.status_code == 200
+        assert resp.headers.get('Set-Cookie') == 'token=; Expires=Thu, 01-Jan-1970 00:00:00 GMT; Path=/'
+
+        self.login()
+
+        resp = self.client.get('/auth/logout', headers={'Accept': 'application/html'})
+
+        assert resp.status_code == 302
+        assert resp.headers.get('Location') == url_for('main.login', _external=True)
+
+
+    def test_user_registration_can_render_json(self):
+        self.register_company()
+
+        resp = self.client.post(
+            '/auth/register-user',
+            content_type='application/json',
+            headers={'Accept': 'application/json'},
+            data=json.dumps({
+                'email': self.USER_EMAIL,
+                'password': self.PASSWORD
+            })
+        )
+
+        assert resp.status_code == 201
+
+    def test_user_registration_can_redirect(self):
+        self.register_company()
+
+        resp = self.client.post(
+            '/auth/register-user',
+            content_type='application/json',
+            headers={'Accept': 'application/html'},
+            data=json.dumps({
+                'email': self.USER_EMAIL,
+                'password': self.PASSWORD
+            })
+        )
+
+        assert resp.status_code == 302
+
+
+    def test_company_registration_can_negotiate(self):
+        resp = self.client.post(
+            '/auth/register-company',
+            content_type='application/json',
+            data=json.dumps(
+                {'name': 'ACME Inc',
+                 'domain': 'email.com'}
+            )
+
+        )
+        assert resp.status_code == 201
+
+        resp = self.client.post(
+            '/auth/register-company',
+            content_type='application/json',
+            headers={'Accept': 'application/html'},
+            data=json.dumps(
+                {'name': 'ACME Inc',
+                 'domain': 'email.it'}
+            )
+
+        )
+        assert resp.status_code == 201
+
+    def test_user_confirmation(self):
+        self.register_company()
+
+        # first register a user
+        resp = self.client.post(
+            '/auth/register-user',
+            content_type='application/json',
+            data=json.dumps({
+                'email': self.USER_EMAIL,
+                'password': self.PASSWORD
+            })
+        )
+        assert resp.status_code == 201
+        confirmation_token = generate_confirmation_token('test_user@email.com')
+
+        resp = self.client.get(
+            f'/auth/confirm/{confirmation_token}', headers={'Accept': 'application/html'}
+        )
+        assert resp.status_code == 302
+        assert resp.headers.get('Location') == url_for('main.login', _external=True)
