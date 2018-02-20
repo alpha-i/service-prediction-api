@@ -1,12 +1,14 @@
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 from flask import Blueprint, jsonify, render_template, g, request, abort
 
 from app.core.auth import requires_access_token
+from app.core.interpreters import prediction_result_to_dataframe
 from app.db import db
 from app.models.customer import UserConfiguration
 from app.models.datasource import DataSource
 from app.models.prediction import PredictionTask
+from config import MAXIMUM_DAYS_FORECAST, DATETIME_FORMAT
 
 customer_blueprint = Blueprint('customer', __name__)
 
@@ -48,14 +50,16 @@ def view_datasource():
 @customer_blueprint.route('/new-prediction')
 @requires_access_token
 def new_prediction():
-    min_date = g.user.current_data_source.end_date
-    max_date = min_date + timedelta(days=30)
+
+    datasource_min_date = g.user.current_data_source.end_date
+    max_date = datasource_min_date + timedelta(days=MAXIMUM_DAYS_FORECAST)
 
     context = {
         'user_id': g.user.id,
         'profile': {'email': g.user.email},
         'datasource': g.user.current_data_source,
-        'min_date': min_date,
+        'datasource_end_date': datasource_min_date,
+        'min_date': datasource_min_date + timedelta(days=1),
         'max_date': max_date
     }
 
@@ -73,41 +77,15 @@ def view_prediction(task_code):
         'prediction': prediction
     }
 
-    result = []
-    ordered_feature_list = []
-    if prediction.prediction_result:
-        for prediction_element in prediction.prediction_result.result:
-            features_in_prediction = {}
-            for prediction_data in prediction_element['prediction']:
-                features_in_prediction.update({
-                    prediction_data['feature']: {
-                        'lower': prediction_data['lower'],
-                        'value': prediction_data['value'],
-                        'upper': prediction_data['upper']
-                    }
-                })
-
-            ordered_feature_list = sorted(features_in_prediction.keys())
-
-            row = [
-                prediction_element['timestamp'],
-            ]
-
-            for feature in ordered_feature_list:
-                feature_data = features_in_prediction[feature]
-                row += [[feature_data['lower'], feature_data['value'], feature_data['upper']]]
-
-            result.append(row)
-
-    header = ['timestamp'] + ordered_feature_list
-    timestamp_list = [row[0] for row in result]
-    timestamp_range = [timestamp_list[0], timestamp_list[-1]] if len(timestamp_list) > 0 else []
-    context['formatted_result'] = {
-        'data': result,
-        'header': header,
-        'features': ordered_feature_list,
-        'timestamp_range': timestamp_range,
-        'prediction_status': prediction.statuses[-1].state
+    result_dataframe = prediction_result_to_dataframe(prediction)
+    headers = list(result_dataframe.columns)
+    context['result'] = {
+        'header': ['timestamp'] + headers,
+        'timestamp_range': [
+            result_dataframe.index[0].strftime(DATETIME_FORMAT),
+            result_dataframe.index[-1].strftime(DATETIME_FORMAT)
+        ],
+        'status': prediction.statuses[-1].state
     }
 
     return render_template('prediction/view.html', **context)

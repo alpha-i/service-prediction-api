@@ -1,9 +1,15 @@
 import abc
+from datetime import datetime, timedelta
+
 import pandas as pd
 import pytz
 from alphai_cromulon_oracle.oracle import OraclePrediction
 
 from alphai_delphi.oracle import PredictionResult
+from dateutil import parser
+
+from config import DATE_FORMAT
+from app.models.prediction import PredictionTask
 
 DEFAULT_TIME_RESOLUTION = '15T'
 
@@ -96,7 +102,7 @@ def datasource_interpreter(data_source):
         except:
             # already timezone aware
             pass
-        df.index = df.index.tz_convert(pytz.timezone('US/Pacific'))
+
         df = df.loc[~df.index.duplicated(keep='first')]  # Remove duplicate entries
 
         df['date'] = df.index
@@ -120,3 +126,34 @@ def make_dict_from_dataframe(df):
 
     return data_dict
 
+
+def prediction_result_to_dataframe(prediction):
+
+    start = prediction.prediction_request['start_time']
+    prediction_start = datetime.strptime(start, DATE_FORMAT).astimezone(pytz.utc)
+
+    end = prediction.prediction_request['end_time']
+    prediction_end = datetime.strptime(end, DATE_FORMAT).astimezone(pytz.utc) + timedelta(days=1)
+
+    result = []
+    if prediction.prediction_result:
+        for prediction_element in prediction.prediction_result.result:
+            result_timestamp = parser.parse(prediction_element['timestamp'])
+            is_result_in_prediction_time = prediction_start < result_timestamp <= prediction_end
+            if is_result_in_prediction_time:
+                result_row = {
+                    'timestamp': result_timestamp
+                }
+                for prediction_data in prediction_element['prediction']:
+                    result_row.update({
+                        prediction_data['feature']: "{:.2f};{:.2f};{:.2f}".format(
+                            prediction_data['lower'],
+                            prediction_data['value'],
+                            prediction_data['upper']
+                        )
+                    })
+                result.append(result_row)
+
+        return pd.DataFrame.from_dict(result).set_index('timestamp')
+
+    return None

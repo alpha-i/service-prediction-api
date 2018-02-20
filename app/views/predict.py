@@ -1,16 +1,15 @@
 import time
 
-from flask import Blueprint, jsonify, make_response, url_for, g, request, abort
+import pandas as pd
+from flask import Blueprint, jsonify, url_for, g, Response, request, abort
 
 from app.core.auth import requires_access_token
+from app.core.interpreters import prediction_result_to_dataframe
 from app.core.content import ApiResponse
 from app.core.schemas import prediction_request_schema
 from app.core.utils import parse_request_data
 from app.models.prediction import PredictionTask, PredictionResult
 from app.tasks.predict import predict_task, prediction_failure
-
-DATE_FORMAT = '%Y-%m-%d'
-DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 
 predict_blueprint = Blueprint('predict', __name__)
 
@@ -89,3 +88,18 @@ def get_task_result(task_code):
     })
 
     return response()
+
+
+@predict_blueprint.route('/result/<string:task_code>/csv')
+@requires_access_token
+def get_task_result_csv(task_code):
+
+    prediction = PredictionTask.get_by_task_code(task_code)
+    result_dataframe = prediction_result_to_dataframe(prediction)
+
+    if isinstance(result_dataframe, pd.DataFrame):
+        return Response(result_dataframe.to_csv(header=False), mimetype='text/plain')
+    else:
+        abort(404)
+
+

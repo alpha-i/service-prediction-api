@@ -16,3 +16,6 @@ HDF5_STORE_INDEX = 'data'
 MAXIMUM_DAYS_FORECAST = 30
 DEFAULT_EMAIL_FROM_ADDRESS = 'admin@alpha-i.co'
 MAILGUN_API_KEY = 'key-a1fef7ac15bfcc5d914b8f31f5ab137b'
+DATE_FORMAT = '%Y-%m-%d'
+DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
+DATETIME_TZ_FORMAT = '%Y-%m-%dT%H:%M:%S%z'
