@@ -7,34 +7,28 @@
 {%- endmacro %}
 
 {% macro print_datasource_info(datasource) -%}
-    <div class="row">
-        <div class="col-xs-3"><h4>Code</h4></div>
-        <div class="col-xs-9">{{ datasource.upload_code }}</div>
-    </div>
-    <div class="row">
-        <div class="col-xs-3"><h4>Created</h4></div>
-        <div class="col-xs-9">{{ format_datetime(datasource.created_at) }}</div>
-    </div>
-    <div class="row">
-        <div class="col-xs-3"><h4>Type</h4></div>
-        <div class="col-xs-9">{{ datasource.type.value|capitalize }}</div>
-    </div>
-    <div class="row">
-        <div class="col-xs-3"><h4>Location</h4></div>
-        <div class="col-xs-9">{{ datasource.location }}</div>
-    </div>
-    <div class="row">
-        <div class="col-xs-3"><h4>File</h4></div>
-        <div class="col-xs-9">{{ datasource.filename }}</div>
-    </div>
-    <div class="row">
-        <div class="col-xs-3"><h4>Start Date</h4></div>
-        <div class="col-xs-9">{{ datasource.start_date }}</div>
-    </div>
-    <div class="row">
-        <div class="col-xs-3"><h4>End Date</h4></div>
-        <div class="col-xs-9">{{ datasource.end_date }}</div>
-    </div>
+    <dl class="dl-horizontal">
+        <dt>Code</dt>
+        <dd>{{ datasource.upload_code }}</dd>
+
+        <dt>Created</dt>
+        <dd>{{ format_datetime(datasource.created_at) }}</dd>
+
+        <dt>Type</dt>
+        <dd>{{ datasource.type.value|capitalize }}</dd>
+
+        <dt>Location</dt>
+        <dd>{{ datasource.location }}</dd>
+
+        <dt>File</dt>
+        <dd>{{ datasource.filename }}</dd>
+
+        <dt>Start Date</dt>
+        <dd>{{ datasource.start_date }}</dd>
+
+        <dt>End Date</dt>
+        <dd>{{ datasource.end_date }}</dd>
+    </dl>
 {%- endmacro %}
 
 

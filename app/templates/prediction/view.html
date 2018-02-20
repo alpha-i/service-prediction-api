@@ -20,26 +20,18 @@
             <div class="box box-success">
                 <h3 class="box-header with-border">Prediction</h3>
                 <div class="box-body">
-                    <div class="row">
-                        <div class="col-xs-3"><h4>Name:</h4></div>
-                        <div class="col-xs-9">{{ prediction.name }}</div>
-                    </div>
-                    <div class="row">
-                        <div class="col-xs-3"><h4>Created:</h4></div>
-                        <div class="col-xs-9">{{ macros.format_datetime(prediction.created_at) }}</div>
-                    </div>
-                    <div class="row">
-                        <div class="col-xs-3"><h4>Start Time:</h4></div>
-                        <div class="col-xs-9">{{ prediction.prediction_request['start_time'] }}</div>
-                    </div>
-                    <div class="row">
-                        <div class="col-xs-3"><h4>End Time:</h4></div>
-                        <div class="col-xs-9">{{ prediction.prediction_request['end_time'] }}</div>
-                    </div>
-                    <div class="row">
-                        <div class="col-xs-3"><h4>Feature List:</h4></div>
-                        <div class="col-xs-9">{{ prediction.prediction_request['features'] }}</div>
-                    </div>
+                    <dl class="dl-horizontal">
+                        <dt>Name:</dt>
+                        <dd>{{ prediction.name }}</dd>
+                        <dt>Created:</dt>
+                        <dd>{{ macros.format_datetime(prediction.created_at) }}</dd>
+                        <dt>Start Time:</dt>
+                        <dd>{{ prediction.prediction_request['start_time'] }}</dd>
+                        <dt>End Time:</dt>
+                        <dd>{{ prediction.prediction_request['end_time'] }}</dd>
+                        <dt>Feature List:</dt>
+                        <dd>{{ prediction.prediction_request['features'] }}</dd>
+                    </dl>
                 </div>
             </div>
         </div>
@@ -85,19 +77,24 @@
                 <div class="box-body">
                 {% if result.status == 'SUCCESSFUL' %}
                     <div class="row">
-                        <div class="col-md-3">
-                            <h4>Data</h4>
+                        <dl class="col-md-12">
+                            <dl class="dl-horizontal">
+                                <dt>Feature Predicted</dt>
+                                <dd>{{ result.features }}</dd>
+                                <dt>Date Range</dt>
+                                <dd>{{ result.timestamp_range }}</dd>
+                                <dt>Number of Forecasts</dt>
+                                <dd>{{ result|length}}</dd>
+                            </dl>
                             <div class="row">
-                                <div class="col-xs-4"><strong>Feature Predicted</strong></div>
-                                <div class="col-xs-8">{{ result.features }}</div>
-                            </div>
-                            <div class="row">
-                                <div class="col-xs-4"><strong>Date Range</strong></div>
-                                <div class="col-xs-8">{{ result.timestamp_range }}</div>
-                            </div>
-                            <div class="row">
-                                <div class="col-xs-4"><strong># Forecasts</strong></div>
-                                <div class="col-xs-8">{{ result|length}}</div>
+                                <div class="col-xs-12">
+                                    <strong>
+                                        <a href="{{ url_for('customer.download_prediction_csv', task_code=prediction.task_code) }}" target="_blank">
+                                            <i class="fa fa-download"></i>
+                                            Download the forecasts
+                                        </a>
+                                    </strong>
+                                </div>
                             </div>
                         </div>
                         <div class="col-md-12">
@@ -105,7 +102,7 @@
                             <script type="text/javascript">
                                 g = new Dygraph(
                                     document.getElementById("prediction_graph"),
-                                    '{{ url_for('predict.get_task_result_csv', task_code=prediction.task_code, _external=True) }}',
+                                    "{{ result.data|safe }}",
                                     {
                                         labels: {{ result.header|safe }},
                                         customBars: true,

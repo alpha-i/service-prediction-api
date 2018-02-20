@@ -1,0 +1,7 @@
+body {
+    font-size: 16px;
+}
+
+.dl-horizontal dt {
+    text-align: left!important;
+}
