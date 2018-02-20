@@ -5,7 +5,7 @@ from flask import Blueprint, jsonify, render_template, g, request, abort, Respon
 from app.core.auth import requires_access_token
 from app.core.interpreters import prediction_result_to_dataframe
 from app.db import db
-from app.models.customer import UserConfiguration
+from app.models.configuration import CompanyConfiguration
 from app.models.datasource import DataSource
 from app.models.prediction import PredictionTask
 from config import MAXIMUM_DAYS_FORECAST, DATETIME_FORMAT
@@ -149,7 +149,7 @@ def update_customer_configuration():
     new_configuration = request.json  # TODO: needs to implement a schema!
     configuration_entity = user.configuration
     if not configuration_entity:
-        configuration_entity = UserConfiguration(
+        configuration_entity = CompanyConfiguration(
             user_id=user.id
         )
     configuration_entity.configuration = new_configuration
