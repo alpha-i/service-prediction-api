@@ -26,9 +26,9 @@ class TestPredictionAPI(BaseTestClass):
                 '/upload',
                 content_type='multipart/form-data',
                 data={'upload': (test_upload_file, 'test_data.csv')},
-                #headers={'Authorization': self.token}
+                headers={'Accept': 'application/html'}
             )
-            assert resp.status_code == 303  # in order to redirect to the dashboard
+            assert resp.status_code == 302  # in order to redirect to the dashboard
             assert resp.json
 
             """
@@ -48,17 +48,24 @@ class TestPredictionAPI(BaseTestClass):
             assert resp.json['start_date'] == '2015-08-15T00:00:11'
             assert resp.json['end_date'] == '2015-08-15T03:21:14'
 
+            first_file_location = resp.json['location']
+
         with open(os.path.join(HERE, '../resources/additional_test_data.csv'), 'rb') as updated_data_file:
             resp = self.client.post(
                 '/upload',
                 content_type='multipart/form-data',
                 data={'upload': (updated_data_file, 'test_data.csv')},
-                # headers={'Authorization': self.token}
+                headers={'Accept': 'application/html'}
             )
-            assert resp.status_code == 303  # in order to redirect to the dashboard
+            assert resp.status_code == 302  # in order to redirect to the dashboard
             assert resp.json
             assert resp.json['start_date'] == '2015-08-15T00:00:11'
             assert resp.json['end_date'] == '2017-08-15T03:21:14'
+
+            second_file_location = resp.json['location']
+
+        os.remove(first_file_location)
+        os.remove(second_file_location)
 
     def test_predict_on_a_file(self):
         self.login()
@@ -68,7 +75,7 @@ class TestPredictionAPI(BaseTestClass):
                 '/upload',
                 content_type='multipart/form-data',
                 data={'upload': (test_upload_file, 'test_full_data.csv')},
-                #headers={'Authorization': self.token}
+                headers={'Accept': 'application/html'}
             )
 
             upload_code = resp.json['upload_code']
@@ -168,4 +175,4 @@ class TestPredictionAPI(BaseTestClass):
         assert resp.status_code == 200
         assert resp.json['user_id'] == 1
         assert resp.json['result']
-        os.unlink(file_location)
+        os.remove(file_location)
