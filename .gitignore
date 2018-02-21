@@ -188,3 +188,5 @@ env/__pycache__/
 /src
 
 local.env
+staging.env
+production.env

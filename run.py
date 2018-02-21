@@ -6,4 +6,4 @@ app = create_app('config')
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
-    app.run(debug=True, host='0.0.0.0')
+    app.run(debug=True, host=app.config['HOST'], port=app.config['PORT'])
