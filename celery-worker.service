@@ -1,0 +1,17 @@
+[Unit]
+Description=Celery worker
+After=syslog.target
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/aps/service-prediction-api
+ExecStartPre=source activate aps
+Environment="PYTHONOPTIMIZE=1"
+Environment="APP_CONFIG=staging.env"
+ExecStart=celery -A celery_worker.celery worker -E --loglevel=debug
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
