@@ -20,13 +20,14 @@ class Actions(Enum):
 
 
 class Company(BaseModel):
-    INCLUDE_ATTRIBUTES = ('current_configuration',)
+    INCLUDE_ATTRIBUTES = ('current_configuration', 'data_sources')
 
     name = db.Column(db.String, nullable=False)
     logo = db.Column(db.String)
     domain = db.Column(db.String, nullable=False)
     profile = db.Column(db.JSON)
     configuration = relationship('CompanyConfiguration', back_populates='company')
+    data_sources = relationship('DataSource', back_populates='company')
     users = relationship('User', back_populates='company')
 
     @staticmethod
@@ -51,6 +52,11 @@ class Company(BaseModel):
     def current_configuration(self):
         if len(self.configuration):
             return self.configuration[-1]
+
+    @property
+    def current_data_source(self):
+        if len(self.data_sources):
+            return self.data_sources[-1]
 
 
 class User(BaseModel):
@@ -81,8 +87,8 @@ class User(BaseModel):
 
     @property
     def current_data_source(self):
-        if len(self.data_sources):
-            return self.data_sources[-1]
+        if len(self.company.data_sources):
+            return self.company.data_sources[-1]
         return None
 
     @staticmethod
