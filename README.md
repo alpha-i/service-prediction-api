@@ -27,6 +27,8 @@ and a test celery worker. This needs to change in the future (by abstracting out
 
 `flask db upgrade`
 
+`export APP_CONFIG=local.env`
+
 `honcho start`
 
 The API server is now running on localhost:5000. Follow the tests for a little tour of the current functionality.

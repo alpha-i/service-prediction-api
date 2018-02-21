@@ -1,21 +1,23 @@
-# TODO: Change this config to get parameters from the environment
 import os
+from dotenv import load_dotenv
 
-DEBUG = True
-PORT = 5000
-HOST = "0.0.0.0"
-CELERY_BROKER_URL = 'redis://localhost:6379/'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/'
-SQLALCHEMY_TRACK_MODIFICATIONS = False
-SQLALCHEMY_DATABASE_URI = 'postgresql://localhost:5432/database'
-UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads')  # changeme!
-ALLOWED_EXTENSIONS = {'csv'}
-SECRET_KEY = 'DcNKg9UgXG14kBw2BQYgfVrkq6ZICr7S'
-TOKEN_EXPIRATION = 3600  # seconds
-HDF5_STORE_INDEX = 'data'
-MAXIMUM_DAYS_FORECAST = 30
-DEFAULT_EMAIL_FROM_ADDRESS = 'admin@alpha-i.co'
-MAILGUN_API_KEY = 'key-a1fef7ac15bfcc5d914b8f31f5ab137b'
-DATE_FORMAT = '%Y-%m-%d'
-DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
-DATETIME_TZ_FORMAT = '%Y-%m-%dT%H:%M:%S%z'
+load_dotenv(os.getenv('APP_CONFIG'))
+
+DEBUG = eval(os.getenv('DEBUG'))
+PORT = os.getenv('PORT')
+HOST = os.getenv('HOST')
+CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL')
+CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND')
+SQLALCHEMY_TRACK_MODIFICATIONS = os.getenv('SQLALCHEMY_DATABASE_URI')
+SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI')
+UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER')
+ALLOWED_EXTENSIONS = eval(os.getenv('ALLOWED_EXTENSIONS'))
+SECRET_KEY = os.getenv('SECRET_KEY')
+TOKEN_EXPIRATION = int(os.getenv('TOKEN_EXPIRATION'))
+HDF5_STORE_INDEX = os.getenv('HDF5_STORE_INDEX')
+MAXIMUM_DAYS_FORECAST = int(os.getenv('MAXIMUM_DAYS_FORECAST'))
+DEFAULT_EMAIL_FROM_ADDRESS = os.getenv('DEFAULT_EMAIL_FROM_ADDRESS')
+MAILGUN_API_KEY = os.getenv('MAILGUN_API_KEY')
+DATE_FORMAT = os.getenv('DATE_FORMAT')
+DATETIME_FORMAT = os.getenv('DATETIME_FORMAT')
+DATETIME_TZ_FORMAT = os.getenv('DATETIME_TZ_FORMAT')
