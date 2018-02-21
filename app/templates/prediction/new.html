@@ -39,16 +39,7 @@
                                 <input required type="text" class="form-control" name="name">
                             </div>
                         </div>
-                        <div class="form-group">
-                            <label for="features">Select features</label>
-                            <select name="features"  id="features"  class="selectpicker dropdown-primary" data-live-search="true" required>
-                                <option value="feature-1">feature-1</option>
-                                <option value="feature-2">feature-2</option>
-                                <option value="feature-3">feature-3</option>
-                                <option value="feature-4">feature-4</option>
-                                <option value="feature-5">feature-5</option>
-                            </select>
-                        </div>
+                      <input type="hidden" name="features" value="{{ target_feature }}" />
                         <div class="form-group">
                             <label for="start_time">Start time</label>
                             <div class="input-group">
