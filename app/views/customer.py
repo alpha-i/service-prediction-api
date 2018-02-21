@@ -108,6 +108,18 @@ def download_prediction_csv(task_code):
         )})
 
 
+@customer_blueprint.route('/use_case')
+@requires_access_token
+def view_company_use_case():
+
+    context = {
+        'user_id': g.user.id,
+        'profile': {'email': g.user.email}
+    }
+
+    return render_template('company/use_case.html', **context)
+
+
 @customer_blueprint.route('/prediction')
 @requires_access_token
 def list_predictions():
