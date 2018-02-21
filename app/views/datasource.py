@@ -62,7 +62,6 @@ def get(datasource_id):
 @requires_access_token
 def upload():
     user = g.user
-    user_id = user.id
     uploaded_file = request.files['upload']
     if not allowed_extension(uploaded_file.filename):
         abort(400)
@@ -82,7 +81,8 @@ def upload():
     data_frame.to_hdf(saved_path, key=current_app.config['HDF5_STORE_INDEX'])
 
     upload = DataSource(
-        user_id=user_id,
+        user_id=user.id,
+        company_id=user.company_id,
         upload_code=upload_code,
         type=UploadTypes.FILESYSTEM,
         location=saved_path,
