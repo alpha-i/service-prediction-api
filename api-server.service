@@ -8,8 +8,7 @@ User=ubuntu
 Group=ubuntu
 WorkingDirectory=/home/ubuntu/aps/service-prediction-api
 Environment="APP_CONFIG=staging.env"
-ExecStartPre=source activate aps
-ExecStart=uwsgi uwsgi.ini
+ExecStart=/opt/anaconda/envs/aps/bin/gunicorn --bind unix:/tmp/gunicorn.sock application:app
 Restart=always
 
 [Install]
