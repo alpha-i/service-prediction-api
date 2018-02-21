@@ -80,9 +80,9 @@
                         <dl class="col-md-12">
                             <dl class="dl-horizontal">
                                 <dt>Feature Predicted</dt>
-                                <dd>{{ result.features }}</dd>
+                                <dd>{{ result.target_feature }}</dd>
                                 <dt>Date Range</dt>
-                                <dd>{{ result.timestamp_range }}</dd>
+                                <dd>[ {{ result.timestamp_range[0] }} - {{ result.timestamp_range[1] }} ]</dd>
                                 <dt>Number of Forecasts</dt>
                                 <dd>{{ result|length}}</dd>
                             </dl>

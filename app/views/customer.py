@@ -1,4 +1,4 @@
-from datetime import timedelta, datetime
+from datetime import timedelta
 
 from flask import Blueprint, jsonify, render_template, g, request, abort, Response
 
@@ -8,7 +8,7 @@ from app.db import db
 from app.models.configuration import CompanyConfiguration
 from app.models.datasource import DataSource
 from app.models.prediction import PredictionTask
-from config import MAXIMUM_DAYS_FORECAST, DATETIME_FORMAT
+from config import MAXIMUM_DAYS_FORECAST, DATETIME_FORMAT, TARGET_FEATURE
 
 customer_blueprint = Blueprint('customer', __name__)
 
@@ -59,6 +59,7 @@ def new_prediction():
         'profile': {'email': g.user.email},
         'datasource': g.user.current_data_source,
         'datasource_end_date': datasource_min_date,
+        'target_feature': TARGET_FEATURE,
         'min_date': datasource_min_date + timedelta(days=1),
         'max_date': max_date
     }
@@ -82,6 +83,7 @@ def view_prediction(task_code):
     context['result'] = {
         'data': repr(result_dataframe.to_csv(header=False)),
         'header': ['timestamp'] + headers,
+        'target_feature': TARGET_FEATURE,
         'timestamp_range': [
             result_dataframe.index[0].strftime(DATETIME_FORMAT),
             result_dataframe.index[-1].strftime(DATETIME_FORMAT)
