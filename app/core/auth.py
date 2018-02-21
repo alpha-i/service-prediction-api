@@ -31,8 +31,8 @@ def is_user_logged():
 
     :return customer|False:
     """
-    if 'Authorization' in request.headers:
-        token = request.headers['Authorization']
+    if 'X-Token' in request.headers:
+        token = request.headers['X-Token']
     elif 'token' in request.cookies:
         token = request.cookies.get('token')
     elif request.content_type == 'application/json':
