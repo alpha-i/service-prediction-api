@@ -1,0 +1,15 @@
+  <aside class="main-sidebar">
+    <!-- sidebar: style can be found in sidebar.less -->
+    <section class="sidebar">
+      <!-- Sidebar Menu -->
+      <ul class="sidebar-menu" data-widget="tree">
+        <li class="header">HEADER</li>
+        <!-- Optionally, you can add icons to the links -->
+        <li><a href="{{ url_for('customer.dashboard') }}"><i class="fa fa-dashboard"></i> <span>Dashboard</span></a></li>
+        <li><a href="{{ url_for('customer.view_datasource') }}"><i class="fa fa-database"></i> <span>Historical Data</span></a></li>
+        <li><a href="{{ url_for('customer.list_predictions') }}"><i class="fa fa-rocket"></i> <span>Predictions</span></a></li>
+      </ul>
+      <!-- /.sidebar-menu -->
+    </section>
+    <!-- /.sidebar -->
+  </aside>

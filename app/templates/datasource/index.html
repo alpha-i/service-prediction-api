@@ -1,0 +1,119 @@
+{% extends "layout.html" %}
+
+{% set page_title %}Update Datasource{% endset %}
+
+{% block page_header %}
+    <h1>
+        Historical Data
+        <small>An overview of your historical data</small>
+    </h1>
+{% endblock %}
+{% block breadcrumb_items %}
+    {{ super() }}
+    <li><a class="active"><i class="fa fa-upload"></i> Upload Datasource</a></li>
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="box box-primary">
+                <div class="box box-success">
+                    <h3 class="box-header with-border">Overview</h3>
+                    <div class="box-body">
+
+                        {% if current_datasource %}
+                            {{ macros.print_datasource_info(current_datasource) }}
+                        {% else %}
+                            <div class="callout callout-warning">
+                                <h4>No datasource set</h4>
+                                <p>To use our prediction engine you need a datasource</p>
+                            </div>
+                        {% endif %}
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="box">
+                <h3 class="box-header with-border">Update your historical data</h3>
+                <div class="box-body">
+                    <form action="{{ url_for('datasource.upload') }}" method="post" enctype="multipart/form-data" class="form-inline">
+                        <div class="form-group">
+                            <div class="col-xs-10">
+                                <div class="input-group">
+                                    <input type="text" id="file_path" class="form-control" placeholder="Browse...">
+                                    <span class="input-group-btn">
+                                    <button class="btn btn-default" type="button" id="file_browser">
+                                    <i class="fa fa-search"></i> Browse</button>
+                                </span>
+
+                                </div>
+                                <input type="file" class="hidden" name="upload" id="upload">
+                            </div>
+                            <div class="col-xs-2">
+                                <input class="btn btn-primary" type="submit" value="Upload file" name="submit">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+     <div class="row">
+        <div class="col-xs-12">
+            <div class="box">
+                <h3 class="box-header with-border">Upload log</h3>
+                <div class="box-body">
+
+                    <table class="table table-bordered">
+                        <tbody>
+                            <tr>
+                                <th>filename</th>
+                                <th>type</th>
+                                <th>start date</th>
+                                <th>end date</th>
+                                <th>last updated</th>
+                                <th></th>
+                            </tr>
+                          {%  for datasource in datasource_history %}
+                            <tr>
+                                <td>{{ datasource.filename }}</td>
+                                <td>{{ datasource.type.value }}</td>
+                                <td>{{ datasource.start_date }}</td>
+                                <td>{{ datasource.end_date }}</td>
+                                <td>{{ macros.format_datetime(datasource.last_update) }}</td>
+                                <td><a href="{{ url_for('datasource.get', datasource_id=datasource.upload_code) }}">
+                                    <i class="fa fa-list"></i></a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+
+
+{% block footer_js %}
+    {{ super() }}
+    <script>
+        $('#file_browser').click(function (e) {
+            e.preventDefault();
+            $('#upload').click();
+        });
+
+        $('#upload').change(function () {
+            $('#file_path').val($(this).val());
+        });
+
+        $('#file_path').click(function () {
+            $('#file_browser').click();
+        });
+    </script>
+{% endblock %}

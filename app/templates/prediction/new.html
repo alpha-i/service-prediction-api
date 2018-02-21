@@ -1,0 +1,67 @@
+{% extends "layout.html" %}
+
+{% set page_title %}New Prediction{% endset %}
+
+{% block page_header %}
+  <h1>
+    New Prediction
+    <small>Small info about creating a new prediction</small>
+  </h1>
+{% endblock %}
+
+{% block breadcrumb_items %}
+    {{ super() }}
+    <li><a href="{{ url_for('customer.list_predictions') }}"><i class="fa fa-list"></i>Prediction List</a></li>
+    <li><a class="active">New Prediction</a></li>
+{% endblock %}
+
+{% block content %}
+ <div class="row">
+        <div class="col-md-12">
+            <div class="box box-primary">
+                <div class="box box-success">
+                    <h3 class="box-header with-border">Current Data Source</h3>
+                    <div class="box-body">
+                       {{ macros.print_datasource_info(datasource) }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+         <div class="col-md-12">
+            <div class="box box-primary">
+                <h3 class="box-header with-border">Submit new prediction</h3>
+                <div class="box-body">
+                    <form class="form-inline" method="post" action="{{ url_for('prediction.submit') }}">
+                         <div class="form-group">
+                            <label for="start_time">Name</label>
+                            <div class="input-group">
+                                <input required type="text" class="form-control" name="name">
+                            </div>
+                        </div>
+                      <input type="hidden" name="features" value="{{ target_feature }}" />
+                        <div class="form-group">
+                            <label for="start_time">Start time</label>
+                            <div class="input-group">
+                                <input readonly="true" required type="text" class="form-control" name="start_time" value="{{ macros.format_date(datasource_end_date) }}">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="end_time">End time</label>
+                            <div class="input-group date" data-provide="datepicker" data-date-format="yyyy-mm-dd" required
+                                 data-date-start-date="{{ macros.format_date(min_date) }}" data-date-end-date="{{ macros.format_date(max_date) }}">
+                                <input type="text" class="form-control" name="end_time" id="end_time">
+                                <span class="input-group-addon">
+                                    <i class="glyphicon glyphicon-th"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <button type="submit" value="submit" class="btn btn-primary">Submit</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

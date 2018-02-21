@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+
+{% set page_title %}List Prediction{% endset %}
+
+{% block page_header %}
+    <h1>
+        Your Predictions
+        <small>Here's the list of predictions</small>
+    </h1>
+{% endblock %}
+{% block breadcrumb_items %}
+    {{ super() }}
+    <li><a class="active"><i class="fa fa-list"></i>Prediction List</a></li>
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="box box-success">
+                <h3 class="box-header with-border">Predictions</h3>
+                <div class="box-body">
+                    <div class="mb-3">
+                        <a class="btn btn-primary" href="{{ url_for('customer.new_prediction') }}"><i
+                                class="fa fa-plus"></i> new prediction</a>
+                    </div>
+                    {{ macros.print_task_list(task_list) }}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

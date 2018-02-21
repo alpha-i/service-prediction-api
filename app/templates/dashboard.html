@@ -1,0 +1,69 @@
+{% extends "layout.html" %}
+
+{% block page_title %}Dashboard{% endblock %}
+
+{% block page_header %}
+  <h1>
+    Overview
+    <small>Here's the overview of your status</small>
+  </h1>
+{% endblock %}
+{% block breadcrumb_items %}
+    {{ super() }}
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="box box-primary">
+                <h3 class="box-header with-border">Data source</h3>
+                <div class="box-body">
+                    {% if datasource %}
+                    <table class="table table-bordered">
+                        <tbody>
+                        <tr>
+                            <th>filename</th>
+                            <th>type</th>
+                            <th>start date</th>
+                            <th>end date</th>
+                            <th>last updated</th>
+                            <th>action</th>
+                        </tr>
+                        <tr>
+                            <td>{{ datasource.filename }}</td>
+                            <td>{{ datasource.type.value|capitalize }}</td>
+                            <td>{{ datasource.start_date }}</td>
+                            <td>{{ datasource.end_date }}</td>
+                            <td>{{ macros.format_datetime(datasource.last_update) }}</td>
+                            <td><a href="{{ url_for('customer.view_datasource') }}"><span class="fa fa-file"></span></a></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    {% else %}
+                      <div class="callout callout-warning">
+                          <h4>No datasource set</h4>
+                          <p>To use our prediction engine you need a datasource</p>
+                        </div>
+                       <p><a class="btn btn-primary nounderline" href="{{ url_for('customer.view_datasource') }}"><span class="fa fa-upload"></span> update</a></p>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="box box-success">
+                <h3 class="box-header with-border">Predictions</h3>
+                <div class="box-body">
+                    <div class="mb-3">
+                        <a class="btn btn-primary" href="{{ url_for('customer.new_prediction') }}"><i class="fa fa-plus"></i> new prediction</a>
+                    </div>
+                    {{ macros.print_task_list(task_list) }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+{% endblock %}

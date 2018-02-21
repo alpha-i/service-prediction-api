@@ -184,4 +184,9 @@ venv.bak/
 .mypy_cache/
 .idea/*
 env/__pycache__/
-static/
+.pytest_cache/
+/src
+
+local.env
+staging.env
+production.env

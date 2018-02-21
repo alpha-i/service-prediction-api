@@ -1,0 +1,145 @@
+{% extends "layout.html" %}
+{% set page_title %}List Prediction{% endset %}
+
+{% block page_header %}
+    <h1>
+        Your Prediction: {{ prediction.name }}
+        <small></small>
+    </h1>
+{% endblock %}
+{% block breadcrumb_items %}
+    {{ super() }}
+    <li><a href="{{ url_for('customer.list_predictions') }}"><i class="fa fa-list"></i>Prediction List</a></li>
+    <li><a class="active"><i class="fa fa-rocket"></i>Prediction</a></li>
+
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-md-6">
+            <div class="box box-success">
+                <h3 class="box-header with-border">Prediction</h3>
+                <div class="box-body">
+                    <dl class="dl-horizontal">
+                        <dt>Name:</dt>
+                        <dd>{{ prediction.name }}</dd>
+                        <dt>Created:</dt>
+                        <dd>{{ macros.format_datetime(prediction.created_at) }}</dd>
+                        <dt>Start Time:</dt>
+                        <dd>{{ prediction.prediction_request['start_time'] }}</dd>
+                        <dt>End Time:</dt>
+                        <dd>{{ prediction.prediction_request['end_time'] }}</dd>
+                        <dt>Feature List:</dt>
+                        <dd>{{ prediction.prediction_request['features'] }}</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="box box-success">
+                <h3 class="box-header with-border">Used Data Source</h3>
+                <div class="box-body">
+                    {{ macros.print_datasource_info(prediction.datasource) }}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="box">
+                <h3 class="box-header with-border">Statuses</h3>
+                <div class="box-body">
+                    <table class="table table-bordered">
+                        <tbody>
+                        <tr>
+                            <th>created</th>
+                            <th>status</th>
+                            <th>message</th>
+                        </tr>
+
+                        {% for status in prediction.statuses %}
+                            <tr>
+                                <td>{{ macros.format_datetime(status.created_at) }}</td>
+                                <td>{{ status.state }}</td>
+                                <td>{{ status.message }}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="box">
+                <h3 class="box-header with-border">Result</h3>
+                <div class="box-body">
+                {% if result.status == 'SUCCESSFUL' %}
+                    <div class="row">
+                        <dl class="col-md-12">
+                            <dl class="dl-horizontal">
+                                <dt>Feature Predicted</dt>
+                                <dd>{{ result.target_feature }}</dd>
+                                <dt>Date Range</dt>
+                                <dd>[ {{ result.timestamp_range[0] }} - {{ result.timestamp_range[1] }} ]</dd>
+                                <dt>Number of Forecasts</dt>
+                                <dd>{{ result|length}}</dd>
+                            </dl>
+                            <div class="row">
+                                <div class="col-xs-12">
+                                    <strong>
+                                        <a href="{{ url_for('customer.download_prediction_csv', task_code=prediction.task_code) }}" target="_blank">
+                                            <i class="fa fa-download"></i>
+                                            Download the forecasts
+                                        </a>
+                                    </strong>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div id="prediction_graph" style="width:100%"></div>
+                            <script type="text/javascript">
+                                g = new Dygraph(
+                                    document.getElementById("prediction_graph"),
+                                    "{{ result.data|safe }}",
+                                    {
+                                        labels: {{ result.header|safe }},
+                                        customBars: true,
+                                        includeZero: true,
+                                        title: 'Forecasts for {{ prediction.name }}',
+                                        xlabel: 'Time',
+                                        ylabel: 'number of people'
+
+                                    }
+                                );
+                            </script>
+                        </div>
+                    </div>
+                        {% else %}
+                    <div class="row">
+                            <div class="col-md-12">
+                                {% if prediction_status in ['QUEUED', 'STARTED'] %}
+                                    <div class="callout callout-info">
+                                        <h4>Processing</h4>
+                                        <p>
+                                            Current status of the prediction is {{ prediction_status }}
+                                            &nbsp;
+                                            <a class="btn btn-primary" href=""><i class="fa fa-refresh"></i></a>
+                                        </p>
+                                    </div>
+                                {% elif prediction_status == 'FAILED' %}
+                                    <div class="callout callout-danger">
+                                        <h4>Failed</h4>
+                                        <p>This prediction has failed so no result displayed</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                    </div>
+            {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
