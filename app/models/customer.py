@@ -115,3 +115,17 @@ class CustomerAction(BaseModel):
 class UserProfile(BaseModel):
     user_id = db.Column(db.ForeignKey('user.id'), nullable=False)
     user = relationship('User')
+
+
+class CompanyConfiguration(BaseModel):
+    company_id = db.Column(db.ForeignKey('company.id'), nullable=False)
+    company = relationship('Company')
+    configuration = db.Column(db.JSON)
+
+    @staticmethod
+    def get_by_id(id):
+        try:
+            configuration = CompanyConfiguration.query.filter(CompanyConfiguration.id == id).one()
+        except NoResultFound:
+            return None
+        return configuration
