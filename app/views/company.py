@@ -4,7 +4,7 @@ from app.core.auth import requires_access_token
 from app.core.content import ApiResponse
 from app.core.utils import parse_request_data, json_reload
 from app.db import db
-from app.models.configuration import CompanyConfiguration
+from app.models.customer import CompanyConfiguration
 from app.models.customer import Company
 
 company_blueprint = Blueprint('company', __name__)

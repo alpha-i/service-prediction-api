@@ -5,7 +5,7 @@ from flask import Blueprint, jsonify, render_template, g, request, abort, Respon
 from app.core.auth import requires_access_token
 from app.core.interpreters import prediction_result_to_dataframe
 from app.db import db
-from app.models.configuration import CompanyConfiguration
+from app.models.customer import CompanyConfiguration
 from app.models.datasource import DataSource
 from app.models.prediction import PredictionTask
 from config import MAXIMUM_DAYS_FORECAST, DATETIME_FORMAT, TARGET_FEATURE
