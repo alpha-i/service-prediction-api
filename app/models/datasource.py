@@ -9,7 +9,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from app.db import db
 from app.models.base import BaseModel
 # noinspection PyUnresolvedReferences
-from app.models.customer import User, CustomerAction, Actions
+from app.models.customer import User, CustomerAction, Actions, Company
 
 STORE_INDEX = 'data'
 
@@ -22,6 +22,8 @@ class UploadTypes(Enum):
 class DataSource(BaseModel):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     user = relationship('User')
+    company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=False)
+    company = relationship('Company')
     upload_code = db.Column(db.String(), index=True)
     type = db.Column(db.Enum(UploadTypes), index=True)
     location = db.Column(db.String(), index=True)
