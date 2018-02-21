@@ -41,7 +41,7 @@
                 <h3 class="box-header with-border">Update your historical data</h3>
                 <div class="box-body">
                     <form action="{{ url_for('datasource.upload') }}" method="post" enctype="multipart/form-data" class="form-inline">
-                        <div class="form-group">
+                        <div class="form-group row">
                             <div class="col-xs-10">
                                 <div class="input-group">
                                     <input type="text" id="file_path" class="form-control" placeholder="Browse...">
@@ -58,6 +58,9 @@
                             </div>
                         </div>
                     </form>
+                    <p class="mt-4">
+                        <a href="{{ url_for('static', filename='demo/data_template.csv') }}" target="_blank"><i class="fa fa-download"></i> &nbsp;Download file template</a>
+                    </p>
                 </div>
             </div>
         </div>
