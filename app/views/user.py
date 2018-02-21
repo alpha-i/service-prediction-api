@@ -54,7 +54,11 @@ def register():
         content_type=request.accept_mimetypes.best,
         next=url_for('main.login'),
         status_code=201,
-        context={'email': user.email, 'id': user.id}
+        context={
+            'email': user.email,
+            'id': user.id,
+            'confirmation_token': confirmation_token  # TODO: changeme, it should be sent via email
+        }
     )
 
     return response()
