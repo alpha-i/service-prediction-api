@@ -34,8 +34,6 @@ def parse_request_data(fn):
                 key: value[0] if len(value) == 1 else value
                 for key, value in request.form.lists()
             }
-        else:
-            abort(400)
         return fn(*args, **kwargs)
 
     return wrapper

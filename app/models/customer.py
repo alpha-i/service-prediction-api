@@ -9,9 +9,8 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.orm.exc import NoResultFound
 
 from app.db import db
-from app.models.base import BaseModel
+from app.models import BaseModel
 from config import SECRET_KEY
-
 
 class Actions(Enum):
     FILE_UPLOAD = 'FILE_UPLOAD'
@@ -70,7 +69,7 @@ class User(BaseModel):
     data_sources = relationship('DataSource', back_populates='user')
     actions = relationship('CustomerAction', back_populates='user')
     company_id = db.Column(db.ForeignKey('company.id'), nullable=False)
-    company = relationship('Company')
+    company = relationship('Company', foreign_keys=company_id)
     profile = relationship('UserProfile', uselist=False)
 
     confirmed = db.Column(db.Boolean, default=False)
@@ -114,18 +113,18 @@ class User(BaseModel):
 
 class CustomerAction(BaseModel):
     user_id = db.Column(db.ForeignKey('user.id'), nullable=False)
-    user = relationship('User')
+    user = relationship('User', foreign_keys=user_id)
     action = db.Column(db.Enum(Actions))
 
 
 class UserProfile(BaseModel):
     user_id = db.Column(db.ForeignKey('user.id'), nullable=False)
-    user = relationship('User')
+    user = relationship('User', foreign_keys=user_id)
 
 
 class CompanyConfiguration(BaseModel):
     company_id = db.Column(db.ForeignKey('company.id'), nullable=False)
-    company = relationship('Company')
+    company = relationship('Company', foreign_keys=company_id)
     configuration = db.Column(db.JSON)
 
     @staticmethod

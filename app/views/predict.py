@@ -49,6 +49,13 @@ def submit():
     return response()
 
 
+@predict_blueprint.route('/', methods=['GET'])
+@requires_access_token
+@parse_request_data
+def get_tasks():
+    return jsonify(g.user.tasks)
+
+
 @predict_blueprint.route('/status/<string:task_code>')
 @requires_access_token
 def status(task_code):
@@ -65,6 +72,13 @@ def status(task_code):
     )
 
     return response()
+
+
+@predict_blueprint.route('/result', methods=['GET'])
+@requires_access_token
+@parse_request_data
+def get_results():
+    return jsonify(g.user.results)
 
 
 @predict_blueprint.route('/result/<string:task_code>')

@@ -1,15 +1,12 @@
 from enum import Enum
 
 import pandas as pd
-from flask import current_app
 from flask_sqlalchemy import event
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm.exc import NoResultFound
 
 from app.db import db
-from app.models.base import BaseModel
-# noinspection PyUnresolvedReferences
-from app.models.customer import User, CustomerAction, Actions, Company
+from app.models import BaseModel, CustomerAction, Actions
 
 STORE_INDEX = 'data'
 
@@ -21,9 +18,9 @@ class UploadTypes(Enum):
 
 class DataSource(BaseModel):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    user = relationship('User')
+    user = relationship('User', foreign_keys=user_id)
     company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=False)
-    company = relationship('Company')
+    company = relationship('Company', foreign_keys=company_id)
     upload_code = db.Column(db.String(), index=True)
     type = db.Column(db.Enum(UploadTypes), index=True)
     location = db.Column(db.String(), index=True)

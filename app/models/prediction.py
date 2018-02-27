@@ -7,11 +7,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.orm.exc import NoResultFound
 
 from app.db import db
-from app.models.base import BaseModel
-# noinspection PyUnresolvedReferences
-from app.models.customer import User, CustomerAction, Actions
-# noinspection PyUnresolvedReferences
-from app.models.datasource import DataSource
+from app.models import BaseModel, CustomerAction, Actions
 
 
 class TaskStatusTypes(Enum):

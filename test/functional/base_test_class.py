@@ -12,17 +12,18 @@ class BaseTestClass(TestCase):
     TESTING = True
     USER_EMAIL = 'test_user@email.com'
     PASSWORD = 'password'
+    DB = db
 
     def create_app(self):
         return APP
 
     def setUp(self):
-        db.drop_all()
-        db.create_all()
+        self.DB.drop_all()
+        self.DB.create_all()
 
     def tearDown(self):
-        db.session.remove()
-        db.drop_all()
+        self.DB.session.remove()
+        self.DB.drop_all()
 
     def register_company(self):
         resp = self.client.post(

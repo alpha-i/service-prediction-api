@@ -6,9 +6,6 @@ from flask import url_for
 
 from test.functional.base_test_class import BaseTestClass
 
-from app.db import db
-from test.test_app import APP
-
 HERE = os.path.join(os.path.dirname(__file__))
 
 
