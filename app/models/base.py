@@ -3,6 +3,7 @@ from app.db import db
 
 class BaseModel(db.Model):
     __abstract__ = True
+    __tablename__ = None
 
     INCLUDE_ATTRIBUTES = ()
     EXCLUDE_ATTRIBUTES = ()

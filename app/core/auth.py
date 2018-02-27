@@ -1,11 +1,10 @@
 import logging
 from functools import wraps
 
-from flask import request, g, abort
 from itsdangerous import URLSafeTimedSerializer
 from flask import request, g, abort, redirect, url_for
 
-from app.models.customer import User
+from app.models.customer import UserModel
 from config import SECRET_KEY
 
 
@@ -14,7 +13,7 @@ def requires_access_token(fn):
     def wrapper(*args, **kwargs):
         user = is_user_logged()
 
-        if isinstance(user, User):
+        if isinstance(user, UserModel):
             g.user = user
             return fn(*args, **kwargs)
         elif request.content_type == 'application/json':
@@ -41,7 +40,7 @@ def is_user_logged():
         logging.info("No token provided!")
         return False
 
-    user = User.verify_auth_token(token)
+    user = UserModel.verify_auth_token(token)
     if not user:
         return None
     return user

@@ -8,7 +8,7 @@ from flask import Blueprint, request, abort, current_app, url_for, g
 from app.core.auth import requires_access_token
 from app.core.content import ApiResponse
 from app.db import db
-from app.models.datasource import DataSource, UploadTypes
+from app.models.datasource import DataSourceModel, UploadTypes
 
 datasource_blueprint = Blueprint('datasource', __name__)
 
@@ -47,7 +47,7 @@ def current():
 @datasource_blueprint.route('/<string:datasource_id>')
 @requires_access_token
 def get(datasource_id):
-    datasource = DataSource.get_by_upload_code(datasource_id)
+    datasource = DataSourceModel.get_by_upload_code(datasource_id)
     if not datasource:
         abort(404)
 
@@ -68,7 +68,7 @@ def upload():
 
     upload_code = generate_upload_code()
 
-    filename = DataSource.generate_filename(upload_code, uploaded_file.filename)
+    filename = DataSourceModel.generate_filename(upload_code, uploaded_file.filename)
 
     data_frame = pd.read_csv(uploaded_file, sep=',', index_col='date', parse_dates=True)
 
@@ -80,7 +80,7 @@ def upload():
     saved_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename + '.hdf5')
     data_frame.to_hdf(saved_path, key=current_app.config['HDF5_STORE_INDEX'])
 
-    upload = DataSource(
+    upload = DataSourceModel(
         user_id=user.id,
         company_id=user.company_id,
         upload_code=upload_code,

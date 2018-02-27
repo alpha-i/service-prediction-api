@@ -33,10 +33,13 @@ class PredictionResultSchema(Schema):
 prediction_result_schema = PredictionResultSchema()
 
 
-#  NEW STUFF
+class BaseModelSchema(Schema):
+    id = fields.Integer()
+    created_at = fields.DateTime()
+    last_update = fields.DateTime()
 
 
-class DataSourceSchema(Schema):
+class DataSourceSchema(BaseModelSchema):
     upload_code = fields.String()
     type = fields.String()
     location = fields.String()
@@ -45,7 +48,7 @@ class DataSourceSchema(Schema):
     end_date = fields.DateTime()
 
 
-class CompanySchema(Schema):
+class CompanySchema(BaseModelSchema):
     name = fields.String()
     domain = fields.String()
 
@@ -55,32 +58,33 @@ class CompanySchema(Schema):
             raise ValidationError("Invalid domain name")
 
 
-class CustomerActionSchema(Schema):
+class CustomerActionSchema(BaseModelSchema):
     action = fields.String()
 
 
-class UserProfileSchema(Schema):
+class UserProfileSchema(BaseModelSchema):
     pass
 
 
-class TaskStatusSchema(Schema):
+class TaskStatusSchema(BaseModelSchema):
     state = fields.String()
     message = fields.String()
 
 
-class ResultSchema(Schema):
+class ResultSchema(BaseModelSchema):
     task_code = fields.String()
     result = fields.Dict()
 
 
-class TaskSchema(Schema):
+class TaskSchema(BaseModelSchema):
     name = fields.String()
     task_code = fields.String()
 
 
-class UserSchema(Schema):
+class UserSchema(BaseModelSchema):
     email = fields.Email()
     confirmed = fields.Boolean(allow_none=True)
+    company = fields.Nested(CompanySchema, many=False)
 
 
 user_schema = UserSchema()

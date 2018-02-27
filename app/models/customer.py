@@ -18,23 +18,25 @@ class Actions(Enum):
     CONFIGURATION_UPDATE = 'CONFIGURATION_UPDATE'
 
 
-class Company(BaseModel):
+class CompanyModel(BaseModel):
+    __tablename__ = 'company'
+
     INCLUDE_ATTRIBUTES = ('current_configuration', 'data_sources')
 
     name = db.Column(db.String, nullable=False)
     logo = db.Column(db.String)
     domain = db.Column(db.String, nullable=False)
     profile = db.Column(db.JSON)
-    configuration = relationship('CompanyConfiguration', back_populates='company')
-    data_sources = relationship('DataSource', back_populates='company')
-    users = relationship('User', back_populates='company')
+    configuration = relationship('CompanyConfigurationModel', back_populates='company')
+    data_sources = relationship('DataSourceModel', back_populates='company')
+    users = relationship('UserModel', back_populates='company')
 
     @staticmethod
     def get_for_email(email):
         domain = email.split('@')[-1]
         try:
             logging.info('Searching for a company %s', domain)
-            company = Company.query.filter(Company.domain == domain).one()
+            company = CompanyModel.query.filter(CompanyModel.domain == domain).one()
         except NoResultFound:
             return None
         return company
@@ -42,7 +44,7 @@ class Company(BaseModel):
     @staticmethod
     def get_for_domain(domain):
         try:
-            company = Company.query.filter(Company.domain == domain).one()
+            company = CompanyModel.query.filter(CompanyModel.domain == domain).one()
         except NoResultFound:
             return None
         return company
@@ -58,19 +60,21 @@ class Company(BaseModel):
             return self.data_sources[-1]
 
 
-class User(BaseModel):
+class UserModel(BaseModel):
+    __tablename__ = 'user'
+
     INCLUDE_ATTRIBUTES = ('data_sources', 'current_data_source', 'actions', 'company')
     EXCLUDE_ATTRIBUTES = ('password_hash',)
 
     email = db.Column(db.String(32), index=True)
     password_hash = db.Column(db.String(128))
-    tasks = relationship('PredictionTask', back_populates='user')
-    results = relationship('PredictionResult', back_populates='user')
-    data_sources = relationship('DataSource', back_populates='user')
-    actions = relationship('CustomerAction', back_populates='user')
+    tasks = relationship('PredictionTaskModel', back_populates='user')
+    results = relationship('PredictionResultModel', back_populates='user')
+    data_sources = relationship('DataSourceModel', back_populates='user')
+    actions = relationship('CustomerActionModel', back_populates='user')
     company_id = db.Column(db.ForeignKey('company.id'), nullable=False)
-    company = relationship('Company', foreign_keys=company_id)
-    profile = relationship('UserProfile', uselist=False)
+    company = relationship('CompanyModel', foreign_keys=company_id)
+    profile = relationship('UserProfileModel', uselist=False)
 
     confirmed = db.Column(db.Boolean, default=False)
 
@@ -100,37 +104,43 @@ class User(BaseModel):
         except BadSignature:
             return None
 
-        user = User.query.get(data['id'])
+        user = UserModel.query.get(data['id'])
         return user
 
     @staticmethod
     def get_user_by_email(email):
         try:
-            return User.query.filter(User.email == email).one()
+            return UserModel.query.filter(UserModel.email == email).one()
         except NoResultFound:
             return None
 
 
-class CustomerAction(BaseModel):
+class CustomerActionModel(BaseModel):
+    __tablename__ = 'customer_action'
+
     user_id = db.Column(db.ForeignKey('user.id'), nullable=False)
-    user = relationship('User', foreign_keys=user_id)
+    user = relationship('UserModel', foreign_keys=user_id)
     action = db.Column(db.Enum(Actions))
 
 
-class UserProfile(BaseModel):
+class UserProfileModel(BaseModel):
+    __tablename__ = 'user_profile'
+
     user_id = db.Column(db.ForeignKey('user.id'), nullable=False)
-    user = relationship('User', foreign_keys=user_id)
+    user = relationship('UserModel', foreign_keys=user_id)
 
 
-class CompanyConfiguration(BaseModel):
+class CompanyConfigurationModel(BaseModel):
+    __tablename__ = 'company_configuration'
+
     company_id = db.Column(db.ForeignKey('company.id'), nullable=False)
-    company = relationship('Company', foreign_keys=company_id)
+    company = relationship('CompanyModel', foreign_keys=company_id)
     configuration = db.Column(db.JSON)
 
     @staticmethod
     def get_by_id(id):
         try:
-            configuration = CompanyConfiguration.query.filter(CompanyConfiguration.id == id).one()
+            configuration = CompanyConfigurationModel.query.filter(CompanyConfigurationModel.id == id).one()
         except NoResultFound:
             return None
         return configuration

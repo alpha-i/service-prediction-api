@@ -9,7 +9,7 @@ from alphai_delphi.oracle import PredictionResult
 from dateutil import parser
 
 from config import DATE_FORMAT
-from app.models.prediction import PredictionTask
+from app.models.prediction import PredictionTaskModel
 
 DEFAULT_TIME_RESOLUTION = '15T'
 

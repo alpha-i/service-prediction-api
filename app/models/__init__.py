@@ -1,4 +1,7 @@
 from app.models.base import BaseModel
-from app.models.customer import (User, Company, CompanyConfiguration, CustomerAction, UserProfile, Actions)
-from app.models.datasource import DataSource
-from app.models.prediction import PredictionTask, TaskStatus, PredictionResult
+from app.models.customer import (
+    UserModel, CompanyModel, CompanyConfigurationModel,
+    CustomerActionModel, UserProfileModel, Actions
+)
+from app.models.datasource import DataSourceModel
+from app.models.prediction import PredictionTaskModel, TaskStatusModel, PredictionResultModel

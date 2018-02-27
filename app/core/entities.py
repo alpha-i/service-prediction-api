@@ -1,31 +1,41 @@
+import abc
+
 from app.core.schemas import UserSchema, CompanySchema, TaskSchema, ResultSchema, DataSourceSchema
 from app.models import (
-    User as UserModel, Company as CompanyModel, PredictionTask as PredictionTaskModel,
-    PredictionResult as PredictionResultModel, DataSource as DataSourceModel
+    UserModel as UserModel, CompanyModel as CompanyModel, PredictionTaskModel as PredictionTaskModel,
+    PredictionResultModel as PredictionResultModel, DataSourceModel as DataSourceModel
 )
+
 
 class EntityCreationException(Exception):
     pass
 
 
-class Entity:
+class BaseEntity(metaclass=abc.ABCMeta):
     SCHEMA = None
     MODEL = None
 
     @classmethod
     def from_model(cls, model):
-        entity = cls()
+        if model is None:
+            return None
+
         schema = cls.SCHEMA()
-        errors = schema.validate(model.to_dict())
+        data, errors = schema.dump(model.to_dict())
+
         if errors:
-            raise EntityCreationException()
-        for key, value in model.to_dict().items():
+            raise EntityCreationException(errors)
+
+        entity = cls()
+
+        for key, value in data.items():
             setattr(entity, key, value)
+        setattr(entity, '_model', model)
         return entity
 
     @classmethod
     def from_models(cls, *models):
-        return [Entity.from_model(model) for model in models]
+        return [BaseEntity.from_model(model) for model in models]
 
     def to_model(self):
         model = self.MODEL
@@ -41,29 +51,29 @@ class Entity:
         return self.SCHEMA().dumps(self)
 
     def __repr__(self):
-        return f"<{self.MODEL.__name__}: {self.__dict__}>"
+        return f"<{self.__class__.__name__}: {self.__dict__}>"
 
 
-class User(Entity):
+class User(BaseEntity):
     SCHEMA = UserSchema
     MODEL = UserModel
 
 
-class Company(Entity):
+class Company(BaseEntity):
     SCHEMA = CompanySchema
     MODEL = CompanyModel
 
 
-class Task(Entity):
+class Task(BaseEntity):
     SCHEMA = TaskSchema
     MODEL = PredictionTaskModel
 
 
-class DataSource(Entity):
+class DataSource(BaseEntity):
     SCHEMA = DataSourceSchema
     MODEL = DataSourceModel
 
 
-class Result(Entity):
+class Result(BaseEntity):
     SCHEMA = ResultSchema
     MODEL = PredictionResultModel

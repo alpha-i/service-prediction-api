@@ -6,7 +6,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.orm.exc import NoResultFound
 
 from app.db import db
-from app.models import BaseModel, CustomerAction, Actions
+from app.models import BaseModel, CustomerActionModel, Actions
 
 STORE_INDEX = 'data'
 
@@ -16,11 +16,13 @@ class UploadTypes(Enum):
     BLOBSTORE = 'blobstore'
 
 
-class DataSource(BaseModel):
+class DataSourceModel(BaseModel):
+    __tablename__ = 'data_source'
+
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    user = relationship('User', foreign_keys=user_id)
+    user = relationship('UserModel', foreign_keys=user_id)
     company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=False)
-    company = relationship('Company', foreign_keys=company_id)
+    company = relationship('CompanyModel', foreign_keys=company_id)
     upload_code = db.Column(db.String(), index=True)
     type = db.Column(db.Enum(UploadTypes), index=True)
     location = db.Column(db.String(), index=True)
@@ -29,7 +31,7 @@ class DataSource(BaseModel):
     start_date = db.Column(db.DateTime, index=True, nullable=True)
     end_date = db.Column(db.DateTime, index=True, nullable=True)
 
-    prediction_task_list = relationship('PredictionTask', back_populates='datasource')
+    prediction_task_list = relationship('PredictionTaskModel', back_populates='datasource')
 
     def get_file(self):
 
@@ -39,12 +41,12 @@ class DataSource(BaseModel):
 
     @staticmethod
     def get_for_user(user_id):
-        return DataSource.query.filter(DataSource.user_id == str(user_id)).all()
+        return DataSourceModel.query.filter(DataSourceModel.user_id == str(user_id)).all()
 
     @staticmethod
     def get_by_upload_code(upload_code):
         try:
-            return DataSource.query.filter(DataSource.upload_code == upload_code).one()
+            return DataSourceModel.query.filter(DataSourceModel.upload_code == upload_code).one()
         except NoResultFound:
             return None
 
@@ -53,14 +55,14 @@ class DataSource(BaseModel):
         return f"{upload_code}_{original_filename}"
 
     def to_dict(self):
-        model_dict = super(DataSource, self).to_dict()
+        model_dict = super(DataSourceModel, self).to_dict()
         model_dict.update({'type': self.type.name})
         return model_dict
 
 
 def update_user_action(mapper, connection, self):
     session = db.create_scoped_session()
-    action = CustomerAction(
+    action = CustomerActionModel(
         user_id=self.user_id,
         action=Actions.FILE_UPLOAD
     )
@@ -68,4 +70,4 @@ def update_user_action(mapper, connection, self):
     session.commit()
 
 
-event.listen(DataSource, 'after_insert', update_user_action)
+event.listen(DataSourceModel, 'after_insert', update_user_action)

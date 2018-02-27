@@ -6,7 +6,7 @@ from app.db import db
 from app.core.auth import requires_access_token, is_valid_email_for_company, generate_confirmation_token, confirm_token
 from app.core.content import ApiResponse
 from app.core.utils import parse_request_data
-from app.models.customer import Company, User
+from app.models.customer import CompanyModel, UserModel
 
 user_blueprint = Blueprint('user', __name__)
 
@@ -28,7 +28,7 @@ def register():
 
     assert email and password, abort(400)
 
-    company = Company.get_for_email(email)
+    company = CompanyModel.get_for_email(email)
     if not company:
         logging.warning("No company could be found for %s", email)
         abort(401)
@@ -37,11 +37,11 @@ def register():
         logging.warning("Invalid email %s for company: %s", email, company.domain)
         abort(401)
 
-    user = User.get_user_by_email(email)
+    user = UserModel.get_user_by_email(email)
     if user is not None:
         abort(400)
 
-    user = User(email=email, confirmed=False, company_id=company.id)
+    user = UserModel(email=email, confirmed=False, company_id=company.id)
 
     user.hash_password(password)
 
@@ -69,7 +69,7 @@ def confirm(token):
     if not email:
         abort(401)
 
-    user = User.get_user_by_email(email)
+    user = UserModel.get_user_by_email(email)
     if user.confirmed:
         abort(400)
     user.confirmed = True

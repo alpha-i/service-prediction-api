@@ -10,8 +10,8 @@ from app.core.interpreters import datasource_interpreter, prediction_interpreter
 from app.core.schemas import prediction_request_schema
 from app.core.utils import json_reload
 from app.db import db
-from app.models.datasource import DataSource
-from app.models.prediction import PredictionTask, PredictionResult, TaskStatus, TaskStatusTypes
+from app.models.datasource import DataSourceModel
+from app.models.prediction import PredictionTaskModel, PredictionResultModel, TaskStatusModel, TaskStatusTypes
 from config import MAXIMUM_DAYS_FORECAST
 
 logging.basicConfig(level=logging.DEBUG)
@@ -116,7 +116,7 @@ oracle_config = OracleConfiguration({
 
 @celery.task(bind=True)
 def predict_task(self, user_id, upload_code, prediction_request):
-    uploaded_file = DataSource.get_by_upload_code(upload_code)  # type: DataSource
+    uploaded_file = DataSourceModel.get_by_upload_code(upload_code)  # type: DataSourceModel
     if not uploaded_file:
         logging.warning("No upload could be found for code %s", upload_code)
         return
@@ -163,7 +163,7 @@ def predict_task(self, user_id, upload_code, prediction_request):
     logging.info("*** TASK FINISHED! %s", prediction_task.task_code)
     set_task_status(prediction_task, TaskStatusTypes.successful)
 
-    prediction_result = PredictionResult(
+    prediction_result = PredictionResultModel(
         user_id=user_id,
         task_code=prediction_task.task_code,
         result=json_reload(prediction_result),
@@ -181,13 +181,13 @@ def prediction_failure(uuid):
         exc = result.get(propagate=False)
         print(exc)
 
-    prediction_task = PredictionTask.get_by_task_code(uuid)
+    prediction_task = PredictionTaskModel.get_by_task_code(uuid)
     set_task_status(prediction_task, TaskStatusTypes.failed)
     print('Task {0} raised exception: {1!r}\n{2!r}'.format(uuid, exc, result.traceback))
 
 
 def create_task(task_code, user_id, upload_code, name):
-    new_task = PredictionTask(
+    new_task = PredictionTaskModel(
         task_code=task_code,
         user_id=user_id,
         datasource_id=upload_code,
@@ -199,7 +199,7 @@ def create_task(task_code, user_id, upload_code, name):
 
 
 def set_task_status(task, status):
-    status_model = TaskStatus(
+    status_model = TaskStatusModel(
         prediction_task_id=task.id,
         state=status.value
     )

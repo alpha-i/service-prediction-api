@@ -6,7 +6,7 @@ from app.core.auth import requires_access_token
 from app.core.content import ApiResponse
 from app.core.schemas import prediction_request_schema
 from app.core.utils import parse_request_data
-from app.models.prediction import PredictionTask, PredictionResult
+from app.models.prediction import PredictionTaskModel, PredictionResultModel
 from app.tasks.predict import predict_task, prediction_failure
 
 predict_blueprint = Blueprint('prediction', __name__)
@@ -62,7 +62,7 @@ def status(task_code):
     """
     Get the status of a particular task
     """
-    prediction_task = PredictionTask.get_by_task_code(task_code)
+    prediction_task = PredictionTaskModel.get_by_task_code(task_code)
     if not prediction_task:
         return abort(404)
 
@@ -87,7 +87,7 @@ def result(task_code):
     """
     Get the result of an individual task
     """
-    prediction_result = PredictionResult.get_for_task(task_code)
+    prediction_result = PredictionResultModel.get_for_task(task_code)
     if not prediction_result:
         abort(404)
 
