@@ -1,11 +1,9 @@
 import logging
 from functools import wraps
 
-from itsdangerous import URLSafeTimedSerializer
 from flask import request, g, abort, redirect, url_for
 
 from app.models.customer import UserModel
-from config import SECRET_KEY
 
 
 def requires_access_token(fn):
@@ -44,20 +42,6 @@ def is_user_logged():
     if not user:
         return None
     return user
-
-
-def generate_confirmation_token(email):
-    serializer = URLSafeTimedSerializer(SECRET_KEY)
-    return serializer.dumps(email)
-
-
-def confirm_token(token, expiration=3600):
-    serializer = URLSafeTimedSerializer(SECRET_KEY)
-    try:
-        email = serializer.loads(token, max_age=expiration)
-    except:
-        return False
-    return email
 
 
 def is_valid_email_for_company(email: str, company):

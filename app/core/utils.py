@@ -3,14 +3,17 @@ from enum import Enum
 from functools import wraps
 
 import numpy
-from flask import request, g, abort, json
+from flask import request, g, json
 from flask.json import JSONEncoder
 from sqlalchemy.ext.declarative import DeclarativeMeta
+from app.core.entities import BaseEntity
 
 
 class CustomJSONEncoder(JSONEncoder):
 
     def default(self, obj):
+        if issubclass(obj.__class__, BaseEntity):
+            return obj.SCHEMA().dump(obj)
         if isinstance(obj.__class__, DeclarativeMeta):
             return obj.to_dict()
         if issubclass(obj.__class__, Enum):

@@ -1,4 +1,4 @@
-from itsdangerous import (TimedJSONWebSignatureSerializer as Serializer)
+from itsdangerous import (TimedJSONWebSignatureSerializer as Serializer, URLSafeTimedSerializer)
 
 from app.core.entities import User
 from app.models import UserModel
@@ -19,5 +19,34 @@ def get_by_email(email):
     user = UserModel.get_user_by_email(email)
     return User.from_model(user)
 
+
 def verify_password(user, password):
     return user._model.verify_password(password)
+
+
+def insert(user):
+    model = user.to_model()
+    model.hash_password(user.password)
+    model.save()
+    return User.from_model(model)
+
+
+def generate_confirmation_token(email):
+    serializer = URLSafeTimedSerializer(SECRET_KEY)
+    return serializer.dumps(email)
+
+
+def confirm_token(token, expiration=3600):
+    serializer = URLSafeTimedSerializer(SECRET_KEY)
+    try:
+        email = serializer.loads(token, max_age=expiration)
+    except:
+        return False
+    return email
+
+
+def confirm(user):
+    model = user._model
+    model.confirmed = True
+    model.save()
+    return User.from_model(model)

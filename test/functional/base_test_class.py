@@ -3,7 +3,7 @@ import json
 from flask import url_for
 from flask_testing import TestCase
 
-from app.core.auth import generate_confirmation_token
+from app.services.user import generate_confirmation_token
 from app.db import db
 from test.test_app import APP
 

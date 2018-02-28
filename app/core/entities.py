@@ -15,6 +15,10 @@ class BaseEntity(metaclass=abc.ABCMeta):
     SCHEMA = None
     MODEL = None
 
+    def __init__(self, **kwargs):
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
     @classmethod
     def from_model(cls, model):
         if model is None:
@@ -38,7 +42,7 @@ class BaseEntity(metaclass=abc.ABCMeta):
         return [BaseEntity.from_model(model) for model in models]
 
     def to_model(self):
-        model = self.MODEL
+        model = self.MODEL()
         for key, value in self.__dict__.items():
             if value:
                 setattr(model, key, value)

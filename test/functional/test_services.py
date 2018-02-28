@@ -1,4 +1,3 @@
-from app.core.entities import User
 from app.models import UserModel, CompanyModel
 from test.functional.base_test_class import BaseTestClass
 
@@ -17,7 +16,7 @@ class TestEntities(BaseTestClass):
 
         assert company.domain == 'alese.it'
 
-        user = services.user.get_by_email('gabriele@alese.it')  # type: User
+        user = services.user.get_by_email('gabriele@alese.it')
         assert user.email == 'gabriele@alese.it'
 
         token = services.user.generate_auth_token(user)
