@@ -7,13 +7,13 @@ import numpy
 from flask import request, g, json, current_app
 from flask.json import JSONEncoder
 from sqlalchemy.ext.declarative import DeclarativeMeta
-from app.core.entities import BaseEntity
+from app.core.models import BaseModel
 
 
 class CustomJSONEncoder(JSONEncoder):
 
     def default(self, obj):
-        if issubclass(obj.__class__, BaseEntity):
+        if issubclass(obj.__class__, BaseModel):
             data, _ = obj.SCHEMA().dump(obj)
             return data
         if isinstance(obj.__class__, DeclarativeMeta):

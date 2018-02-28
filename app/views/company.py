@@ -3,7 +3,7 @@ from flask import Blueprint, g, abort, request
 from app import services
 from app.core.auth import requires_access_token
 from app.core.content import ApiResponse
-from app.core.entities import Company, CompanyConfiguration
+from app.core.models import Company, CompanyConfiguration
 from app.core.utils import parse_request_data, json_reload
 
 company_blueprint = Blueprint('company', __name__)

@@ -7,7 +7,7 @@ from app.services.user import generate_confirmation_token, confirm_token
 from app.core.content import ApiResponse
 from app.core.utils import parse_request_data
 from app import services
-from app.core.entities import User
+from app.core.models import User
 
 user_blueprint = Blueprint('user', __name__)
 

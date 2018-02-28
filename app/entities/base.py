@@ -1,7 +1,7 @@
 from app.db import db
 
 
-class BaseModel(db.Model):
+class BaseEntity(db.Model):
     __abstract__ = True
     __tablename__ = None
 
@@ -37,5 +37,9 @@ class BaseModel(db.Model):
 
     def save(self):
         db.session.add(self)
+        db.session.commit()
+
+    def update(self):
+        db.session.merge(self)
         db.session.commit()
 

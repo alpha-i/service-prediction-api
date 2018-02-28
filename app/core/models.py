@@ -1,22 +1,26 @@
 import abc
 
+import pandas as pd
 from flask import json
 
 from app.core.schemas import (
-    UserSchema, CompanySchema, TaskSchema, ResultSchema, DataSourceSchema, CompanyConfigurationSchema
+    UserSchema, CompanySchema, TaskSchema, ResultSchema, DataSourceSchema, CompanyConfigurationSchema,
+    TaskStatusSchema
 )
-from app.models import (
-    UserModel as UserModel, CompanyModel as CompanyModel, PredictionTaskModel as PredictionTaskModel,
-    PredictionResultModel as PredictionResultModel, DataSourceModel as DataSourceModel,
-    CompanyConfigurationModel
+from app.entities import (
+    UserEntity, CompanyEntity, PredictionTaskEntity, PredictionResultEntity, DataSourceEntity,
+    CompanyConfigurationEntity, TaskStatusEntity
 )
+
+
+from config import HDF5_STORE_INDEX
 
 
 class EntityCreationException(Exception):
     pass
 
 
-class BaseEntity(metaclass=abc.ABCMeta):
+class BaseModel(metaclass=abc.ABCMeta):
     SCHEMA = None
     MODEL = None
 
@@ -32,7 +36,6 @@ class BaseEntity(metaclass=abc.ABCMeta):
         schema = cls.SCHEMA()
         data, errors = schema.loads(json.dumps(model.to_dict()))
         if errors:
-            import ipdb; ipdb.set_trace()
             raise EntityCreationException(errors)
 
         entity = cls()
@@ -44,7 +47,7 @@ class BaseEntity(metaclass=abc.ABCMeta):
 
     @classmethod
     def from_models(cls, *models):
-        return [BaseEntity.from_model(model) for model in models]
+        return [BaseModel.from_model(model) for model in models]
 
     def to_model(self):
         model = self.MODEL()
@@ -63,31 +66,41 @@ class BaseEntity(metaclass=abc.ABCMeta):
         return f"<{self.__class__.__name__}: {self.__dict__}>"
 
 
-class User(BaseEntity):
+class User(BaseModel):
     SCHEMA = UserSchema
-    MODEL = UserModel
+    MODEL = UserEntity
 
 
-class Company(BaseEntity):
+class Company(BaseModel):
     SCHEMA = CompanySchema
-    MODEL = CompanyModel
+    MODEL = CompanyEntity
 
 
-class Task(BaseEntity):
+class Task(BaseModel):
     SCHEMA = TaskSchema
-    MODEL = PredictionTaskModel
+    MODEL = PredictionTaskEntity
 
 
-class DataSource(BaseEntity):
+class TaskStatus(BaseModel):
+    SCHEMA = TaskStatusSchema
+    MODEL = TaskStatusEntity
+
+
+class DataSource(BaseModel):
     SCHEMA = DataSourceSchema
-    MODEL = DataSourceModel
+    MODEL = DataSourceEntity
+
+    def get_file(self):
+        with pd.HDFStore(self.location) as hdf_store:
+            dataframe = hdf_store[HDF5_STORE_INDEX]
+            return dataframe
 
 
-class Result(BaseEntity):
+class Result(BaseModel):
     SCHEMA = ResultSchema
-    MODEL = PredictionResultModel
+    MODEL = PredictionResultEntity
 
 
-class CompanyConfiguration(BaseEntity):
+class CompanyConfiguration(BaseModel):
     SCHEMA = CompanyConfigurationSchema
-    MODEL = CompanyConfigurationModel
+    MODEL = CompanyConfigurationEntity

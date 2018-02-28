@@ -1,14 +1,14 @@
-from app.core.entities import DataSource
-from app.models.datasource import DataSourceModel
+from app.core.models import DataSource
+from app.entities import DataSourceEntity
 
 
 def get_by_upload_code(datasource_id):
-    model = DataSourceModel.get_by_upload_code(datasource_id)
+    model = DataSourceEntity.get_by_upload_code(datasource_id)
     return DataSource.from_model(model)
 
 
 def generate_filename(upload_code, filename):
-    return DataSourceModel.generate_filename(upload_code, filename)
+    return DataSourceEntity.generate_filename(upload_code, filename)
 
 
 def insert(upload):

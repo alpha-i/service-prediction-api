@@ -7,9 +7,9 @@ from flask import Blueprint, request, abort, current_app, url_for, g
 from app import services
 from app.core.auth import requires_access_token
 from app.core.content import ApiResponse
-from app.core.entities import DataSource
+from app.core.models import DataSource
 from app.core.utils import allowed_extension, generate_upload_code
-from app.models.datasource import UploadTypes
+from app.entities.datasource import UploadTypes
 
 datasource_blueprint = Blueprint('datasource', __name__)
 

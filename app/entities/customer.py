@@ -9,7 +9,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.orm.exc import NoResultFound
 
 from app.db import db
-from app.models import BaseModel
+from app.entities import BaseEntity
 from config import SECRET_KEY
 
 class Actions(Enum):
@@ -18,7 +18,7 @@ class Actions(Enum):
     CONFIGURATION_UPDATE = 'CONFIGURATION_UPDATE'
 
 
-class CompanyModel(BaseModel):
+class CompanyEntity(BaseEntity):
     __tablename__ = 'company'
 
     INCLUDE_ATTRIBUTES = ('current_configuration', 'data_sources')
@@ -27,16 +27,16 @@ class CompanyModel(BaseModel):
     logo = db.Column(db.String)
     domain = db.Column(db.String, nullable=False)
     profile = db.Column(db.JSON)
-    configuration = relationship('CompanyConfigurationModel', back_populates='company')
-    data_sources = relationship('DataSourceModel', back_populates='company')
-    users = relationship('UserModel', back_populates='company')
+    configuration = relationship('CompanyConfigurationEntity', back_populates='company')
+    data_sources = relationship('DataSourceEntity', back_populates='company')
+    users = relationship('UserEntity', back_populates='company')
 
     @staticmethod
     def get_for_email(email):
         domain = email.split('@')[-1]
         try:
             logging.info('Searching for a company %s', domain)
-            company = CompanyModel.query.filter(CompanyModel.domain == domain).one()
+            company = CompanyEntity.query.filter(CompanyEntity.domain == domain).one()
         except NoResultFound:
             return None
         return company
@@ -44,7 +44,7 @@ class CompanyModel(BaseModel):
     @staticmethod
     def get_for_domain(domain):
         try:
-            company = CompanyModel.query.filter(CompanyModel.domain == domain).one()
+            company = CompanyEntity.query.filter(CompanyEntity.domain == domain).one()
         except NoResultFound:
             return None
         return company
@@ -60,7 +60,7 @@ class CompanyModel(BaseModel):
             return self.data_sources[-1]
 
 
-class UserModel(BaseModel):
+class UserEntity(BaseEntity):
     __tablename__ = 'user'
 
     INCLUDE_ATTRIBUTES = ('data_sources', 'current_data_source', 'actions', 'company')
@@ -68,13 +68,13 @@ class UserModel(BaseModel):
 
     email = db.Column(db.String(32), index=True)
     password_hash = db.Column(db.String(128))
-    tasks = relationship('PredictionTaskModel', back_populates='user')
-    results = relationship('PredictionResultModel', back_populates='user')
-    data_sources = relationship('DataSourceModel', back_populates='user')
-    actions = relationship('CustomerActionModel', back_populates='user')
+    tasks = relationship('PredictionTaskEntity', back_populates='user')
+    results = relationship('PredictionResultEntity', back_populates='user')
+    data_sources = relationship('DataSourceEntity', back_populates='user')
+    actions = relationship('CustomerActionEntity', back_populates='user')
     company_id = db.Column(db.ForeignKey('company.id'), nullable=False)
-    company = relationship('CompanyModel', foreign_keys=company_id)
-    profile = relationship('UserProfileModel', uselist=False)
+    company = relationship('CompanyEntity', foreign_keys=company_id)
+    profile = relationship('UserProfileEntity', uselist=False)
 
     confirmed = db.Column(db.Boolean, default=False)
 
@@ -104,42 +104,42 @@ class UserModel(BaseModel):
         except BadSignature:
             return None
 
-        user = UserModel.query.get(data['id'])
+        user = UserEntity.query.get(data['id'])
         return user
 
     @staticmethod
     def get_user_by_email(email):
         try:
-            return UserModel.query.filter(UserModel.email == email).one()
+            return UserEntity.query.filter(UserEntity.email == email).one()
         except NoResultFound:
             return None
 
-class CustomerActionModel(BaseModel):
+class CustomerActionEntity(BaseEntity):
     __tablename__ = 'customer_action'
 
     user_id = db.Column(db.ForeignKey('user.id'), nullable=False)
-    user = relationship('UserModel', foreign_keys=user_id)
+    user = relationship('UserEntity', foreign_keys=user_id)
     action = db.Column(db.Enum(Actions))
 
 
-class UserProfileModel(BaseModel):
+class UserProfileEntity(BaseEntity):
     __tablename__ = 'user_profile'
 
     user_id = db.Column(db.ForeignKey('user.id'), nullable=False)
-    user = relationship('UserModel', foreign_keys=user_id)
+    user = relationship('UserEntity', foreign_keys=user_id)
 
 
-class CompanyConfigurationModel(BaseModel):
+class CompanyConfigurationEntity(BaseEntity):
     __tablename__ = 'company_configuration'
 
     company_id = db.Column(db.ForeignKey('company.id'), nullable=False)
-    company = relationship('CompanyModel', foreign_keys=company_id)
+    company = relationship('CompanyEntity', foreign_keys=company_id)
     configuration = db.Column(db.JSON)
 
     @staticmethod
     def get_by_id(id):
         try:
-            configuration = CompanyConfigurationModel.query.filter(CompanyConfigurationModel.id == id).one()
+            configuration = CompanyConfigurationEntity.query.filter(CompanyConfigurationEntity.id == id).one()
         except NoResultFound:
             return None
         return configuration

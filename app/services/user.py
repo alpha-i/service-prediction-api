@@ -1,7 +1,7 @@
 from itsdangerous import (TimedJSONWebSignatureSerializer as Serializer, URLSafeTimedSerializer)
 
-from app.core.entities import User
-from app.models import UserModel
+from app.entities import UserEntity
+from app.core.models import User
 from config import SECRET_KEY
 
 
@@ -11,12 +11,12 @@ def generate_auth_token(user, expiration=3600):
 
 
 def verify_token(token):
-    user = UserModel.verify_auth_token(token)
+    user = UserEntity.verify_auth_token(token)
     return User.from_model(user)
 
 
 def get_by_email(email):
-    user = UserModel.get_user_by_email(email)
+    user = UserEntity.get_user_by_email(email)
     return User.from_model(user)
 
 

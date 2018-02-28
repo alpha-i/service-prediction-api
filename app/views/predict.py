@@ -7,7 +7,6 @@ from app.core.auth import requires_access_token
 from app.core.content import ApiResponse
 from app.core.schemas import prediction_request_schema
 from app.core.utils import parse_request_data
-from app.models.prediction import PredictionTaskModel, PredictionResultModel
 from app.tasks.predict import predict_task, prediction_failure
 
 predict_blueprint = Blueprint('prediction', __name__)

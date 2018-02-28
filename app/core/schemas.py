@@ -75,7 +75,7 @@ class UserProfileSchema(BaseModelSchema):
 
 class TaskStatusSchema(BaseModelSchema):
     state = fields.String()
-    message = fields.String()
+    message = fields.String(allow_none=True)
 
 
 class ResultSchema(BaseModelSchema):
@@ -88,7 +88,7 @@ class TaskSchema(BaseModelSchema):
     name = fields.String()
     user_id = fields.Integer()
     task_code = fields.String()
-    status = fields.String()
+    status = fields.String(allow_none=True)
 
 
 class UserSchema(BaseModelSchema):
