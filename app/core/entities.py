@@ -31,10 +31,10 @@ class BaseEntity(metaclass=abc.ABCMeta):
             raise EntityCreationException(errors)
 
         entity = cls()
+        setattr(entity, '_model', model)
 
         for key, value in data.items():
             setattr(entity, key, value)
-        setattr(entity, '_model', model)
         return entity
 
     @classmethod

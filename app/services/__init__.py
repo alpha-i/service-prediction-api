@@ -1,1 +1,1 @@
-from app.services import user, company
+from app.services import user, company, prediction

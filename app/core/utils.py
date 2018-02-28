@@ -13,7 +13,8 @@ class CustomJSONEncoder(JSONEncoder):
 
     def default(self, obj):
         if issubclass(obj.__class__, BaseEntity):
-            return obj.SCHEMA().dump(obj)
+            data, _ = obj.SCHEMA().dump(obj)
+            return data
         if isinstance(obj.__class__, DeclarativeMeta):
             return obj.to_dict()
         if issubclass(obj.__class__, Enum):

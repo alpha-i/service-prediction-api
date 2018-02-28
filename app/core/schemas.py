@@ -72,13 +72,16 @@ class TaskStatusSchema(BaseModelSchema):
 
 
 class ResultSchema(BaseModelSchema):
+    user_id = fields.Integer()
     task_code = fields.String()
     result = fields.Dict()
 
 
 class TaskSchema(BaseModelSchema):
     name = fields.String()
+    user_id = fields.Integer()
     task_code = fields.String()
+    status = fields.String()
 
 
 class UserSchema(BaseModelSchema):

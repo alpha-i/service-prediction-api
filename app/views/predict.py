@@ -2,6 +2,7 @@ import time
 
 from flask import Blueprint, jsonify, url_for, g, request, abort
 
+from app import services
 from app.core.auth import requires_access_token
 from app.core.content import ApiResponse
 from app.core.schemas import prediction_request_schema
@@ -62,7 +63,7 @@ def status(task_code):
     """
     Get the status of a particular task
     """
-    prediction_task = PredictionTaskModel.get_by_task_code(task_code)
+    prediction_task = services.prediction.get_task_by_code(task_code)
     if not prediction_task:
         return abort(404)
 
@@ -87,16 +88,13 @@ def result(task_code):
     """
     Get the result of an individual task
     """
-    prediction_result = PredictionResultModel.get_for_task(task_code)
+    prediction_result = services.prediction.get_result_by_code(task_code)
     if not prediction_result:
         abort(404)
 
     response = ApiResponse(
         content_type=request.accept_mimetypes.best,
-        context={
-            'user_id': prediction_result.user_id,
-            'task_code': prediction_result.task_code,
-            'result': prediction_result.result,
-        })
+        context=prediction_result
+    )
 
     return response()

@@ -2,7 +2,6 @@ import logging
 
 from flask import Blueprint, g, request, abort, url_for
 
-from app.db import db
 from app.core.auth import requires_access_token, is_valid_email_for_company
 from app.services.user import generate_confirmation_token, confirm_token
 from app.core.content import ApiResponse
