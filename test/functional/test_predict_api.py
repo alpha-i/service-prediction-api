@@ -6,9 +6,6 @@ from flask import url_for
 
 from test.functional.base_test_class import BaseTestClass
 
-from app.db import db
-from test.test_app import APP
-
 HERE = os.path.join(os.path.dirname(__file__))
 
 
@@ -47,8 +44,8 @@ class TestPredictionAPI(BaseTestClass):
             """
             assert resp.json['user_id'] == 1
 
-            assert resp.json['start_date'] == '2015-08-15T00:00:11'
-            assert resp.json['end_date'] == '2015-08-15T03:21:14'
+            assert resp.json['start_date'] == '2015-08-15T00:00:11+00:00'
+            assert resp.json['end_date'] == '2015-08-15T03:21:14+00:00'
 
             first_file_location = resp.json['location']
 
@@ -61,8 +58,8 @@ class TestPredictionAPI(BaseTestClass):
             )
             assert resp.status_code == 302  # in order to redirect to the dashboard
             assert resp.json
-            assert resp.json['start_date'] == '2015-08-15T00:00:11'
-            assert resp.json['end_date'] == '2017-08-15T03:21:14'
+            assert resp.json['start_date'] == '2015-08-15T00:00:11+00:00'
+            assert resp.json['end_date'] == '2017-08-15T03:21:14+00:00'
 
             second_file_location = resp.json['location']
 

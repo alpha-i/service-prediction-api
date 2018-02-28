@@ -2,11 +2,11 @@ import time
 
 from flask import Blueprint, jsonify, url_for, g, request, abort
 
+from app import services
 from app.core.auth import requires_access_token
 from app.core.content import ApiResponse
 from app.core.schemas import prediction_request_schema
 from app.core.utils import parse_request_data
-from app.models.prediction import PredictionTask, PredictionResult
 from app.tasks.predict import predict_task, prediction_failure
 
 predict_blueprint = Blueprint('prediction', __name__)
@@ -49,13 +49,20 @@ def submit():
     return response()
 
 
+@predict_blueprint.route('/', methods=['GET'])
+@requires_access_token
+@parse_request_data
+def get_tasks():
+    return jsonify(g.user.tasks)
+
+
 @predict_blueprint.route('/status/<string:task_code>')
 @requires_access_token
 def status(task_code):
     """
     Get the status of a particular task
     """
-    prediction_task = PredictionTask.get_by_task_code(task_code)
+    prediction_task = services.prediction.get_task_by_code(task_code)
     if not prediction_task:
         return abort(404)
 
@@ -67,22 +74,26 @@ def status(task_code):
     return response()
 
 
+@predict_blueprint.route('/result', methods=['GET'])
+@requires_access_token
+@parse_request_data
+def get_results():
+    return jsonify(g.user.results)
+
+
 @predict_blueprint.route('/result/<string:task_code>')
 @requires_access_token
 def result(task_code):
     """
     Get the result of an individual task
     """
-    prediction_result = PredictionResult.get_for_task(task_code)
+    prediction_result = services.prediction.get_result_by_code(task_code)
     if not prediction_result:
         abort(404)
 
     response = ApiResponse(
         content_type=request.accept_mimetypes.best,
-        context={
-            'user_id': prediction_result.user_id,
-            'task_code': prediction_result.task_code,
-            'result': prediction_result.result,
-        })
+        context=prediction_result
+    )
 
     return response()

@@ -2,11 +2,12 @@ import logging
 
 from flask import Blueprint, g, request, abort, url_for
 
-from app.db import db
-from app.core.auth import requires_access_token, is_valid_email_for_company, generate_confirmation_token, confirm_token
+from app.core.auth import requires_access_token, is_valid_email_for_company
+from app.services.user import generate_confirmation_token, confirm_token
 from app.core.content import ApiResponse
 from app.core.utils import parse_request_data
-from app.models.customer import Company, User
+from app import services
+from app.core.models import User
 
 user_blueprint = Blueprint('user', __name__)
 
@@ -28,7 +29,7 @@ def register():
 
     assert email and password, abort(400)
 
-    company = Company.get_for_email(email)
+    company = services.company.get_for_email(email)
     if not company:
         logging.warning("No company could be found for %s", email)
         abort(401)
@@ -37,16 +38,13 @@ def register():
         logging.warning("Invalid email %s for company: %s", email, company.domain)
         abort(401)
 
-    user = User.get_user_by_email(email)
+    user = services.user.get_by_email(email)
     if user is not None:
         abort(400)
 
-    user = User(email=email, confirmed=False, company_id=company.id)
+    user = User(email=email, confirmed=False, company_id=company.id, password=password)
+    user = services.user.insert(user)
 
-    user.hash_password(password)
-
-    db.session.add(user)
-    db.session.commit()
     confirmation_token = generate_confirmation_token(user.email)
     logging.info("Confirmation token for %s: %s", user.email, confirmation_token)
 
@@ -69,12 +67,11 @@ def confirm(token):
     if not email:
         abort(401)
 
-    user = User.get_user_by_email(email)
+    user = services.user.get_by_email(email)
     if user.confirmed:
         abort(400)
-    user.confirmed = True
-    db.session.add(user)
-    db.session.commit()
+
+    user = services.user.confirm(user)
     logging.info("User %s successfully confirmed!", user.email)
 
     response = ApiResponse(
