@@ -1,7 +1,5 @@
-import logging
 from enum import Enum
 
-from flask import url_for
 from sqlalchemy import event
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm.exc import NoResultFound
@@ -27,12 +25,13 @@ class PredictionTaskEntity(BaseEntity):
     user = relationship('UserEntity', back_populates='tasks')
 
     task_code = db.Column(db.String(60), unique=True, nullable=False)
-    statuses = relationship('TaskStatusEntity')
+    statuses = relationship('TaskStatusEntity', cascade='all, delete-orphan')
 
     datasource_id = db.Column(db.Integer, db.ForeignKey('data_source.id'), nullable=False)
     datasource = relationship('DataSourceEntity', back_populates='prediction_task_list')
 
-    prediction_result = relationship('PredictionResultEntity', uselist=False, back_populates='prediction_task')
+    prediction_result = relationship('PredictionResultEntity', uselist=False, back_populates='prediction_task',
+                                     cascade='all, delete-orphan')
     prediction_request = db.Column(db.JSON)
 
     @staticmethod
@@ -53,11 +52,8 @@ class PredictionTaskEntity(BaseEntity):
         return None
 
     @property
-    def result(self):
-        logging.warning(self.status)
-        if self.status in [TaskStatusTypes.successful.value, TaskStatusTypes.failed.value]:
-            return url_for('prediction.result', task_code=self.task_code, _external=True)
-        return None
+    def is_completed(self):
+        return self.status in [TaskStatusTypes.successful.value, TaskStatusTypes.failed.value]
 
 
 class TaskStatusEntity(BaseEntity):

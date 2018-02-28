@@ -73,6 +73,8 @@ def upload():
     saved_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename + '.hdf5')
     data_frame.to_hdf(saved_path, key=current_app.config['HDF5_STORE_INDEX'])
 
+    original = True if len(user.company.data_sources) == 0 else False
+
     upload = DataSource(
         user_id=user.id,
         company_id=user.company_id,
@@ -81,7 +83,8 @@ def upload():
         location=saved_path,
         filename=filename,
         start_date=data_frame.index[0].to_pydatetime(),
-        end_date=data_frame.index[-1].to_pydatetime()
+        end_date=data_frame.index[-1].to_pydatetime(),
+        is_original=original
     )
 
     datasource = services.datasource.insert(upload)
@@ -89,7 +92,24 @@ def upload():
     response = ApiResponse(
         content_type=request.accept_mimetypes.best,
         context=datasource,
-        next=url_for('customer.view_datasource')
+        next=url_for('customer.list_datasources')
+    )
+
+    return response()
+
+@datasource_blueprint.route('/delete/<string:datasource_id>', methods=['POST'])
+@requires_access_token
+def delete(datasource_id):
+    datasource = services.datasource.get_by_upload_code(datasource_id)
+    if datasource.is_original:
+        abort(400)
+
+    services.datasource.delete(datasource)
+
+    response = ApiResponse(
+        content_type=request.accept_mimetypes.best,
+        next=url_for('customer.list_datasources'),
+        status_code=200
     )
 
     return response()

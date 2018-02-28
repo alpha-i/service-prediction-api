@@ -15,3 +15,8 @@ def insert(upload):
     model = upload.to_model()
     model.save()
     return DataSource.from_model(model)
+
+
+def delete(datasource):
+    model = datasource._model
+    model.delete()

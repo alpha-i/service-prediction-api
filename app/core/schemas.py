@@ -1,6 +1,9 @@
 import re
 
 from marshmallow import Schema, fields, validates, ValidationError
+from marshmallow_enum import EnumField
+
+from app.entities.datasource import UploadTypes
 
 
 class DataPointSchema(Schema):
@@ -43,11 +46,12 @@ class BaseModelSchema(Schema):
 class DataSourceSchema(BaseModelSchema):
     user_id = fields.Integer()
     upload_code = fields.String()
-    type = fields.String()
+    type = EnumField(UploadTypes)
     location = fields.String()
     filename = fields.String()
     start_date = fields.DateTime()
     end_date = fields.DateTime()
+    is_original = fields.Boolean()
 
 
 class CompanySchema(BaseModelSchema):
@@ -89,6 +93,7 @@ class TaskSchema(BaseModelSchema):
     user_id = fields.Integer()
     task_code = fields.String()
     status = fields.String(allow_none=True)
+    is_completed = fields.Boolean()
 
 
 class UserSchema(BaseModelSchema):

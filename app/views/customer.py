@@ -2,6 +2,7 @@ from datetime import timedelta
 
 from flask import Blueprint, jsonify, render_template, g, request, abort, Response
 
+from app import services
 from app.core.auth import requires_access_token
 from app.core.interpreters import prediction_result_to_dataframe
 from app.core.schemas import user_schema
@@ -36,7 +37,7 @@ def dashboard():
 
 @customer_blueprint.route('/datasource')
 @requires_access_token
-def view_datasource():
+def list_datasources():
     context = {
         'user_id': g.user.id,
         'profile': {'email': g.user.email},
@@ -44,7 +45,20 @@ def view_datasource():
         'datasource_history': g.user.data_sources
     }
 
-    return render_template('datasource/index.html', **context)
+    return render_template('datasource/list.html', **context)
+
+
+@customer_blueprint.route('/datasource/<string:datasource_id>', methods=['GET'])
+@requires_access_token
+def view_datasource(datasource_id):
+    datasource = services.datasource.get_by_upload_code(datasource_id=datasource_id)
+
+    context = {
+        'current_datasource': datasource,
+        'profile': {'email': g.user.email}
+    }
+
+    return render_template('datasource/detail.html', **context)
 
 
 @customer_blueprint.route('/new-prediction')
