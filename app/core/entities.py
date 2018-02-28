@@ -2,10 +2,13 @@ import abc
 
 from flask import json
 
-from app.core.schemas import UserSchema, CompanySchema, TaskSchema, ResultSchema, DataSourceSchema
+from app.core.schemas import (
+    UserSchema, CompanySchema, TaskSchema, ResultSchema, DataSourceSchema, CompanyConfigurationSchema
+)
 from app.models import (
     UserModel as UserModel, CompanyModel as CompanyModel, PredictionTaskModel as PredictionTaskModel,
-    PredictionResultModel as PredictionResultModel, DataSourceModel as DataSourceModel
+    PredictionResultModel as PredictionResultModel, DataSourceModel as DataSourceModel,
+    CompanyConfigurationModel
 )
 
 
@@ -83,3 +86,8 @@ class DataSource(BaseEntity):
 class Result(BaseEntity):
     SCHEMA = ResultSchema
     MODEL = PredictionResultModel
+
+
+class CompanyConfiguration(BaseEntity):
+    SCHEMA = CompanyConfigurationSchema
+    MODEL = CompanyConfigurationModel

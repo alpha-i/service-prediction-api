@@ -1,11 +1,10 @@
 from flask import Blueprint, g, abort, request
 
+from app import services
 from app.core.auth import requires_access_token
 from app.core.content import ApiResponse
+from app.core.entities import Company, CompanyConfiguration
 from app.core.utils import parse_request_data, json_reload
-from app.db import db
-from app.models.customer import CompanyConfigurationModel
-from app.models.customer import CompanyModel
 
 company_blueprint = Blueprint('company', __name__)
 
@@ -28,13 +27,12 @@ def register():
 
     assert company_name and domain, abort(400)
 
-    existing_company = CompanyModel.get_for_domain(domain)
+    existing_company = services.company.get_for_domain(domain)
     if existing_company:
         abort(400)
 
-    company = CompanyModel(name=company_name, domain=domain)
-    db.session.add(company)
-    db.session.commit()
+    company = Company(name=company_name, domain=domain)
+    company = services.company.insert(company)
 
     response = ApiResponse(
         content_type=request.accept_mimetypes.best,
@@ -59,7 +57,7 @@ def current_configuration():
 @company_blueprint.route('/configuration/<int:id>')
 @requires_access_token
 def configuration_detail(id):
-    configuration = CompanyConfigurationModel.get_by_id(id)
+    configuration = services.company.get_configuration_for_id(id)
     if not configuration:
         abort(404)
     if configuration.company_id != g.user.company.id:
@@ -76,13 +74,12 @@ def configuration_detail(id):
 def configuration_update():
     configuration_request = g.json
 
-    configuration = CompanyConfigurationModel(
+    configuration = CompanyConfiguration(
         company_id=g.user.company_id,
         configuration=json_reload(configuration_request)
     )
 
-    db.session.add(configuration)
-    db.session.commit()
+    configuration = services.company.insert_configuration(configuration)
 
     response = ApiResponse(
         content_type=request.accept_mimetypes.best,

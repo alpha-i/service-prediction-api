@@ -60,6 +60,11 @@ class CompanySchema(BaseModelSchema):
             raise ValidationError("Invalid domain name")
 
 
+class CompanyConfigurationSchema(BaseModelSchema):
+    company_id = fields.Integer()
+    configuration = fields.Dict()
+
+
 class CustomerActionSchema(BaseModelSchema):
     action = fields.String()
 
