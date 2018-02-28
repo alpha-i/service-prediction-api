@@ -52,7 +52,7 @@ class PredictionTaskEntity(BaseEntity):
         return None
 
     @property
-    def ended(self):
+    def is_completed(self):
         return self.status in [TaskStatusTypes.successful.value, TaskStatusTypes.failed.value]
 
 

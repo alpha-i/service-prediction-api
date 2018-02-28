@@ -51,6 +51,7 @@ class DataSourceSchema(BaseModelSchema):
     filename = fields.String()
     start_date = fields.DateTime()
     end_date = fields.DateTime()
+    is_original = fields.Boolean()
 
 
 class CompanySchema(BaseModelSchema):
@@ -92,7 +93,7 @@ class TaskSchema(BaseModelSchema):
     user_id = fields.Integer()
     task_code = fields.String()
     status = fields.String(allow_none=True)
-    ended = fields.Boolean()
+    is_completed = fields.Boolean()
 
 
 class UserSchema(BaseModelSchema):

@@ -34,6 +34,8 @@ class DataSourceEntity(BaseEntity):
     prediction_task_list = relationship('PredictionTaskEntity', back_populates='datasource',
                                         cascade='all, delete-orphan')
 
+    is_original = db.Column(db.Boolean, default=False)
+
     def get_file(self):
         with pd.HDFStore(self.location) as hdf_store:
             dataframe = hdf_store[HDF5_STORE_INDEX]

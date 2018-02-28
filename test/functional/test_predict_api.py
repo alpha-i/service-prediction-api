@@ -77,17 +77,41 @@ class TestPredictionAPI(BaseTestClass):
             )
             assert resp.status_code == 302  # in order to redirect to the dashboard
             assert resp.json
-            upload_code = resp.json['upload_code']
-            file_location = resp.json['location']
+            original_upload_code = resp.json['upload_code']
+            original_file_location = resp.json['location']
 
+        with open(os.path.join(HERE, '../resources/test_data.csv'), 'rb') as test_upload_file:
+            resp = self.client.post(
+                url_for('datasource.upload'),
+                content_type='multipart/form-data',
+                data={'upload': (test_upload_file, 'test_data.csv')},
+                headers={'Accept': 'application/html'}
+            )
+            assert resp.status_code == 302  # in order to redirect to the dashboard
+            assert resp.json
+            second_upload_code = resp.json['upload_code']
+            second_file_location = resp.json['location']
+
+        # users can't delete the original data source
         resp = self.client.post(
-            url_for('datasource.delete', datasource_id=upload_code),
+            url_for('datasource.delete', datasource_id=original_upload_code),
+            content_type='application/json',
+            headers={'Accept': 'application/html'}
+        )
+
+        assert resp.status_code == 400
+
+        # but they can delete updates
+        resp = self.client.post(
+            url_for('datasource.delete', datasource_id=second_upload_code),
             content_type='application/json',
             headers={'Accept': 'application/html'}
         )
 
         assert resp.status_code == 302
-        os.remove(file_location)
+
+        os.remove(original_file_location)
+        os.remove(second_file_location)
 
     def test_predict_on_a_file(self):
         self.login()
