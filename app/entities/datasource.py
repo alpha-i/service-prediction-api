@@ -31,7 +31,8 @@ class DataSourceEntity(BaseEntity):
     start_date = db.Column(db.DateTime, index=True, nullable=True)
     end_date = db.Column(db.DateTime, index=True, nullable=True)
 
-    prediction_task_list = relationship('PredictionTaskEntity', back_populates='datasource')
+    prediction_task_list = relationship('PredictionTaskEntity', back_populates='datasource',
+                                        cascade='all, delete-orphan')
 
     def get_file(self):
         with pd.HDFStore(self.location) as hdf_store:

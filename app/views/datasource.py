@@ -89,7 +89,20 @@ def upload():
     response = ApiResponse(
         content_type=request.accept_mimetypes.best,
         context=datasource,
-        next=url_for('customer.view_datasource')
+        next=url_for('customer.list_datasources')
+    )
+
+    return response()
+
+@datasource_blueprint.route('/delete/<string:datasource_id>', methods=['POST'])
+@requires_access_token
+def delete(datasource_id):
+    services.datasource.delete(datasource_id)
+
+    response = ApiResponse(
+        content_type=request.accept_mimetypes.best,
+        next=url_for('customer.list_datasources'),
+        status_code=200
     )
 
     return response()

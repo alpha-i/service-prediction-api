@@ -15,3 +15,8 @@ def insert(upload):
     model = upload.to_model()
     model.save()
     return DataSource.from_model(model)
+
+
+def delete(datasource_id):
+    model = DataSourceEntity.get_by_upload_code(datasource_id)
+    model.delete()

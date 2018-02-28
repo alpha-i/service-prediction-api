@@ -35,7 +35,7 @@
                             <td>{{ datasource.start_date }}</td>
                             <td>{{ datasource.end_date }}</td>
                             <td>{{ macros.format_datetime(datasource.last_update) }}</td>
-                            <td><a href="{{ url_for('customer.view_datasource') }}"><span class="fa fa-file"></span></a></td>
+                            <td><a href="{{ url_for('customer.list_datasources') }}"><span class="fa fa-file"></span></a></td>
                         </tr>
                         </tbody>
                     </table>
@@ -44,7 +44,7 @@
                           <h4>No datasource set</h4>
                           <p>To use our prediction engine you need a datasource</p>
                         </div>
-                       <p><a class="btn btn-primary nounderline" href="{{ url_for('customer.view_datasource') }}"><span class="fa fa-upload"></span> update</a></p>
+                       <p><a class="btn btn-primary nounderline" href="{{ url_for('customer.list_datasources') }}"><span class="fa fa-upload"></span> update</a></p>
                     {% endif %}
                 </div>
             </div>

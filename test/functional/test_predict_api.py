@@ -66,6 +66,29 @@ class TestPredictionAPI(BaseTestClass):
         os.remove(first_file_location)
         os.remove(second_file_location)
 
+    def test_user_can_delete_a_datasource(self):
+        self.login()
+        with open(os.path.join(HERE, '../resources/test_data.csv'), 'rb') as test_upload_file:
+            resp = self.client.post(
+                url_for('datasource.upload'),
+                content_type='multipart/form-data',
+                data={'upload': (test_upload_file, 'test_data.csv')},
+                headers={'Accept': 'application/html'}
+            )
+            assert resp.status_code == 302  # in order to redirect to the dashboard
+            assert resp.json
+            upload_code = resp.json['upload_code']
+            file_location = resp.json['location']
+
+        resp = self.client.post(
+            url_for('datasource.delete', datasource_id=upload_code),
+            content_type='application/json',
+            headers={'Accept': 'application/html'}
+        )
+
+        assert resp.status_code == 302
+        os.remove(file_location)
+
     def test_predict_on_a_file(self):
         self.login()
         # first you upload a file
@@ -111,7 +134,7 @@ class TestPredictionAPI(BaseTestClass):
         time.sleep(4)
         resp = self.client.get(
             url_for('prediction.status', task_code=task_code)
-            #headers={'Authorization': self.token}
+            # headers={'Authorization': self.token}
         )
         """
         {
@@ -139,7 +162,7 @@ class TestPredictionAPI(BaseTestClass):
         # check the result
         resp = self.client.get(
             url_for('prediction.result', task_code=task_code),
-            #headers={'Authorization': self.token}
+            # headers={'Authorization': self.token}
         )
 
         """

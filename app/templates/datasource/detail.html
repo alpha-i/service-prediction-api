@@ -1,0 +1,71 @@
+{% extends "layout.html" %}
+
+{% set page_title %}Update Datasource{% endset %}
+
+{% block page_header %}
+    <h1>
+        Historical Data
+        <small>An overview of your historical data</small>
+    </h1>
+{% endblock %}
+{% block breadcrumb_items %}
+    {{ super() }}
+    <li><a class="active"><i class="fa fa-upload"></i> Upload Datasource</a></li>
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="box box-primary">
+                <div class="box box-success">
+                    <h3 class="box-header with-border">Overview</h3>
+                    <div class="box-body">
+
+                        {% if current_datasource %}
+                            {{ macros.print_datasource_info(current_datasource) }}
+                        {% else %}
+                            <div class="callout callout-warning">
+                                <h4>No datasource set</h4>
+                                <p>To use our prediction engine you need a datasource</p>
+                            </div>
+                        {% endif %}
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="box box-danger">
+                <h3 class="box-header with-border">Delete datasource</h3>
+                <div class="box-body">
+                    <form action="{{ url_for('datasource.delete', datasource_id=current_datasource.upload_code) }}" method="POST">
+                        <div class="form-group row">
+                            {# Ugly to watch, plz halp #}
+                            <input class="btn btn-primary" type="submit" value="DELETE!" name="submit">
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block footer_js %}
+    {{ super() }}
+    <script>
+        $('#file_browser').click(function (e) {
+            e.preventDefault();
+            $('#upload').click();
+        });
+
+        $('#upload').change(function () {
+            $('#file_path').val($(this).val());
+        });
+
+        $('#file_path').click(function () {
+            $('#file_browser').click();
+        });
+    </script>
+{% endblock %}
