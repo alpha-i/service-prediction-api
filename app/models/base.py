@@ -34,3 +34,8 @@ class BaseModel(db.Model):
 
     def __iter__(self):
         return self.to_dict().iteritems()
+
+    def save(self):
+        db.session.add(self)
+        db.session.commit()
+

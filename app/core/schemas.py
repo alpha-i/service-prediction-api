@@ -6,7 +6,8 @@ from marshmallow import Schema, fields, validates, ValidationError
 class DataPointSchema(Schema):
     feature = fields.String()
     value = fields.Float()
-    confidence = fields.Float()
+    lower = fields.Float()
+    upper = fields.Float()
 
 
 class PredictionSchema(Schema):
@@ -34,12 +35,13 @@ prediction_result_schema = PredictionResultSchema()
 
 
 class BaseModelSchema(Schema):
-    id = fields.Integer()
-    created_at = fields.DateTime()
-    last_update = fields.DateTime()
+    id = fields.Integer(allow_none=True)
+    created_at = fields.DateTime(allow_none=True)
+    last_update = fields.DateTime(allow_none=True)
 
 
 class DataSourceSchema(BaseModelSchema):
+    user_id = fields.Integer()
     upload_code = fields.String()
     type = fields.String()
     location = fields.String()
@@ -74,7 +76,7 @@ class TaskStatusSchema(BaseModelSchema):
 class ResultSchema(BaseModelSchema):
     user_id = fields.Integer()
     task_code = fields.String()
-    result = fields.Dict()
+    result = fields.Nested(PredictionSchema, many=True)
 
 
 class TaskSchema(BaseModelSchema):

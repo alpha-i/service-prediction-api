@@ -1,5 +1,7 @@
 import abc
 
+from flask import json
+
 from app.core.schemas import UserSchema, CompanySchema, TaskSchema, ResultSchema, DataSourceSchema
 from app.models import (
     UserModel as UserModel, CompanyModel as CompanyModel, PredictionTaskModel as PredictionTaskModel,
@@ -25,9 +27,9 @@ class BaseEntity(metaclass=abc.ABCMeta):
             return None
 
         schema = cls.SCHEMA()
-        data, errors = schema.dump(model.to_dict())
-
+        data, errors = schema.loads(json.dumps(model.to_dict()))
         if errors:
+            import ipdb; ipdb.set_trace()
             raise EntityCreationException(errors)
 
         entity = cls()

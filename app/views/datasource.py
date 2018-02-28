@@ -1,25 +1,17 @@
 import logging
 import os
-import uuid
 
 import pandas as pd
 from flask import Blueprint, request, abort, current_app, url_for, g
 
+from app import services
 from app.core.auth import requires_access_token
 from app.core.content import ApiResponse
-from app.db import db
-from app.models.datasource import DataSourceModel, UploadTypes
+from app.core.entities import DataSource
+from app.core.utils import allowed_extension, generate_upload_code
+from app.models.datasource import UploadTypes
 
 datasource_blueprint = Blueprint('datasource', __name__)
-
-
-def allowed_extension(filename):
-    extension = filename.rsplit('.', 1)[1].lower()
-    return extension in current_app.config['ALLOWED_EXTENSIONS']
-
-
-def generate_upload_code():
-    return str(uuid.uuid4())
 
 
 @datasource_blueprint.route('/')
@@ -47,7 +39,7 @@ def current():
 @datasource_blueprint.route('/<string:datasource_id>')
 @requires_access_token
 def get(datasource_id):
-    datasource = DataSourceModel.get_by_upload_code(datasource_id)
+    datasource = services.datasource.get_by_upload_code(datasource_id)
     if not datasource:
         abort(404)
 
@@ -57,6 +49,7 @@ def get(datasource_id):
     )
 
     return response()
+
 
 @datasource_blueprint.route('/upload', methods=['POST'])
 @requires_access_token
@@ -68,7 +61,7 @@ def upload():
 
     upload_code = generate_upload_code()
 
-    filename = DataSourceModel.generate_filename(upload_code, uploaded_file.filename)
+    filename = services.datasource.generate_filename(upload_code, uploaded_file.filename)
 
     data_frame = pd.read_csv(uploaded_file, sep=',', index_col='date', parse_dates=True)
 
@@ -80,7 +73,7 @@ def upload():
     saved_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename + '.hdf5')
     data_frame.to_hdf(saved_path, key=current_app.config['HDF5_STORE_INDEX'])
 
-    upload = DataSourceModel(
+    upload = DataSource(
         user_id=user.id,
         company_id=user.company_id,
         upload_code=upload_code,
@@ -91,12 +84,11 @@ def upload():
         end_date=data_frame.index[-1].to_pydatetime()
     )
 
-    db.session.add(upload)
-    db.session.commit()
+    datasource = services.datasource.insert(upload)
 
     response = ApiResponse(
         content_type=request.accept_mimetypes.best,
-        context=upload,
+        context=datasource,
         next=url_for('customer.view_datasource')
     )
 

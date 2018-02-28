@@ -114,11 +114,6 @@ class UserModel(BaseModel):
         except NoResultFound:
             return None
 
-    def save(self):
-        db.session.add(self)
-        db.session.commit()
-
-
 class CustomerActionModel(BaseModel):
     __tablename__ = 'customer_action'
 

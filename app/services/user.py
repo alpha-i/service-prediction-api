@@ -26,7 +26,7 @@ def verify_password(user, password):
 
 def insert(user):
     model = user.to_model()
-    model.hash_password(user.password)
+    model.hash_password(password=model.password)
     model.save()
     return User.from_model(model)
 

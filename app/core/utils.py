@@ -1,9 +1,10 @@
+import uuid
 from datetime import datetime, date
 from enum import Enum
 from functools import wraps
 
 import numpy
-from flask import request, g, json
+from flask import request, g, json, current_app
 from flask.json import JSONEncoder
 from sqlalchemy.ext.declarative import DeclarativeMeta
 from app.core.entities import BaseEntity
@@ -45,3 +46,12 @@ def parse_request_data(fn):
 
 def json_reload(json_as_a_dict):
     return json.loads(json.dumps(json_as_a_dict))
+
+
+def allowed_extension(filename):
+    extension = filename.rsplit('.', 1)[1].lower()
+    return extension in current_app.config['ALLOWED_EXTENSIONS']
+
+
+def generate_upload_code():
+    return str(uuid.uuid4())
