@@ -10,12 +10,11 @@ def requires_access_token(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
         user = is_user_logged()
-
         if isinstance(user, UserEntity):
             g.user = user
             return fn(*args, **kwargs)
         elif request.content_type == 'application/json':
-            abort(401)
+            abort(401, "Unauthorised")
         else:
             return redirect(url_for('main.login'))
 
@@ -36,11 +35,11 @@ def is_user_logged():
         token = request.json.get('token')
     else:
         logging.info("No token provided!")
-        return False
+        return None
+    if not token:
+        abort(401, 'Please supply authentication')
 
     user = UserEntity.verify_auth_token(token)
-    if not user:
-        return None
     return user
 
 

@@ -25,11 +25,11 @@ def register():
     company_name = g.json.get('name')
     domain = g.json.get('domain')
 
-    assert company_name and domain, abort(400)
+    assert company_name and domain, abort(400, 'Request error: please specify company name and company domain.')
 
     existing_company = services.company.get_for_domain(domain)
     if existing_company:
-        abort(400)
+        abort(400, 'Unable to create existing company')
 
     company = Company(name=company_name, domain=domain)
     company = services.company.insert(company)
@@ -59,9 +59,9 @@ def current_configuration():
 def configuration_detail(id):
     configuration = services.company.get_configuration_for_id(id)
     if not configuration:
-        abort(404)
+        abort(404, 'No such configuration found')
     if configuration.company_id != g.user.company.id:
-        abort(401)
+        abort(401, 'Unauthorised')
     return ApiResponse(
         content_type=request.accept_mimetypes.best,
         context=configuration

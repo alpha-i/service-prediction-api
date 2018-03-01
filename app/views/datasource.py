@@ -41,7 +41,7 @@ def current():
 def get(datasource_id):
     datasource = services.datasource.get_by_upload_code(datasource_id)
     if not datasource:
-        abort(404)
+        abort(404, 'No data source found!')
 
     response = ApiResponse(
         content_type=request.accept_mimetypes.best,
@@ -57,7 +57,7 @@ def upload():
     user = g.user
     uploaded_file = request.files['upload']
     if not allowed_extension(uploaded_file.filename):
-        abort(400)
+        abort(400, f'File extension for {uploaded_file.filename} not allowed!')
 
     upload_code = generate_upload_code()
 

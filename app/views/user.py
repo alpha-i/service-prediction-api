@@ -27,20 +27,20 @@ def register():
     email = g.json.get('email')
     password = g.json.get('password')
 
-    assert email and password, abort(400)
+    assert email and password, abort(400, 'Please specify a user email and password')
 
     company = services.company.get_for_email(email)
     if not company:
         logging.warning("No company could be found for %s", email)
-        abort(401)
+        abort(401, 'Unauthorised')
 
     if not is_valid_email_for_company(email, company):
         logging.warning("Invalid email %s for company: %s", email, company.domain)
-        abort(401)
+        abort(401, 'Unauthorised')
 
     user = services.user.get_by_email(email)
     if user is not None:
-        abort(400)
+        abort(400, 'Cannot register an existing user!')
 
     user = User(email=email, confirmed=False, company_id=company.id, password=password)
     user = services.user.insert(user)
@@ -65,11 +65,11 @@ def register():
 def confirm(token):
     email = confirm_token(token)
     if not email:
-        abort(401)
+        abort(401, 'Unauthorised')
 
     user = services.user.get_by_email(email)
     if user.confirmed:
-        abort(400)
+        abort(400, 'User was already confirmed')
 
     user = services.user.confirm(user)
     logging.info("User %s successfully confirmed!", user.email)
