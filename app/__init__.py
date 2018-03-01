@@ -3,6 +3,7 @@ from flask import Flask, request, render_template
 from flask_migrate import Migrate
 from flask_bootstrap import Bootstrap
 
+from app.core.content import ApiResponse
 from app.core.utils import CustomJSONEncoder
 from config import CELERY_BROKER_URL, CELERY_RESULT_BACKEND
 
@@ -48,18 +49,37 @@ def create_app(config_filename, register_blueprints=True):
 
         @app.errorhandler(404)
         def render_404(e):
-            return render_template('404.html'), 404
+            response = ApiResponse(
+                content_type=request.accept_mimetypes.best,
+                context={'message': e.description},
+                template='404.html',
+                status_code=404
+            )
+            return response()
 
         @app.errorhandler(401)
         def render_401(e):
-            return render_template('401.html'), 401
+            response = ApiResponse(
+                content_type=request.accept_mimetypes.best,
+                context={'message': e.description},
+                template='401.html',
+                status_code=401
+            )
+            return response()
 
         @app.errorhandler(400)
         def render_400(e):
-            return render_template('400.html'), 400
+            response = ApiResponse(
+                content_type=request.accept_mimetypes.best,
+                context={'message': e.description},
+                template='404.html',
+                status_code=400
+            )
+            return response()
 
         @app.errorhandler(500)
         def render_500(e):
+            # We don't want to show internal exception messages...
             return render_template('500.html'), 500
 
 

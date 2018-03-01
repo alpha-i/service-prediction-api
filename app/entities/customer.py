@@ -104,6 +104,7 @@ class UserEntity(BaseEntity):
         except BadSignature:
             return None
 
+
         user = UserEntity.query.get(data['id'])
         return user
 

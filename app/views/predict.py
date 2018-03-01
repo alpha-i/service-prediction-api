@@ -64,7 +64,7 @@ def status(task_code):
     """
     prediction_task = services.prediction.get_task_by_code(task_code)
     if not prediction_task:
-        return abort(404)
+        return abort(404, 'No task found!')
 
     response = ApiResponse(
         content_type=request.accept_mimetypes.best,
@@ -89,7 +89,7 @@ def result(task_code):
     """
     prediction_result = services.prediction.get_result_by_code(task_code)
     if not prediction_result:
-        abort(404)
+        abort(404, 'No result found!')
 
     response = ApiResponse(
         content_type=request.accept_mimetypes.best,
