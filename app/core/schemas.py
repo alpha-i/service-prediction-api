@@ -51,7 +51,7 @@ class DataSourceSchema(BaseModelSchema):
     filename = fields.String()
     start_date = fields.DateTime()
     end_date = fields.DateTime()
-    is_original = fields.Boolean()
+    is_original = fields.Boolean(allow_none=True)
 
 
 class CompanySchema(BaseModelSchema):
