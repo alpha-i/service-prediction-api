@@ -52,10 +52,21 @@ def list_datasources():
 @requires_access_token
 def view_datasource(datasource_id):
     datasource = services.datasource.get_by_upload_code(datasource_id=datasource_id)
+    result_dataframe = services.datasource.get_dataframe(datasource)
 
+    data_source = {
+        'content': repr(result_dataframe[TARGET_FEATURE].to_csv(header=False)),
+        'header': ['timestamp', TARGET_FEATURE],
+        'timestamp_range': [
+            result_dataframe.index[0].strftime(DATETIME_FORMAT),
+            result_dataframe.index[-1].strftime(DATETIME_FORMAT)
+        ],
+        'target_feature': TARGET_FEATURE,
+    }
     context = {
         'current_datasource': datasource,
-        'profile': {'email': g.user.email}
+        'profile': {'email': g.user.email},
+        'data': data_source
     }
 
     return render_template('datasource/detail.html', **context)

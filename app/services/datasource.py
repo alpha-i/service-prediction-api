@@ -20,3 +20,6 @@ def insert(upload):
 def delete(datasource):
     model = datasource._model
     model.delete()
+
+def get_dataframe(datasource):
+    return datasource._model.get_file()
