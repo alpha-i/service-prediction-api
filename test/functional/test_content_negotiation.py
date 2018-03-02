@@ -2,7 +2,7 @@ import json
 
 from flask import url_for
 
-from app.core.auth import generate_confirmation_token
+from app.services.user import generate_confirmation_token
 from test.functional.base_test_class import BaseTestClass
 
 

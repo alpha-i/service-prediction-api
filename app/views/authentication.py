@@ -2,11 +2,12 @@ import datetime
 import logging
 
 from flask import Blueprint, abort, g, url_for, request
+from app import services
 
 from app.core.auth import requires_access_token
 from app.core.content import ApiResponse
 from app.core.utils import parse_request_data
-from app.models.customer import User
+
 from config import TOKEN_EXPIRATION
 
 authentication_blueprint = Blueprint('authentication', __name__)
@@ -18,20 +19,20 @@ def login():
     email = g.json.get('email')
     password = g.json.get('password')
 
-    user = User.get_user_by_email(email)  # type: User
+    user = services.user.get_by_email(email)
     if not user:
         logging.warning("No user found for %s", email)
-        abort(401)
+        abort(401, 'Incorrect user or password')
 
-    if not user.verify_password(password):
+    if not services.user.verify_password(user, password):
         logging.warning("Incorrect password for %s", email)
-        abort(401)
+        abort(401, 'Incorrect user or password')
 
     if not user.confirmed:
         logging.warning("User %s hasn't been confirmed!", user.email)
-        abort(401)
+        abort(401, f'Please confirm user {user.email} first')
 
-    token = user.generate_auth_token(expiration=TOKEN_EXPIRATION)
+    token = services.user.generate_auth_token(user, expiration=TOKEN_EXPIRATION)
     ascii_token = token.decode('ascii')
 
     response = ApiResponse(

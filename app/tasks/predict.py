@@ -6,12 +6,12 @@ from alphai_delphi.oracle.oracle_configuration import OracleConfiguration
 from celery.result import AsyncResult, allow_join_result
 
 from app import celery
+from app import services
 from app.core.interpreters import datasource_interpreter, prediction_interpreter
+from app.core.models import Task, Result, TaskStatus
 from app.core.schemas import prediction_request_schema
 from app.core.utils import json_reload
-from app.db import db
-from app.models.datasource import DataSource
-from app.models.prediction import PredictionTask, PredictionResult, TaskStatus, TaskStatusTypes
+from app.entities import TaskStatusTypes
 from config import MAXIMUM_DAYS_FORECAST
 
 logging.basicConfig(level=logging.DEBUG)
@@ -116,7 +116,7 @@ oracle_config = OracleConfiguration({
 
 @celery.task(bind=True)
 def predict_task(self, user_id, upload_code, prediction_request):
-    uploaded_file = DataSource.get_by_upload_code(upload_code)  # type: DataSource
+    uploaded_file = services.datasource.get_by_upload_code(upload_code)
     if not uploaded_file:
         logging.warning("No upload could be found for code %s", upload_code)
         return
@@ -130,9 +130,7 @@ def predict_task(self, user_id, upload_code, prediction_request):
         raise Exception(errors)
 
     prediction_task.prediction_request = json_reload(prediction_request)
-
-    db.session.add(prediction_task)
-    db.session.commit()
+    prediction_task = services.prediction.update_task(prediction_task)
 
     logging.info("Prediction request %s received: %s", upload_code, prediction_request)
 
@@ -163,14 +161,14 @@ def predict_task(self, user_id, upload_code, prediction_request):
     logging.info("*** TASK FINISHED! %s", prediction_task.task_code)
     set_task_status(prediction_task, TaskStatusTypes.successful)
 
-    prediction_result = PredictionResult(
+    prediction_result = Result(
         user_id=user_id,
         task_code=prediction_task.task_code,
         result=json_reload(prediction_result),
         prediction_task_id=prediction_task.id
     )
-    db.session.add(prediction_result)
-    db.session.commit()
+
+    services.prediction.insert_result(prediction_result)
     return
 
 
@@ -181,27 +179,24 @@ def prediction_failure(uuid):
         exc = result.get(propagate=False)
         print(exc)
 
-    prediction_task = PredictionTask.get_by_task_code(uuid)
+    prediction_task = services.prediction.get_task_by_code(uuid)
     set_task_status(prediction_task, TaskStatusTypes.failed)
     print('Task {0} raised exception: {1!r}\n{2!r}'.format(uuid, exc, result.traceback))
 
 
 def create_task(task_code, user_id, upload_code, name):
-    new_task = PredictionTask(
-        task_code=task_code,
-        user_id=user_id,
-        datasource_id=upload_code,
-        name=name
+    return services.prediction.insert_task(
+        Task(task_code=task_code,
+             user_id=user_id,
+             datasource_id=upload_code,
+             name=name)
     )
-    db.session.add(new_task)
-    db.session.commit()
-    return new_task
 
 
 def set_task_status(task, status):
-    status_model = TaskStatus(
-        prediction_task_id=task.id,
-        state=status.value
+    services.prediction.insert_status(
+        TaskStatus(
+            prediction_task_id=task.id,
+            state=status.value
+        )
     )
-    db.session.add(status_model)
-    db.session.commit()

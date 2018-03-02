@@ -50,3 +50,4 @@ alphai_covariance>=0.1.3
 alphai_feature_generation==1.4.0-dev-gym
 tensorflow==1.4.0
 alphai_cromulon_oracle==0.0.1
+gunicorn

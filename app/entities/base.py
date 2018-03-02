@@ -1,8 +1,9 @@
 from app.db import db
 
 
-class BaseModel(db.Model):
+class BaseEntity(db.Model):
     __abstract__ = True
+    __tablename__ = None
 
     INCLUDE_ATTRIBUTES = ()
     EXCLUDE_ATTRIBUTES = ()
@@ -33,3 +34,17 @@ class BaseModel(db.Model):
 
     def __iter__(self):
         return self.to_dict().iteritems()
+
+    def save(self):
+        db.session.add(self)
+        db.session.commit()
+
+    def update(self):
+        db.session.merge(self)
+        db.session.commit()
+
+    def delete(self):
+        db.session.delete(self)
+        db.session.commit()
+
+

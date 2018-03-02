@@ -1,8 +1,9 @@
 from celery import Celery
-from flask import Flask, request
+from flask import Flask, request, render_template
 from flask_migrate import Migrate
 from flask_bootstrap import Bootstrap
 
+from app.core.content import ApiResponse
 from app.core.utils import CustomJSONEncoder
 from config import CELERY_BROKER_URL, CELERY_RESULT_BACKEND
 
@@ -45,6 +46,43 @@ def create_app(config_filename, register_blueprints=True):
             # development, so wipe the cache every request.
             if 'localhost' in request.host_url or '0.0.0.0' in request.host_url:
                 app.jinja_env.cache = {}
+
+        @app.errorhandler(404)
+        def render_404(e):
+            response = ApiResponse(
+                content_type=request.accept_mimetypes.best,
+                context={'message': e.description},
+                template='404.html',
+                status_code=404
+            )
+            return response()
+
+        @app.errorhandler(401)
+        def render_401(e):
+            response = ApiResponse(
+                content_type=request.accept_mimetypes.best,
+                context={'message': e.description},
+                template='401.html',
+                status_code=401
+            )
+            return response()
+
+        @app.errorhandler(400)
+        def render_400(e):
+            response = ApiResponse(
+                content_type=request.accept_mimetypes.best,
+                context={'message': e.description},
+                template='404.html',
+                status_code=400
+            )
+            return response()
+
+        @app.errorhandler(500)
+        def render_500(e):
+            # We don't want to show internal exception messages...
+            return render_template('500.html'), 500
+
+
 
     app.json_encoder = CustomJSONEncoder
     return app

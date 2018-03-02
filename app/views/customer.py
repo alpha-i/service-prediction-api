@@ -2,12 +2,12 @@ from datetime import timedelta
 
 from flask import Blueprint, jsonify, render_template, g, request, abort, Response
 
+from app import services
 from app.core.auth import requires_access_token
 from app.core.interpreters import prediction_result_to_dataframe
+from app.core.schemas import user_schema
 from app.db import db
-from app.models.customer import CompanyConfiguration
-from app.models.datasource import DataSource
-from app.models.prediction import PredictionTask
+from app.entities import CompanyConfigurationEntity, DataSourceEntity, PredictionTaskEntity
 from config import MAXIMUM_DAYS_FORECAST, DATETIME_FORMAT, TARGET_FEATURE
 
 customer_blueprint = Blueprint('customer', __name__)
@@ -18,7 +18,8 @@ customer_blueprint = Blueprint('customer', __name__)
 @requires_access_token
 def get_user_profile():
     customer = g.user
-    return jsonify(customer)
+    user = user_schema.dump(customer).data
+    return jsonify(user)
 
 
 @customer_blueprint.route('/dashboard')
@@ -36,7 +37,7 @@ def dashboard():
 
 @customer_blueprint.route('/datasource')
 @requires_access_token
-def view_datasource():
+def list_datasources():
     context = {
         'user_id': g.user.id,
         'profile': {'email': g.user.email},
@@ -44,13 +45,36 @@ def view_datasource():
         'datasource_history': g.user.data_sources
     }
 
-    return render_template('datasource/index.html', **context)
+    return render_template('datasource/list.html', **context)
+
+
+@customer_blueprint.route('/datasource/<string:datasource_id>', methods=['GET'])
+@requires_access_token
+def view_datasource(datasource_id):
+    datasource = services.datasource.get_by_upload_code(datasource_id=datasource_id)
+    result_dataframe = services.datasource.get_dataframe(datasource)
+
+    data_source = {
+        'content': repr(result_dataframe[TARGET_FEATURE].to_csv(header=False)),
+        'header': ['timestamp', TARGET_FEATURE],
+        'timestamp_range': [
+            result_dataframe.index[0].strftime(DATETIME_FORMAT),
+            result_dataframe.index[-1].strftime(DATETIME_FORMAT)
+        ],
+        'target_feature': TARGET_FEATURE,
+    }
+    context = {
+        'current_datasource': datasource,
+        'profile': {'email': g.user.email},
+        'data': data_source
+    }
+
+    return render_template('datasource/detail.html', **context)
 
 
 @customer_blueprint.route('/new-prediction')
 @requires_access_token
 def new_prediction():
-
     datasource_min_date = g.user.current_data_source.end_date
     max_date = datasource_min_date + timedelta(days=MAXIMUM_DAYS_FORECAST)
 
@@ -70,7 +94,7 @@ def new_prediction():
 @customer_blueprint.route('/prediction/<string:task_code>')
 @requires_access_token
 def view_prediction(task_code):
-    prediction = PredictionTask.get_by_task_code(task_code)
+    prediction = PredictionTaskEntity.get_by_task_code(task_code)
     context = {
         'user_id': g.user.id,
         'profile': {'email': g.user.email},
@@ -97,7 +121,7 @@ def view_prediction(task_code):
 @customer_blueprint.route('/prediction/<string:task_code>/download')
 @requires_access_token
 def download_prediction_csv(task_code):
-    prediction = PredictionTask.get_by_task_code(task_code)
+    prediction = PredictionTaskEntity.get_by_task_code(task_code)
     result_dataframe = prediction_result_to_dataframe(prediction)
 
     return Response(
@@ -106,6 +130,17 @@ def download_prediction_csv(task_code):
         headers={"Content-disposition": "attachment; filename={}.csv".format(
             prediction.task_code
         )})
+
+
+@customer_blueprint.route('/use_case')
+@requires_access_token
+def view_company_use_case():
+    context = {
+        'user_id': g.user.id,
+        'profile': {'email': g.user.email}
+    }
+
+    return render_template('company/use_case.html', **context)
 
 
 @customer_blueprint.route('/prediction')
@@ -126,7 +161,7 @@ def list_predictions():
 @requires_access_token
 def list_customer_uploads():
     user_id = g.user.id
-    uploads = DataSource.get_for_user(user_id)
+    uploads = DataSourceEntity.get_for_user(user_id)
     return jsonify(uploads)
 
 
@@ -151,7 +186,7 @@ def update_customer_configuration():
     new_configuration = request.json  # TODO: needs to implement a schema!
     configuration_entity = user.configuration
     if not configuration_entity:
-        configuration_entity = CompanyConfiguration(
+        configuration_entity = CompanyConfigurationEntity(
             user_id=user.id
         )
     configuration_entity.configuration = new_configuration
@@ -159,6 +194,7 @@ def update_customer_configuration():
     db.session.add(user)  # TODO: needs to be decoupled!
     db.session.commit()  # maybe follow implement a repository/entity pattern
     return jsonify(user.configuration), 201
+
 
 @customer_blueprint.route('/configuration', methods=['GET'])
 @requires_access_token

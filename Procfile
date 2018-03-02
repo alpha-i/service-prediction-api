@@ -1,2 +1,2 @@
-web: gunicorn -b 0.0.0.0:5000 application:app
+web: python application.py
 worker: PYTHONOPTIMIZE=1 celery -A celery_worker.celery worker -E --loglevel=debug

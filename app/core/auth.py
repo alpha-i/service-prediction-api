@@ -1,24 +1,20 @@
 import logging
 from functools import wraps
 
-from flask import request, g, abort
-from itsdangerous import URLSafeTimedSerializer
 from flask import request, g, abort, redirect, url_for
 
-from app.models.customer import User
-from config import SECRET_KEY
+from app.entities import UserEntity
 
 
 def requires_access_token(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
         user = is_user_logged()
-
-        if isinstance(user, User):
+        if isinstance(user, UserEntity):
             g.user = user
             return fn(*args, **kwargs)
         elif request.content_type == 'application/json':
-            abort(401)
+            abort(401, "Unauthorised")
         else:
             return redirect(url_for('main.login'))
 
@@ -31,34 +27,20 @@ def is_user_logged():
 
     :return customer|False:
     """
-    if 'Authorization' in request.headers:
-        token = request.headers['Authorization']
+    if 'X-Token' in request.headers:
+        token = request.headers['X-Token']
     elif 'token' in request.cookies:
         token = request.cookies.get('token')
     elif request.content_type == 'application/json':
         token = request.json.get('token')
     else:
         logging.info("No token provided!")
-        return False
-
-    user = User.verify_auth_token(token)
-    if not user:
         return None
+    if not token:
+        abort(401, 'Please supply authentication')
+
+    user = UserEntity.verify_auth_token(token)
     return user
-
-
-def generate_confirmation_token(email):
-    serializer = URLSafeTimedSerializer(SECRET_KEY)
-    return serializer.dumps(email)
-
-
-def confirm_token(token, expiration=3600):
-    serializer = URLSafeTimedSerializer(SECRET_KEY)
-    try:
-        email = serializer.loads(token, max_age=expiration)
-    except:
-        return False
-    return email
 
 
 def is_valid_email_for_company(email: str, company):
