@@ -3,6 +3,7 @@ import json
 from flask import url_for
 from flask_testing import TestCase
 
+from app.services.oracle import ORACLE_CONFIG
 from app.services.user import generate_confirmation_token
 from app.db import db
 from test.test_app import APP
@@ -35,6 +36,19 @@ class BaseTestClass(TestCase):
             )
 
         )
+        assert resp.status_code == 201
+
+    def set_company_configuration(self):
+        configuration = ORACLE_CONFIG
+        configuration['oracle_class'] = 'alphai_cromulon_oracle.oracle.CromulonOracle'
+
+        resp = self.client.post(
+            url_for('company.configuration_update'),
+            data=json.dumps(configuration),
+            content_type='application/json',
+            headers={'Accept': 'application/json'}
+        )
+
         assert resp.status_code == 201
 
     def register_user(self):

@@ -115,6 +115,7 @@ class TestPredictionAPI(BaseTestClass):
 
     def test_predict_on_a_file(self):
         self.login()
+        self.set_company_configuration()
         # first you upload a file
         with open(os.path.join(HERE, '../resources/test_full_data.csv'), 'rb') as test_upload_file:
             resp = self.client.post(

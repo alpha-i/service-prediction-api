@@ -45,6 +45,7 @@ class BaseModelSchema(Schema):
 
 class DataSourceSchema(BaseModelSchema):
     user_id = fields.Integer()
+    company_id = fields.Integer()
     upload_code = fields.String()
     type = EnumField(UploadTypes)
     location = fields.String()
@@ -64,9 +65,15 @@ class CompanySchema(BaseModelSchema):
             raise ValidationError("Invalid domain name")
 
 
+class OracleConfigurationSchema(BaseModelSchema):
+    scheduling = fields.Dict()
+    oracle = fields.Dict()
+    oracle_class = fields.String()
+
+
 class CompanyConfigurationSchema(BaseModelSchema):
     company_id = fields.Integer()
-    configuration = fields.Dict()
+    configuration = fields.Nested(OracleConfigurationSchema, many=False)
 
 
 class CustomerActionSchema(BaseModelSchema):
