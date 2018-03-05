@@ -15,9 +15,9 @@ class TestConfigurationAPI(BaseTestClass):
 
     def test_user_can_push_a_configuration(self):
         configuration = {
-            "parameter_one": 1,
-            "parameter_two": 2,
-            "a_date": datetime.datetime(2018, 2, 20, 18, 39, 42)
+            "scheduling": {"something": "random"},
+            "oracle": {"something": "else"},
+            "oracle_class": "alphai_cromulon_oracle.oracle.CromulonOracle"
         }
         resp = self.client.post(
             url_for('company.configuration_update'),
@@ -27,4 +27,8 @@ class TestConfigurationAPI(BaseTestClass):
         )
 
         assert resp.status_code == 201
-        assert resp.json['a_date'] == '2018-02-20T18:39:42'
+        assert resp.json == {
+            'oracle': {'something': 'else'},
+            'oracle_class': 'alphai_cromulon_oracle.oracle.CromulonOracle',
+            'scheduling': {'something': 'random'}
+        }

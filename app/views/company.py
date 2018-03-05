@@ -4,6 +4,7 @@ from app import services
 from app.core.auth import requires_access_token
 from app.core.content import ApiResponse
 from app.core.models import Company, CompanyConfiguration
+from app.core.schemas import OracleConfigurationSchema
 from app.core.utils import parse_request_data, json_reload
 
 company_blueprint = Blueprint('company', __name__)
@@ -73,10 +74,13 @@ def configuration_detail(id):
 @parse_request_data
 def configuration_update():
     configuration_request = g.json
+    data, errors = OracleConfigurationSchema().load(configuration_request)
+    if errors or not data:
+        return abort(400, str(errors))
 
     configuration = CompanyConfiguration(
         company_id=g.user.company_id,
-        configuration=json_reload(configuration_request)
+        configuration=json_reload(data)
     )
 
     configuration = services.company.insert_configuration(configuration)
