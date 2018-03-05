@@ -72,7 +72,7 @@ def create_app(config_filename, register_blueprints=True):
             response = ApiResponse(
                 content_type=request.accept_mimetypes.best,
                 context={'message': e.description},
-                template='404.html',
+                template='400.html',
                 status_code=400
             )
             return response()

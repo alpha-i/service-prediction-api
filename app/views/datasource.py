@@ -55,7 +55,11 @@ def get(datasource_id):
 @requires_access_token
 def upload():
     user = g.user
+    if not len(request.files):
+        abort(400, "No file provided!")
+
     uploaded_file = request.files['upload']
+
     if not allowed_extension(uploaded_file.filename):
         abort(400, f'File extension for {uploaded_file.filename} not allowed!')
 
