@@ -1,9 +1,15 @@
 import re
 
-from marshmallow import Schema, fields, validates, ValidationError
+from marshmallow import Schema, fields, validates, ValidationError, pre_load
 from marshmallow_enum import EnumField
 
 from app.entities.datasource import UploadTypes
+
+
+class AttributeDict(dict):
+    __getattr__ = dict.get
+    __setattr__ = dict.__setitem__
+    __delattr__ = dict.__delitem__
 
 
 class DataPointSchema(Schema):
@@ -42,6 +48,10 @@ class BaseModelSchema(Schema):
     created_at = fields.DateTime(allow_none=True)
     last_update = fields.DateTime(allow_none=True)
 
+    @property
+    def dict_class(self):
+        return AttributeDict
+
 
 class DataSourceSchema(BaseModelSchema):
     user_id = fields.Integer()
@@ -53,11 +63,20 @@ class DataSourceSchema(BaseModelSchema):
     start_date = fields.DateTime()
     end_date = fields.DateTime()
     is_original = fields.Boolean(allow_none=True)
+    features = fields.List(fields.String)
+
+    @pre_load
+    def process_list_of_features(self, data):
+        features_string_list = data.get('features')
+        if not features_string_list:
+            return
+        data['features'] = features_string_list.split(', ')
 
 
 class CompanySchema(BaseModelSchema):
     name = fields.String()
     domain = fields.String()
+    data_sources = fields.Nested(DataSourceSchema, many=True, default=[])
 
     @validates('domain')
     def validate_domain(self, value):
@@ -106,7 +125,10 @@ class TaskSchema(BaseModelSchema):
 class UserSchema(BaseModelSchema):
     email = fields.Email()
     confirmed = fields.Boolean(allow_none=True)
+    company_id = fields.Integer()
     company = fields.Nested(CompanySchema, many=False)
+    current_data_source = fields.Nested(DataSourceSchema, allow_none=True)
+    data_sources = fields.Nested(DataSourceSchema, many=True, default=[])
 
 
 user_schema = UserSchema()

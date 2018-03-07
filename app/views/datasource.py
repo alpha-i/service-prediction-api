@@ -68,10 +68,12 @@ def upload():
     filename = services.datasource.generate_filename(upload_code, uploaded_file.filename)
 
     data_frame = pd.read_csv(uploaded_file, sep=',', index_col='date', parse_dates=True)
+    features = list(data_frame.columns)
 
     if user.current_data_source:
         logging.warning('User already has a data source')
-        existing_data_frame = user.current_data_source.get_file()
+        data_souce = services.datasource.get_by_upload_code(user.current_data_source.upload_code)
+        existing_data_frame = data_souce._model.get_file()
         data_frame = pd.concat([existing_data_frame, data_frame])
 
     saved_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename + '.hdf5')
@@ -88,7 +90,8 @@ def upload():
         filename=filename,
         start_date=data_frame.index[0].to_pydatetime(),
         end_date=data_frame.index[-1].to_pydatetime(),
-        is_original=original
+        is_original=original,
+        features=', '.join(features)
     )
 
     datasource = services.datasource.insert(upload)
@@ -100,6 +103,7 @@ def upload():
     )
 
     return response()
+
 
 @datasource_blueprint.route('/delete/<string:datasource_id>', methods=['POST'])
 @requires_access_token

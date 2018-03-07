@@ -35,6 +35,7 @@ class DataSourceEntity(BaseEntity):
                                         cascade='all, delete-orphan')
 
     is_original = db.Column(db.Boolean, default=False)
+    features = db.Column(db.String, nullable=True)
 
     def get_file(self):
         with pd.HDFStore(self.location) as hdf_store:
