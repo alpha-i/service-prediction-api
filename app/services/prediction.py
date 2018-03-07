@@ -17,7 +17,7 @@ def insert_task(prediction_task):
     return Task.from_model(model)
 
 def update_task(prediction_task):
-    model = prediction_task.to_model()
+    model = prediction_task._model
     model.update()
     return Task.from_model(model)
 

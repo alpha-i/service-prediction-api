@@ -115,6 +115,11 @@ class UserEntity(BaseEntity):
         except NoResultFound:
             return None
 
+    def to_dict(self):
+        diz = super().to_dict()
+        diz['tasks'] = self.tasks
+        return diz
+
 class CustomerActionEntity(BaseEntity):
     __tablename__ = 'customer_action'
 

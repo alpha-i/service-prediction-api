@@ -103,6 +103,9 @@ def view_prediction(task_code):
     }
 
     result_dataframe = prediction_result_to_dataframe(prediction)
+    if not result_dataframe:
+        abort(404, f'Task {task_code} has no result')
+
     headers = list(result_dataframe.columns)
     context['result'] = {
         'data': repr(result_dataframe.to_csv(header=False)),

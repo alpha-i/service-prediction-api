@@ -26,7 +26,7 @@ class PredictionSchema(Schema):
 
 class PredictionRequestSchema(Schema):
     name = fields.String(required=True)
-    features = fields.String(required=True)
+    feature = fields.String(required=True)
     start_time = fields.Date(required=True)
     end_time = fields.Date(required=True)
 
@@ -120,6 +120,8 @@ class TaskSchema(BaseModelSchema):
     task_code = fields.String()
     status = fields.String(allow_none=True)
     is_completed = fields.Boolean()
+    statuses = fields.Nested(TaskStatusSchema, many=True, default=[])
+    datasource = fields.Nested(DataSourceSchema)
 
 
 class UserSchema(BaseModelSchema):
@@ -129,6 +131,7 @@ class UserSchema(BaseModelSchema):
     company = fields.Nested(CompanySchema, many=False)
     current_data_source = fields.Nested(DataSourceSchema, allow_none=True)
     data_sources = fields.Nested(DataSourceSchema, many=True, default=[])
+    tasks = fields.Nested(TaskSchema, many=True, default=[])
 
 
 user_schema = UserSchema()

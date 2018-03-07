@@ -55,6 +55,12 @@ class PredictionTaskEntity(BaseEntity):
     def is_completed(self):
         return self.status in [TaskStatusTypes.successful.value, TaskStatusTypes.failed.value]
 
+    def to_dict(self):
+        diz = super().to_dict()
+        diz['datasource'] = self.datasource
+        diz['is_completed'] = self.is_completed
+        return diz
+
 
 class TaskStatusEntity(BaseEntity):
     __tablename__ = 'task_status'

@@ -24,7 +24,6 @@ def submit():
 
     # the user can only predict against the _latest_ datasource
     upload_code = g.user.current_data_source.upload_code
-
     prediction_request, errors = prediction_request_schema.load(g.json)
     if errors:
         return jsonify(errors=errors), 400

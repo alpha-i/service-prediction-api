@@ -20,6 +20,9 @@
         <dt>File</dt>
         <dd>{{ datasource.filename }}</dd>
 
+        <dt>Available features</dt>
+        <dd>{{ datasource.features }}</dd>
+
         <dt>Start Date</dt>
         <dd>{{ datasource.start_date }}</dd>
 
@@ -46,7 +49,11 @@
                     <td scope="row">{{ task.name }}</td>
                     <td scope="row">{{ task.task_code }}</td>
                     <td>{{ format_datetime(task.created_at) }}</td>
-                    <td>{{ task.datasource.upload_code }}</td>
+                    <td>
+                        <a href="{{ url_for('customer.view_datasource', datasource_id=task.datasource.upload_code) }}">
+                            {{ task.datasource.upload_code }}
+                        </a>
+                    </td>
                     <td>{{ task.statuses[-1].state }}</td>
                     <td>
                         {% if task.is_completed %}
