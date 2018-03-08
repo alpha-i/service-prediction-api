@@ -132,6 +132,7 @@ class UserSchema(BaseModelSchema):
     current_data_source = fields.Nested(DataSourceSchema, allow_none=True)
     data_sources = fields.Nested(DataSourceSchema, many=True, default=[])
     tasks = fields.Nested(TaskSchema, many=True, default=[])
+    results = fields.Nested(ResultSchema, many=True, default=[])
 
 
 user_schema = UserSchema()

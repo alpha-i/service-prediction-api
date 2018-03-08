@@ -63,7 +63,7 @@ class CompanyEntity(BaseEntity):
 class UserEntity(BaseEntity):
     __tablename__ = 'user'
 
-    INCLUDE_ATTRIBUTES = ('data_sources', 'current_data_source', 'actions', 'company')
+    INCLUDE_ATTRIBUTES = ('data_sources', 'current_data_source', 'actions', 'company', 'tasks', 'results')
     EXCLUDE_ATTRIBUTES = ('password_hash',)
 
     email = db.Column(db.String(32), index=True)
@@ -114,11 +114,6 @@ class UserEntity(BaseEntity):
             return UserEntity.query.filter(UserEntity.email == email).one()
         except NoResultFound:
             return None
-
-    def to_dict(self):
-        diz = super().to_dict()
-        diz['tasks'] = self.tasks
-        return diz
 
 class CustomerActionEntity(BaseEntity):
     __tablename__ = 'customer_action'

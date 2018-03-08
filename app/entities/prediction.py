@@ -18,7 +18,7 @@ class TaskStatusTypes(Enum):
 class PredictionTaskEntity(BaseEntity):
     __tablename__ = 'prediction_task'
 
-    INCLUDE_ATTRIBUTES = ('status', 'statuses', 'result')
+    INCLUDE_ATTRIBUTES = ('status', 'statuses', 'result', 'datasource', 'is_completed')
 
     name = db.Column(db.String(60), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -55,12 +55,6 @@ class PredictionTaskEntity(BaseEntity):
     def is_completed(self):
         return self.status in [TaskStatusTypes.successful.value, TaskStatusTypes.failed.value]
 
-    def to_dict(self):
-        diz = super().to_dict()
-        diz['datasource'] = self.datasource
-        diz['is_completed'] = self.is_completed
-        return diz
-
 
 class TaskStatusEntity(BaseEntity):
     __tablename__ = 'task_status'
@@ -72,6 +66,7 @@ class TaskStatusEntity(BaseEntity):
 
 
 class PredictionResultEntity(BaseEntity):
+    INCLUDE_ATTRIBUTES = ('prediction_task',)
     __tablename__ = 'prediction_result'
 
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -88,11 +83,6 @@ class PredictionResultEntity(BaseEntity):
             return PredictionResultEntity.query.filter(PredictionResultEntity.task_code == task_code).one()
         except NoResultFound:
             return None
-
-    def to_dict(self):
-        dictionary = super(PredictionResultEntity, self).to_dict()
-        dictionary['prediction_task'] = self.prediction_task
-        return dictionary
 
 
 def update_user_action(mapper, connection, self):

@@ -7,7 +7,6 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from app.db import db
 from app.entities import BaseEntity, CustomerActionEntity, Actions
-
 from config import HDF5_STORE_INDEX
 
 
@@ -17,6 +16,8 @@ class UploadTypes(Enum):
 
 
 class DataSourceEntity(BaseEntity):
+    INCLUDE_ATTRIBUTES = ('type',)
+
     __tablename__ = 'data_source'
 
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -56,11 +57,6 @@ class DataSourceEntity(BaseEntity):
     @staticmethod
     def generate_filename(upload_code, original_filename):
         return f"{upload_code}_{original_filename}"
-
-    def to_dict(self):
-        model_dict = super(DataSourceEntity, self).to_dict()
-        model_dict.update({'type': self.type.name})
-        return model_dict
 
 
 def update_user_action(mapper, connection, self):

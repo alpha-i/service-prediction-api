@@ -1,18 +1,16 @@
 import abc
 
 import pandas as pd
-from flask import json
 
 from app.core.schemas import (
     UserSchema, CompanySchema, TaskSchema, ResultSchema, DataSourceSchema, CompanyConfigurationSchema,
     TaskStatusSchema
 )
+from flask import json
 from app.entities import (
     UserEntity, CompanyEntity, PredictionTaskEntity, PredictionResultEntity, DataSourceEntity,
     CompanyConfigurationEntity, TaskStatusEntity
 )
-
-
 from config import HDF5_STORE_INDEX
 
 
@@ -36,6 +34,7 @@ class BaseModel(metaclass=abc.ABCMeta):
         schema = cls.SCHEMA()
         data, errors = schema.loads(json.dumps(model.to_dict()))
         if errors:
+            import ipdb; ipdb.set_trace()
             raise EntityCreationException(errors)
 
         entity = cls()
