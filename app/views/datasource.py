@@ -71,7 +71,6 @@ def upload():
     features = list(data_frame.columns)
 
     if user.current_data_source:
-        logging.warning('User already has a data source')
         data_souce = services.datasource.get_by_upload_code(user.current_data_source.upload_code)
         existing_data_frame = data_souce._model.get_file()
         data_frame = pd.concat([existing_data_frame, data_frame])

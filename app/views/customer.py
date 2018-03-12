@@ -108,7 +108,23 @@ def view_prediction(task_code):
     if result_dataframe is None:
         abort(404, f'Task {task_code} has no result')
 
+    latest_date_in_datasource = g.user.current_data_source.end_date.date()
+    latest_date_in_results = result_dataframe.index[-1].date()
+
     headers = list(result_dataframe.columns)
+    if latest_date_in_datasource > latest_date_in_results:
+        actuals_dataframe = services.datasource.get_dataframe(g.user.current_data_source)
+        actuals_dataframe.index = actuals_dataframe.index.tz_localize('UTC')
+
+        actuals_dataframe = actuals_dataframe.resample('15T').sum().astype(object)
+
+        result_dataframe['actuals'] = actuals_dataframe[TARGET_FEATURE]
+        for timestamp in result_dataframe.index:
+            actual_datapoint = result_dataframe.loc[timestamp]['actuals']
+            result_dataframe.loc[timestamp]['actuals'] = "{:.2f};{:.2f};{:.2f}".format(actual_datapoint, actual_datapoint, actual_datapoint)
+        headers.append('actuals')
+
+
     context['result'] = {
         'data': repr(result_dataframe.to_csv(header=False)),
         'header': ['timestamp'] + headers,

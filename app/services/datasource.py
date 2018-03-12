@@ -22,4 +22,5 @@ def delete(datasource):
     model.delete()
 
 def get_dataframe(datasource):
-    return datasource._model.get_file()
+    model = DataSourceEntity.get_by_upload_code(datasource.upload_code)
+    return model.get_file()

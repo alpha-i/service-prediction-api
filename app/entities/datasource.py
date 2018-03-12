@@ -29,8 +29,8 @@ class DataSourceEntity(BaseEntity):
     location = db.Column(db.String(), index=True)
     filename = db.Column(db.String(), nullable=False)
 
-    start_date = db.Column(db.DateTime, index=True, nullable=True)
-    end_date = db.Column(db.DateTime, index=True, nullable=True)
+    start_date = db.Column(db.DateTime(timezone=True), index=True, nullable=True)
+    end_date = db.Column(db.DateTime(timezone=True), index=True, nullable=True)
 
     prediction_task_list = relationship('PredictionTaskEntity', back_populates='datasource',
                                         cascade='all, delete-orphan')
