@@ -34,7 +34,6 @@ class BaseModel(metaclass=abc.ABCMeta):
         schema = cls.SCHEMA()
         data, errors = schema.loads(json.dumps(model.to_dict()))
         if errors:
-            import ipdb; ipdb.set_trace()
             raise EntityCreationException(errors)
 
         entity = cls()
@@ -50,6 +49,7 @@ class BaseModel(metaclass=abc.ABCMeta):
 
     def to_model(self):
         model = self.MODEL()
+
         for key, value in self.__dict__.items():
             if value:
                 setattr(model, key, value)

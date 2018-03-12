@@ -75,6 +75,8 @@ def view_datasource(datasource_id):
 @customer_blueprint.route('/new-prediction')
 @requires_access_token
 def new_prediction():
+    if not g.user.current_data_source:
+        abort(400, "No data source available. Upload one first!")
     datasource_min_date = g.user.current_data_source.end_date
     max_date = datasource_min_date + timedelta(days=MAXIMUM_DAYS_FORECAST)
 
@@ -103,7 +105,7 @@ def view_prediction(task_code):
     }
 
     result_dataframe = prediction_result_to_dataframe(prediction)
-    if not result_dataframe:
+    if result_dataframe is None:
         abort(404, f'Task {task_code} has no result')
 
     headers = list(result_dataframe.columns)

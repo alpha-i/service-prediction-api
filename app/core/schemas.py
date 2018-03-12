@@ -73,17 +73,6 @@ class DataSourceSchema(BaseModelSchema):
         data['features'] = features_string_list.split(', ')
 
 
-class CompanySchema(BaseModelSchema):
-    name = fields.String()
-    domain = fields.String()
-    data_sources = fields.Nested(DataSourceSchema, many=True, default=[])
-
-    @validates('domain')
-    def validate_domain(self, value):
-        if not re.match(r'^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$', value):
-            raise ValidationError("Invalid domain name")
-
-
 class OracleConfigurationSchema(BaseModelSchema):
     scheduling = fields.Dict()
     oracle = fields.Dict()
@@ -93,6 +82,18 @@ class OracleConfigurationSchema(BaseModelSchema):
 class CompanyConfigurationSchema(BaseModelSchema):
     company_id = fields.Integer()
     configuration = fields.Nested(OracleConfigurationSchema, many=False)
+
+
+class CompanySchema(BaseModelSchema):
+    name = fields.String()
+    domain = fields.String()
+    data_sources = fields.Nested(DataSourceSchema, many=True, default=[])
+    current_configuration = fields.Nested(CompanyConfigurationSchema, default=None, allow_none=True)
+
+    @validates('domain')
+    def validate_domain(self, value):
+        if not re.match(r'^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$', value):
+            raise ValidationError("Invalid domain name")
 
 
 class CustomerActionSchema(BaseModelSchema):
@@ -122,6 +123,7 @@ class TaskSchema(BaseModelSchema):
     is_completed = fields.Boolean()
     statuses = fields.Nested(TaskStatusSchema, many=True, default=[])
     datasource = fields.Nested(DataSourceSchema)
+    prediction_request = fields.Nested(PredictionRequestSchema, allow_none=True)
 
 
 class UserSchema(BaseModelSchema):

@@ -158,7 +158,7 @@ class TestPredictionAPI(BaseTestClass):
         # you can query the task status
         time.sleep(4)
         resp = self.client.get(
-            url_for('prediction.status', task_code=task_code)
+            url_for('prediction.get_single_task', task_code=task_code)
             # headers={'Authorization': self.token}
         )
         """
@@ -179,7 +179,7 @@ class TestPredictionAPI(BaseTestClass):
         while task_status not in ['SUCCESSFUL', 'FAILED']:
             time.sleep(2)
             resp = self.client.get(
-                url_for('prediction.status', task_code=task_code),
+                url_for('prediction.get_single_task', task_code=task_code),
                 # headers={'Authorization': self.token}
             )
             task_status = resp.json['status']

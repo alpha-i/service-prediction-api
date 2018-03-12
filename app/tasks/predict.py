@@ -24,8 +24,8 @@ def predict_task(self, user_id, upload_code, prediction_request):
 
     prediction_task = create_task(self.request.id, user_id, uploaded_file.id, prediction_request['name'])
     set_task_status(prediction_task, TaskStatusTypes.queued)
-    prediction_request, errors = prediction_request_schema.load(prediction_request)
 
+    prediction_request, errors = prediction_request_schema.load(prediction_request)
     if errors:
         logging.warning(errors)
         raise Exception(errors)
