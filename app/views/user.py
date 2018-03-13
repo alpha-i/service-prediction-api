@@ -48,14 +48,15 @@ def register():
     confirmation_token = generate_confirmation_token(user.email)
     logging.info("Confirmation token for %s: %s", user.email, confirmation_token)
 
+    services.email.send_confirmation_email(user.email, confirmation_token)
+
     response = ApiResponse(
         content_type=request.accept_mimetypes.best,
         next=url_for('main.login'),
         status_code=201,
         context={
             'email': user.email,
-            'id': user.id,
-            'confirmation_token': confirmation_token  # TODO: changeme, it should be sent via email
+            'id': user.id
         }
     )
 
@@ -76,8 +77,8 @@ def confirm(token):
 
     response = ApiResponse(
         content_type=request.accept_mimetypes.best,
-        next=url_for('main.login'),
-        context=user,
+        template='user/confirmed.html',
+        next=url_for('main.login')
     )
 
     return response()

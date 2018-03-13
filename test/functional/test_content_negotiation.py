@@ -134,5 +134,5 @@ class TestContentNegotiation(BaseTestClass):
             url_for('user.confirm', token=confirmation_token),
             headers={'Accept': 'application/html'}
         )
-        assert resp.status_code == 302
+        assert resp.status_code == 200
         assert resp.headers.get('Location') == url_for('main.login', _external=True)
