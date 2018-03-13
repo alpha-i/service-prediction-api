@@ -3,6 +3,7 @@ from functools import wraps
 
 from flask import request, g, abort, redirect, url_for
 
+from app.core.models import User
 from app.entities import UserEntity
 
 
@@ -11,7 +12,7 @@ def requires_access_token(fn):
     def wrapper(*args, **kwargs):
         user = is_user_logged()
         if isinstance(user, UserEntity):
-            g.user = user
+            g.user = User.from_model(user)
             return fn(*args, **kwargs)
         elif request.content_type == 'application/json':
             abort(401, "Unauthorised")

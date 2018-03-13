@@ -4,7 +4,7 @@ from flask import Blueprint, jsonify, render_template, g, request, abort, Respon
 
 from app import services
 from app.core.auth import requires_access_token
-from app.core.interpreters import prediction_result_to_dataframe
+from app.core.interpreters import prediction_result_to_dataframe, DEFAULT_TIME_RESOLUTION
 from app.core.schemas import user_schema
 from app.db import db
 from app.entities import CompanyConfigurationEntity, DataSourceEntity, PredictionTaskEntity
@@ -75,6 +75,8 @@ def view_datasource(datasource_id):
 @customer_blueprint.route('/new-prediction')
 @requires_access_token
 def new_prediction():
+    if not g.user.current_data_source:
+        abort(400, "No data source available. Upload one first!")
     datasource_min_date = g.user.current_data_source.end_date
     max_date = datasource_min_date + timedelta(days=MAXIMUM_DAYS_FORECAST)
 
@@ -103,7 +105,23 @@ def view_prediction(task_code):
     }
 
     result_dataframe = prediction_result_to_dataframe(prediction)
+    if result_dataframe is None:
+        abort(404, f'Task {task_code} has no result')
+
+    latest_date_in_datasource = g.user.current_data_source.end_date.date()
+    latest_date_in_results = result_dataframe.index[-1].date()
+
     headers = list(result_dataframe.columns)
+    if latest_date_in_datasource > latest_date_in_results:
+        actuals_dataframe = services.datasource.get_dataframe(g.user.current_data_source)
+        actuals_dataframe.index = actuals_dataframe.index.tz_localize('UTC')
+        actuals_dataframe = actuals_dataframe.resample(DEFAULT_TIME_RESOLUTION).sum()
+        result_dataframe['actuals'] = actuals_dataframe[TARGET_FEATURE]
+        result_dataframe['actuals'] = result_dataframe['actuals'].transform(
+            lambda x: "{:.2f};{:.2f};{:.2f}".format(x, x, x)
+        )
+        headers.append('actuals')
+
     context['result'] = {
         'data': repr(result_dataframe.to_csv(header=False)),
         'header': ['timestamp'] + headers,

@@ -1,9 +1,15 @@
 import re
 
-from marshmallow import Schema, fields, validates, ValidationError
+from marshmallow import Schema, fields, validates, ValidationError, pre_load
 from marshmallow_enum import EnumField
 
 from app.entities.datasource import UploadTypes
+
+
+class AttributeDict(dict):
+    __getattr__ = dict.get
+    __setattr__ = dict.__setitem__
+    __delattr__ = dict.__delitem__
 
 
 class DataPointSchema(Schema):
@@ -20,7 +26,7 @@ class PredictionSchema(Schema):
 
 class PredictionRequestSchema(Schema):
     name = fields.String(required=True)
-    features = fields.String(required=True)
+    feature = fields.String(required=True)
     start_time = fields.Date(required=True)
     end_time = fields.Date(required=True)
 
@@ -42,6 +48,10 @@ class BaseModelSchema(Schema):
     created_at = fields.DateTime(allow_none=True)
     last_update = fields.DateTime(allow_none=True)
 
+    @property
+    def dict_class(self):
+        return AttributeDict
+
 
 class DataSourceSchema(BaseModelSchema):
     user_id = fields.Integer()
@@ -53,16 +63,14 @@ class DataSourceSchema(BaseModelSchema):
     start_date = fields.DateTime()
     end_date = fields.DateTime()
     is_original = fields.Boolean(allow_none=True)
+    features = fields.List(fields.String)
 
-
-class CompanySchema(BaseModelSchema):
-    name = fields.String()
-    domain = fields.String()
-
-    @validates('domain')
-    def validate_domain(self, value):
-        if not re.match(r'^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$', value):
-            raise ValidationError("Invalid domain name")
+    @pre_load
+    def process_list_of_features(self, data):
+        features_string_list = data.get('features')
+        if not features_string_list:
+            return
+        data['features'] = features_string_list.split(', ')
 
 
 class OracleConfigurationSchema(BaseModelSchema):
@@ -74,6 +82,18 @@ class OracleConfigurationSchema(BaseModelSchema):
 class CompanyConfigurationSchema(BaseModelSchema):
     company_id = fields.Integer()
     configuration = fields.Nested(OracleConfigurationSchema, many=False)
+
+
+class CompanySchema(BaseModelSchema):
+    name = fields.String()
+    domain = fields.String()
+    data_sources = fields.Nested(DataSourceSchema, many=True, default=[])
+    current_configuration = fields.Nested(CompanyConfigurationSchema, default=None, allow_none=True)
+
+    @validates('domain')
+    def validate_domain(self, value):
+        if not re.match(r'^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$', value):
+            raise ValidationError("Invalid domain name")
 
 
 class CustomerActionSchema(BaseModelSchema):
@@ -101,12 +121,20 @@ class TaskSchema(BaseModelSchema):
     task_code = fields.String()
     status = fields.String(allow_none=True)
     is_completed = fields.Boolean()
+    statuses = fields.Nested(TaskStatusSchema, many=True, default=[])
+    datasource = fields.Nested(DataSourceSchema)
+    prediction_request = fields.Nested(PredictionRequestSchema, allow_none=True)
 
 
 class UserSchema(BaseModelSchema):
     email = fields.Email()
     confirmed = fields.Boolean(allow_none=True)
+    company_id = fields.Integer()
     company = fields.Nested(CompanySchema, many=False)
+    current_data_source = fields.Nested(DataSourceSchema, allow_none=True)
+    data_sources = fields.Nested(DataSourceSchema, many=True, default=[])
+    tasks = fields.Nested(TaskSchema, many=True, default=[])
+    results = fields.Nested(ResultSchema, many=True, default=[])
 
 
 user_schema = UserSchema()

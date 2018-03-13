@@ -1,18 +1,16 @@
 import abc
 
 import pandas as pd
-from flask import json
 
 from app.core.schemas import (
     UserSchema, CompanySchema, TaskSchema, ResultSchema, DataSourceSchema, CompanyConfigurationSchema,
     TaskStatusSchema
 )
+from flask import json
 from app.entities import (
     UserEntity, CompanyEntity, PredictionTaskEntity, PredictionResultEntity, DataSourceEntity,
     CompanyConfigurationEntity, TaskStatusEntity
 )
-
-
 from config import HDF5_STORE_INDEX
 
 
@@ -51,6 +49,7 @@ class BaseModel(metaclass=abc.ABCMeta):
 
     def to_model(self):
         model = self.MODEL()
+
         for key, value in self.__dict__.items():
             if value:
                 setattr(model, key, value)

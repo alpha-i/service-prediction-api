@@ -4,7 +4,7 @@ from flask_migrate import Migrate
 from flask_bootstrap import Bootstrap
 
 from app.core.content import ApiResponse
-from app.core.utils import CustomJSONEncoder
+from app.core.jsonencoder import CustomJSONEncoder
 from config import CELERY_BROKER_URL, CELERY_RESULT_BACKEND
 
 celery = Celery(__name__, broker=CELERY_BROKER_URL, backend=CELERY_RESULT_BACKEND)

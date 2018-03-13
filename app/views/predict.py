@@ -24,7 +24,6 @@ def submit():
 
     # the user can only predict against the _latest_ datasource
     upload_code = g.user.current_data_source.upload_code
-
     prediction_request, errors = prediction_request_schema.load(g.json)
     if errors:
         return jsonify(errors=errors), 400
@@ -41,8 +40,8 @@ def submit():
         next=url_for('customer.dashboard'),  # TODO: changeme, it should point to the status
         context={
             'task_code': celery_prediction_task.id,
-            'task_status': url_for('prediction.status', task_code=celery_prediction_task.id, _external=True),
-            'result': url_for('prediction.status', task_code=celery_prediction_task.id, _external=True)
+            'task_status': url_for('prediction.get_single_task', task_code=celery_prediction_task.id, _external=True),
+            'result': url_for('prediction.result', task_code=celery_prediction_task.id, _external=True)
         }
     )
 
@@ -56,12 +55,10 @@ def get_tasks():
     return jsonify(g.user.tasks)
 
 
-@predict_blueprint.route('/status/<string:task_code>')
+@predict_blueprint.route('/<string:task_code>', methods=['GET'])
 @requires_access_token
-def status(task_code):
-    """
-    Get the status of a particular task
-    """
+@parse_request_data
+def get_single_task(task_code):
     prediction_task = services.prediction.get_task_by_code(task_code)
     if not prediction_task:
         return abort(404, 'No task found!')

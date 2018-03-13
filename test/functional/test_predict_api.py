@@ -135,7 +135,7 @@ class TestPredictionAPI(BaseTestClass):
             content_type='application/json',
             data=json.dumps({
                 "name": "TESTPREDICTION",
-                "features": "number_people",
+                "feature": "number_people",
                 "start_time": "2017-01-01T00:00:00",
                 "end_time": "2017-01-02T00:00:00"}),
             headers={'Authorization': self.token,
@@ -158,7 +158,7 @@ class TestPredictionAPI(BaseTestClass):
         # you can query the task status
         time.sleep(4)
         resp = self.client.get(
-            url_for('prediction.status', task_code=task_code)
+            url_for('prediction.get_single_task', task_code=task_code)
             # headers={'Authorization': self.token}
         )
         """
@@ -179,7 +179,7 @@ class TestPredictionAPI(BaseTestClass):
         while task_status not in ['SUCCESSFUL', 'FAILED']:
             time.sleep(2)
             resp = self.client.get(
-                url_for('prediction.status', task_code=task_code),
+                url_for('prediction.get_single_task', task_code=task_code),
                 # headers={'Authorization': self.token}
             )
             task_status = resp.json['status']
