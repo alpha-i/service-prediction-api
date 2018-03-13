@@ -4,12 +4,7 @@ from marshmallow import Schema, fields, validates, ValidationError, pre_load
 from marshmallow_enum import EnumField
 
 from app.entities.datasource import UploadTypes
-
-
-class AttributeDict(dict):
-    __getattr__ = dict.get
-    __setattr__ = dict.__setitem__
-    __delattr__ = dict.__delitem__
+from attribdict import AttribDict
 
 
 class DataPointSchema(Schema):
@@ -50,7 +45,7 @@ class BaseModelSchema(Schema):
 
     @property
     def dict_class(self):
-        return AttributeDict
+        return AttribDict
 
 
 class DataSourceSchema(BaseModelSchema):
