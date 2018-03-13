@@ -4,7 +4,7 @@ from flask import Blueprint, jsonify, render_template, g, request, abort, Respon
 
 from app import services
 from app.core.auth import requires_access_token
-from app.core.interpreters import prediction_result_to_dataframe
+from app.core.interpreters import prediction_result_to_dataframe, DEFAULT_TIME_RESOLUTION
 from app.core.schemas import user_schema
 from app.db import db
 from app.entities import CompanyConfigurationEntity, DataSourceEntity, PredictionTaskEntity
@@ -115,15 +115,12 @@ def view_prediction(task_code):
     if latest_date_in_datasource > latest_date_in_results:
         actuals_dataframe = services.datasource.get_dataframe(g.user.current_data_source)
         actuals_dataframe.index = actuals_dataframe.index.tz_localize('UTC')
-
-        actuals_dataframe = actuals_dataframe.resample('15T').sum().astype(object)
-
+        actuals_dataframe = actuals_dataframe.resample(DEFAULT_TIME_RESOLUTION).sum()
         result_dataframe['actuals'] = actuals_dataframe[TARGET_FEATURE]
-        for timestamp in result_dataframe.index:
-            actual_datapoint = result_dataframe.loc[timestamp]['actuals']
-            result_dataframe.loc[timestamp]['actuals'] = "{:.2f};{:.2f};{:.2f}".format(actual_datapoint, actual_datapoint, actual_datapoint)
+        result_dataframe['actuals'] = result_dataframe['actuals'].transform(
+            lambda x: "{:.2f};{:.2f};{:.2f}".format(x, x, x)
+        )
         headers.append('actuals')
-
 
     context['result'] = {
         'data': repr(result_dataframe.to_csv(header=False)),

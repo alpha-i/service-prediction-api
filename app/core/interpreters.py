@@ -4,7 +4,6 @@ from datetime import datetime, timedelta
 import pandas as pd
 import pytz
 from alphai_cromulon_oracle.oracle import OraclePrediction
-
 from alphai_delphi.oracle import PredictionResult
 from dateutil import parser
 
@@ -14,7 +13,6 @@ DEFAULT_TIME_RESOLUTION = '15T'
 
 
 class AbstractInterpreter(metaclass=abc.ABCMeta):
-
     MEAN_FORECAST_ATTRIBUTE = 'mean_vector'
     UPPER_BOUND_ATTRIBUTE = 'prediction_timestamp'
     LOWER_BOUND_ATTRIBUTE = 'covariance_matrix'
@@ -45,7 +43,6 @@ class AbstractInterpreter(metaclass=abc.ABCMeta):
 
 
 class PredictionResultInterpreter(AbstractInterpreter):
-
     MEAN_VECTOR_ATTRIBUTE = 'mean_vector'
     UPPER_BOUND_ATTRIBUTE = 'prediction_timestamp'
     LOWER_BOUND_ATTRIBUTE = 'covariance_matrix'
@@ -79,6 +76,7 @@ class CromulonDataSourceInterpreter(DataSourceInterpreter):
     """
     Given a dataframe-from-csv data source, output something that can be used for Cromulon
     """
+
     def __init__(self, datasource_frame: pd.DataFrame):
         self._result = make_dict_from_dataframe(datasource_frame)
 
@@ -127,7 +125,6 @@ def make_dict_from_dataframe(df):
 
 
 def prediction_result_to_dataframe(prediction):
-
     start = prediction.prediction_request['start_time']
     prediction_start = datetime.strptime(start, DATE_FORMAT).astimezone(pytz.utc)
 
