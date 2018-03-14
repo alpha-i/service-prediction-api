@@ -3,6 +3,7 @@ import logging
 import os
 import unittest
 import pandas as pd
+import pytest
 
 from alphai_cromulon_oracle.oracle import CromulonOracle
 from alphai_delphi.oracle.oracle_configuration import OracleConfiguration
@@ -15,6 +16,8 @@ EXECUTION_TIME = datetime.datetime(2017, 12, 12, 0)
 TEST_DATA_FILE = os.path.join(os.path.dirname(__file__), 'resources/test_full_data.csv')
 
 
+# We're not using cromulon at the moment, so just skip this test please
+@pytest.mark.skip
 class TestCromulonIntegration(unittest.TestCase):
     def setUp(self):
         self.config = self.load_gym_config()

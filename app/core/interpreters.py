@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import pandas as pd
 import pytz
 from alphai_cromulon_oracle.oracle import OraclePrediction
-from alphai_delphi.oracle import PredictionResult
+from alphai_delphi.oracle.abstract_oracle import PredictionResult
 from dateutil import parser
 
 from config import DATE_FORMAT
