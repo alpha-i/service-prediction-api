@@ -40,13 +40,17 @@ def predict_task(self, user_id, upload_code, prediction_request):
     set_task_status(prediction_task, TaskStatusTypes.started)
 
     data_frame_content = uploaded_file.get_file()
-    data_dict = datasource_interpreter(data_frame_content)
     company_configuration = services.company.get_configuration_for_company_id(uploaded_file.company_id)
     oracle = services.oracle.get_oracle_for_configuration(company_configuration)
     oracle.config['n_forecast'] = MAXIMUM_DAYS_FORECAST + 2
+    interpreter = services.company.get_datasource_interpreter(company_configuration)
+    data_dict = interpreter.from_dataframe_to_data_dict(data_frame_content)
 
     oracle_prediction_result = services.oracle.make_prediction(
-        prediction_request, data_dict, company_configuration.configuration)
+        prediction_request=prediction_request,
+        data_dict=data_dict,
+        company_configuration=company_configuration.configuration
+    )
     prediction_result = prediction_interpreter(oracle_prediction_result)
 
     logging.info("*** TASK FINISHED! %s", prediction_task.task_code)

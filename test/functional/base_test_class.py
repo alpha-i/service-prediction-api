@@ -55,11 +55,14 @@ class BaseTestClass(TestCase):
         )
         assert resp.status_code == 201
 
-    def set_company_configuration(self):
+    def get_company_configuration(self):
         configuration = {
                 # this is the company_configuration.configuration
                 'oracle_class': 'alphai_crocubot_oracle.oracle.CrocubotOracle',
                 'calendar_name': 'GYMUK',
+                'target_feature': 'number_people',
+                'datasource_interpreter': 'app.core.interpreters.GymDataSourceInterpreter',
+                'prediction_result_interpreter': '',
                 'oracle': {
                     'universe': {
                         'method': "liquidity",
@@ -179,8 +182,10 @@ class BaseTestClass(TestCase):
                     },
                 },
             }
+        return configuration
 
-
+    def set_company_configuration(self):
+        configuration = self.get_company_configuration()
         resp = self.client.post(
             url_for('company.configuration_update', company_id=2),  # company 1 is the super-company...
             data=json.dumps(configuration),
