@@ -24,6 +24,7 @@ class TestPredictionAPI(BaseTestClass):
 
     def test_upload_file_for_customer(self):
         self.login()
+        self.set_company_configuration()
         with open(os.path.join(HERE, '../resources/test_data.csv'), 'rb') as test_upload_file:
             resp = self.client.post(
                 url_for('datasource.upload'),
@@ -72,6 +73,7 @@ class TestPredictionAPI(BaseTestClass):
 
     def test_user_can_delete_a_datasource(self):
         self.login()
+        self.set_company_configuration()
         with open(os.path.join(HERE, '../resources/test_data.csv'), 'rb') as test_upload_file:
             resp = self.client.post(
                 url_for('datasource.upload'),
