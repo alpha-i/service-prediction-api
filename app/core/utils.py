@@ -1,5 +1,6 @@
 import uuid
 from functools import wraps
+import importlib
 
 from flask import request, g, json, current_app
 
@@ -34,7 +35,5 @@ def generate_upload_code():
 
 def import_class(name):
     components = name.split('.')
-    mod = __import__(components[0])
-    for comp in components[1:]:
-        mod = getattr(mod, comp)
-    return mod
+    mod = importlib.import_module(".".join(components[:-1]))
+    return getattr(mod, components[-1])

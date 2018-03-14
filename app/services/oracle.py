@@ -1,10 +1,9 @@
 import logging
 
-from alphai_delphi.oracle.oracle_configuration import OracleConfiguration
-
 # placeholder until we came up with a general way of validating
 # the different oracle configurations
 from app.core.utils import import_class
+from config import MAXIMUM_DAYS_FORECAST
 
 ORACLE_CONFIG = {
     "scheduling": {
@@ -105,10 +104,37 @@ ORACLE_CONFIG = {
 
 
 def get_oracle_for_configuration(company_configuration):
-    logging.warning(company_configuration)
-    oracle_class = company_configuration.configuration['oracle_class']
+    oracle_class = company_configuration['oracle_class']
+    calendar_name = company_configuration['calendar_name']
+
+
     try:
         oracle = import_class(oracle_class)
     except ImportError:
         raise ImportError("No available oracle found for %s", oracle_class)
-    return oracle(OracleConfiguration(ORACLE_CONFIG))
+
+    return oracle(
+        calendar_name=calendar_name,
+        scheduling_configuration=company_configuration['scheduling'],
+        oracle_configuration=company_configuration['oracle']
+    )
+
+
+def make_prediction(prediction_request, data_dict, company_configuration):
+    logging.warning("*****")
+    logging.warning(prediction_request)
+    logging.warning(data_dict)
+    logging.warning(company_configuration)
+    logging.warning("*****")
+
+
+    start_time = prediction_request['start_time']
+    oracle = get_oracle_for_configuration(company_configuration)
+    oracle.config['n_forecast'] = MAXIMUM_DAYS_FORECAST + 2
+    oracle.train(data_dict, start_time)
+    oracle_prediction_result = oracle.predict(
+        data=data_dict,
+        current_timestamp=start_time,
+        number_of_iterations=1
+    )
+    return oracle_prediction_result
