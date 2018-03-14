@@ -1,4 +1,5 @@
 from app.core.models import Company, CompanyConfiguration
+from app.core.utils import import_class
 from app.entities import CompanyEntity, CompanyConfigurationEntity
 
 
@@ -28,3 +29,9 @@ def insert_configuration(company_configuration):
     model = company_configuration.to_model()
     model.save()
     return CompanyConfiguration.from_model(model)
+
+
+def get_datasource_interpreter(company_configuration):
+    from app.interpreters import datasource
+    interpeter = getattr(datasource, company_configuration.configuration['datasource_interpreter'])
+    return interpeter()

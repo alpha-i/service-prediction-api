@@ -1,4 +1,3 @@
-import logging
 import os
 
 import pandas as pd
@@ -64,10 +63,13 @@ def upload():
         abort(400, f'File extension for {uploaded_file.filename} not allowed!')
 
     upload_code = generate_upload_code()
-
     filename = services.datasource.generate_filename(upload_code, uploaded_file.filename)
 
-    data_frame = pd.read_csv(uploaded_file, sep=',', index_col='date', parse_dates=True)
+    interpreter = services.company.get_datasource_interpreter(g.user.company.current_configuration)
+    data_frame, errors = interpreter.from_csv_to_dataframe(uploaded_file)
+    if errors:
+        abort(400, errors)
+
     features = list(data_frame.columns)
 
     if user.current_data_source:

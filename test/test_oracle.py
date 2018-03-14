@@ -2,12 +2,13 @@ import datetime
 import logging
 import os
 import unittest
+
 import pandas as pd
+import pytest
+# TODO: Cromulon is delphi-incompatible
+#from alphai_cromulon_oracle.oracle import CromulonOracle
 
-from alphai_cromulon_oracle.oracle import CromulonOracle
-from alphai_delphi.oracle.oracle_configuration import OracleConfiguration
-
-from app.core.interpreters import datasource_interpreter
+from app.interpreters.datasource import GymDataSourceInterpreter
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -15,6 +16,8 @@ EXECUTION_TIME = datetime.datetime(2017, 12, 12, 0)
 TEST_DATA_FILE = os.path.join(os.path.dirname(__file__), 'resources/test_full_data.csv')
 
 
+# We're not using cromulon at the moment, so just skip this test please
+@pytest.mark.skip
 class TestCromulonIntegration(unittest.TestCase):
     def setUp(self):
         self.config = self.load_gym_config()
@@ -104,35 +107,34 @@ class TestCromulonIntegration(unittest.TestCase):
             'spike_slab_weighting': 0.6
         }
 
-        oracle_config = OracleConfiguration(
-            {
-                "scheduling": {
-                    "prediction_horizon": 240,
-                    "prediction_frequency":
-                        {
-                            "frequency_type": "DAILY",
-                            "days_offset": 0,
-                            "minutes_offset": 15
-                        },
-                    "prediction_delta": 10,
+        oracle_config = {
+            "scheduling": {
+                "prediction_horizon": 240,
+                "prediction_frequency":
+                    {
+                        "frequency_type": "DAILY",
+                        "days_offset": 0,
+                        "minutes_offset": 15
+                    },
+                "prediction_delta": 10,
 
-                    "training_frequency":
-                        {
-                            "frequency_type": "WEEKLY",
-                            "days_offset": 0,
-                            "minutes_offset": 15
-                        },
-                    "training_delta": 20,
-                },
-                "oracle": configuration
-            })
+                "training_frequency":
+                    {
+                        "frequency_type": "WEEKLY",
+                        "days_offset": 0,
+                        "minutes_offset": 15
+                    },
+                "training_delta": 20,
+            },
+            "oracle": configuration
+        }
 
         return oracle_config
 
     def test_cromulon_can_make_a_prediction(self):
         config = self.config
 
-        data_dict = datasource_interpreter(self.data)
+        data_dict = GymDataSourceInterpreter.from_dataframe_to_data_dict(self.data)
 
         oracle = CromulonOracle(config)
         oracle.train(data_dict, EXECUTION_TIME)

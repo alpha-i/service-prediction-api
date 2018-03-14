@@ -73,6 +73,10 @@ class OracleConfigurationSchema(BaseModelSchema):
     scheduling = fields.Dict()
     oracle = fields.Dict()
     oracle_class = fields.String()
+    calendar_name = fields.String()
+    target_feature = fields.String()
+    datasource_interpreter = fields.String()
+    prediction_result_interpreter = fields.String()
 
 
 class CompanyConfigurationSchema(BaseModelSchema):
