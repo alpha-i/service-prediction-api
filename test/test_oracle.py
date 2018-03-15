@@ -7,7 +7,7 @@ import pandas as pd
 import pytest
 from alphai_cromulon_oracle.oracle import CromulonOracle
 
-from app.core.interpreters import datasource_interpreter
+from app.interpreters.datasource import GymDataSourceInterpreter
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -133,7 +133,7 @@ class TestCromulonIntegration(unittest.TestCase):
     def test_cromulon_can_make_a_prediction(self):
         config = self.config
 
-        data_dict = datasource_interpreter(self.data)
+        data_dict = GymDataSourceInterpreter.from_dataframe_to_data_dict(self.data)
 
         oracle = CromulonOracle(config)
         oracle.train(data_dict, EXECUTION_TIME)

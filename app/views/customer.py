@@ -4,16 +4,15 @@ from flask import Blueprint, jsonify, render_template, g, request, abort, Respon
 
 from app import services
 from app.core.auth import requires_access_token
-from app.core.interpreters import prediction_result_to_dataframe, DEFAULT_TIME_RESOLUTION
 from app.core.schemas import user_schema
 from app.db import db
 from app.entities import CompanyConfigurationEntity, DataSourceEntity, PredictionTaskEntity
-from config import MAXIMUM_DAYS_FORECAST, DATETIME_FORMAT, TARGET_FEATURE
+from app.interpreters.prediction import prediction_result_to_dataframe
+from config import MAXIMUM_DAYS_FORECAST, DATETIME_FORMAT, TARGET_FEATURE, DEFAULT_TIME_RESOLUTION
 
 customer_blueprint = Blueprint('customer', __name__)
 
 
-# TODO: get rid of me before committing
 @customer_blueprint.route('/')
 @requires_access_token
 def get_user_profile():

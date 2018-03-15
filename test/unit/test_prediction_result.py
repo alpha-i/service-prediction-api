@@ -2,7 +2,7 @@ import os
 import pickle
 import unittest
 
-from app.core.interpreters import prediction_interpreter
+from app import interpreters
 
 HERE = os.path.join(os.path.dirname(__file__))
 
@@ -17,7 +17,7 @@ class TestPredictionResult(unittest.TestCase):
         pickle_file.close()
 
     def test_gets_a_prediction_result_out_of_a_prediction_result(self):
-        result = prediction_interpreter(self.prediction_result)
+        result = interpreters.prediction.prediction_interpreter(self.prediction_result)
 
         assert result[0]['timestamp'] == '2008-01-02 02:02:02'
         assert result[0]['prediction'] == [
@@ -33,7 +33,7 @@ class TestOracleResult(unittest.TestCase):
         picke_file.close()
 
     def test_gets_a_prediction_for_an_oracle_result(self):
-        result = prediction_interpreter(self.prediction_result)
+        result = interpreters.prediction.prediction_interpreter(self.prediction_result)
 
         assert result[0]['timestamp'] == '2008-01-02 02:02:02'
         assert result[0]['prediction'] == [

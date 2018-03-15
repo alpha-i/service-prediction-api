@@ -1,4 +1,3 @@
-from app.core.interpreters import AbstractDataSourceInterpreter
 from app.core.models import Company, CompanyConfiguration
 from app.core.utils import import_class
 from app.entities import CompanyEntity, CompanyConfigurationEntity
@@ -33,8 +32,6 @@ def insert_configuration(company_configuration):
 
 
 def get_datasource_interpreter(company_configuration):
-    """
-    :rtype: AbstractDataSourceInterpreter
-    """
-    interpeter = import_class(company_configuration.configuration['datasource_interpreter'])
+    from app.interpreters import datasource
+    interpeter = getattr(datasource, company_configuration.configuration['datasource_interpreter'])
     return interpeter

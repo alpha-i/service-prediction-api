@@ -61,7 +61,7 @@ class BaseTestClass(TestCase):
                 'oracle_class': 'alphai_crocubot_oracle.oracle.CrocubotOracle',
                 'calendar_name': 'GYMUK',
                 'target_feature': 'number_people',
-                'datasource_interpreter': 'app.core.interpreters.GymDataSourceInterpreter',
+                'datasource_interpreter': 'GymDataSourceInterpreter',
                 'prediction_result_interpreter': '',
                 'oracle': {
                     'universe': {

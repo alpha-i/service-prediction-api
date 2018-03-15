@@ -5,7 +5,7 @@ from celery.result import AsyncResult, allow_join_result
 
 from app import celery
 from app import services
-from app.core.interpreters import datasource_interpreter, prediction_interpreter
+from app import interpreters
 from app.core.models import Task, Result, TaskStatus
 from app.core.schemas import prediction_request_schema
 from app.core.utils import json_reload
@@ -51,7 +51,7 @@ def predict_task(self, user_id, upload_code, prediction_request):
         data_dict=data_dict,
         company_configuration=company_configuration.configuration
     )
-    prediction_result = prediction_interpreter(oracle_prediction_result)
+    prediction_result = interpreters.prediction.prediction_interpreter(oracle_prediction_result)
 
     logging.info("*** TASK FINISHED! %s", prediction_task.task_code)
     set_task_status(prediction_task, TaskStatusTypes.successful)
