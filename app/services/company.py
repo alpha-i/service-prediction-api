@@ -22,6 +22,7 @@ def get_configuration_for_id(id):
     model = CompanyConfigurationEntity.get_by_id(id)
     return CompanyConfiguration.from_model(model)
 
+
 def insert_configuration(company_configuration):
     # TODO: generalise this
     model = company_configuration.to_model()

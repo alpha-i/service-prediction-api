@@ -28,7 +28,7 @@ def create_app(config_filename, register_blueprints=True):
         from app.views.main import home_blueprint
         from app.views.user import user_blueprint
         from app.views.company import company_blueprint
-        from app.views.predict import predict_blueprint
+        from app.views.prediction import predict_blueprint
         from app.views.customer import customer_blueprint
         from app.views.datasource import datasource_blueprint
         from app.views.authentication import authentication_blueprint
@@ -81,8 +81,6 @@ def create_app(config_filename, register_blueprints=True):
         def render_500(e):
             # We don't want to show internal exception messages...
             return render_template('500.html'), 500
-
-
 
     app.json_encoder = CustomJSONEncoder
     return app

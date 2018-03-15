@@ -104,7 +104,6 @@ class UserEntity(BaseEntity):
         except BadSignature:
             return None
 
-
         user = UserEntity.query.get(data['id'])
         return user
 
@@ -114,6 +113,7 @@ class UserEntity(BaseEntity):
             return UserEntity.query.filter(UserEntity.email == email).one()
         except NoResultFound:
             return None
+
 
 class CustomerActionEntity(BaseEntity):
     __tablename__ = 'customer_action'
