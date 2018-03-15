@@ -12,7 +12,6 @@ HERE = os.path.join(os.path.dirname(__file__))
 
 class TestPredictionAPI(BaseTestClass):
     TESTING = True
-    TEST_USER_ID = '99'
 
     def setUp(self):
         super().setUp()
@@ -25,7 +24,6 @@ class TestPredictionAPI(BaseTestClass):
 
     def test_upload_file_for_customer(self):
         self.login()
-        self.set_company_configuration()
         with open(os.path.join(HERE, '../resources/test_data.csv'), 'rb') as test_upload_file:
             resp = self.client.post(
                 url_for('datasource.upload'),
@@ -53,8 +51,6 @@ class TestPredictionAPI(BaseTestClass):
             assert resp.json['start_date'] == '2015-08-15T00:00:11+00:00'
             assert resp.json['end_date'] == '2015-08-15T03:21:14+00:00'
 
-            first_file_location = resp.json['location']
-
         with open(os.path.join(HERE, '../resources/additional_test_data.csv'), 'rb') as updated_data_file:
             resp = self.client.post(
                 url_for('datasource.upload'),
@@ -67,14 +63,8 @@ class TestPredictionAPI(BaseTestClass):
             assert resp.json['start_date'] == '2015-08-15T00:00:11+00:00'
             assert resp.json['end_date'] == '2017-08-15T03:21:14+00:00'
 
-            second_file_location = resp.json['location']
-
-        os.remove(first_file_location)
-        os.remove(second_file_location)
-
     def test_user_can_delete_a_datasource(self):
         self.login()
-        self.set_company_configuration()
         with open(os.path.join(HERE, '../resources/test_data.csv'), 'rb') as test_upload_file:
             resp = self.client.post(
                 url_for('datasource.upload'),
@@ -85,7 +75,6 @@ class TestPredictionAPI(BaseTestClass):
             assert resp.status_code == 302  # in order to redirect to the dashboard
             assert resp.json
             original_upload_code = resp.json['upload_code']
-            original_file_location = resp.json['location']
 
         with open(os.path.join(HERE, '../resources/test_data.csv'), 'rb') as test_upload_file:
             resp = self.client.post(
@@ -97,7 +86,6 @@ class TestPredictionAPI(BaseTestClass):
             assert resp.status_code == 302  # in order to redirect to the dashboard
             assert resp.json
             second_upload_code = resp.json['upload_code']
-            second_file_location = resp.json['location']
 
         # users can't delete the original data source
         resp = self.client.post(
@@ -117,9 +105,6 @@ class TestPredictionAPI(BaseTestClass):
 
         assert resp.status_code == 302
 
-        os.remove(original_file_location)
-        os.remove(second_file_location)
-
     @pytest.mark.skip('Waiting for the oracle to be fixed...')
     def test_predict_on_a_file(self):
         self.login()
@@ -134,9 +119,7 @@ class TestPredictionAPI(BaseTestClass):
             )
 
             upload_code = resp.json['upload_code']
-            file_location = resp.json['location']
             assert upload_code
-            assert file_location
 
         resp = self.client.post(
             url_for('prediction.submit'),
@@ -230,4 +213,3 @@ class TestPredictionAPI(BaseTestClass):
         assert resp.status_code == 200
         assert resp.json['user_id'] == 2
         assert resp.json['result']
-        os.remove(file_location)

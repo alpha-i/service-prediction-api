@@ -1,7 +1,7 @@
-from app.entities import PredictionTaskEntity, PredictionResultEntity
-from app.core.models import Task, Result, TaskStatus
-
 import logging
+
+from app.core.models import Task, Result, TaskStatus
+from app.entities import PredictionTaskEntity, PredictionResultEntity
 
 
 def get_task_by_code(task_code):
