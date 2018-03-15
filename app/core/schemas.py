@@ -1,10 +1,11 @@
 import re
 
+from attribdict import AttribDict
 from marshmallow import Schema, fields, validates, ValidationError, pre_load
 from marshmallow_enum import EnumField
 
+from app.entities.customer import UserPermissions
 from app.entities.datasource import UploadTypes
-from attribdict import AttribDict
 
 
 class DataPointSchema(Schema):
@@ -130,6 +131,8 @@ class UserSchema(BaseModelSchema):
     data_sources = fields.Nested(DataSourceSchema, many=True, default=[])
     tasks = fields.Nested(TaskSchema, many=True, default=[])
     results = fields.Nested(ResultSchema, many=True, default=[])
+    actions = fields.Nested(CustomerActionSchema, many=True, default=[])
+    permissions = EnumField(UserPermissions)
 
 
 user_schema = UserSchema()

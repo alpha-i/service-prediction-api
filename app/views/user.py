@@ -2,7 +2,7 @@ import logging
 
 from flask import Blueprint, g, request, abort, url_for
 
-from app.core.auth import requires_access_token, is_valid_email_for_company
+from app.core.auth import requires_access_token, is_valid_email_for_company, requires_admin_permissions
 from app.services.user import generate_confirmation_token, confirm_token
 from app.core.content import ApiResponse
 from app.core.utils import parse_request_data
@@ -22,6 +22,7 @@ def show_current_user_info():
     return response()
 
 @user_blueprint.route('/register', methods=['POST'])
+@requires_admin_permissions
 @parse_request_data
 def register():
     email = g.json.get('email')
@@ -32,11 +33,11 @@ def register():
     company = services.company.get_for_email(email)
     if not company:
         logging.warning("No company could be found for %s", email)
-        abort(401, 'Unauthorised')
+        abort(400, f"No company could be found for {email}")
 
     if not is_valid_email_for_company(email, company):
         logging.warning("Invalid email %s for company: %s", email, company.domain)
-        abort(401, 'Unauthorised')
+        abort(401, f"Invalid email {email} for company: {company.domain}")
 
     user = services.user.get_by_email(email)
     if user is not None:
@@ -48,7 +49,8 @@ def register():
     confirmation_token = generate_confirmation_token(user.email)
     logging.info("Confirmation token for %s: %s", user.email, confirmation_token)
 
-    services.email.send_confirmation_email(user.email, confirmation_token)
+    # Only admins can create users for now
+    #services.email.send_confirmation_email(user.email, confirmation_token)
 
     response = ApiResponse(
         content_type=request.accept_mimetypes.best,
@@ -56,7 +58,8 @@ def register():
         status_code=201,
         context={
             'email': user.email,
-            'id': user.id
+            'id': user.id,
+            'confirmation_token': confirmation_token
         }
     )
 

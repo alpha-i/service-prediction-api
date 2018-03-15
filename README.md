@@ -27,6 +27,8 @@ and a test celery worker. This needs to change in the future (by abstracting out
 
 `flask db upgrade`
 
+`flask create_superuser`
+
 `export APP_CONFIG=local.env`
 
 `honcho start`

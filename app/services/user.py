@@ -1,7 +1,7 @@
 from itsdangerous import (TimedJSONWebSignatureSerializer as Serializer, URLSafeTimedSerializer)
 
-from app.entities import UserEntity
 from app.core.models import User
+from app.entities import UserEntity
 from config import SECRET_KEY
 
 

@@ -12,10 +12,16 @@ from app.db import db
 from app.entities import BaseEntity
 from config import SECRET_KEY
 
+
 class Actions(Enum):
     FILE_UPLOAD = 'FILE_UPLOAD'
     PREDICTION_STARTED = 'PREDICTION_STARTED'
     CONFIGURATION_UPDATE = 'CONFIGURATION_UPDATE'
+
+
+class UserPermissions(Enum):
+    USER = 'USER'
+    ADMIN = 'ADMIN'
 
 
 class CompanyEntity(BaseEntity):
@@ -75,6 +81,7 @@ class UserEntity(BaseEntity):
     company_id = db.Column(db.ForeignKey('company.id'), nullable=False)
     company = relationship('CompanyEntity', foreign_keys=company_id)
     profile = relationship('UserProfileEntity', uselist=False)
+    permissions = db.Column(db.Enum(UserPermissions), default=UserPermissions.USER)
 
     confirmed = db.Column(db.Boolean, default=False)
 
@@ -141,6 +148,15 @@ class CompanyConfigurationEntity(BaseEntity):
     def get_by_id(id):
         try:
             configuration = CompanyConfigurationEntity.query.filter(CompanyConfigurationEntity.id == id).one()
+        except NoResultFound:
+            return None
+        return configuration
+
+    @staticmethod
+    def get_by_company_id(company_id):
+        try:
+            configuration = CompanyConfigurationEntity.query.filter(
+                CompanyConfigurationEntity.company_id == company_id).one()
         except NoResultFound:
             return None
         return configuration

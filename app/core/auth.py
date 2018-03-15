@@ -5,6 +5,7 @@ from flask import request, g, abort, redirect, url_for
 
 from app.core.models import User
 from app.entities import UserEntity
+from app.entities.customer import UserPermissions
 
 
 def requires_access_token(fn):
@@ -19,6 +20,16 @@ def requires_access_token(fn):
         else:
             return redirect(url_for('main.login'))
 
+    return wrapper
+
+
+def requires_admin_permissions(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        user = is_user_logged()
+        if not user.permissions == UserPermissions.ADMIN:
+            abort(403, 'Only admins can do that!')
+        return fn(*args, **kwargs)
     return wrapper
 
 
