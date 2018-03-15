@@ -34,4 +34,4 @@ def insert_configuration(company_configuration):
 def get_datasource_interpreter(company_configuration):
     from app.interpreters import datasource
     interpeter = getattr(datasource, company_configuration.configuration['datasource_interpreter'])
-    return interpeter
+    return interpeter()

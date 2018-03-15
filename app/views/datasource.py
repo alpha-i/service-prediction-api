@@ -66,7 +66,9 @@ def upload():
     filename = services.datasource.generate_filename(upload_code, uploaded_file.filename)
 
     interpreter = services.company.get_datasource_interpreter(g.user.company.current_configuration)
-    data_frame = interpreter.from_csv_to_dataframe(uploaded_file)
+    data_frame, errors = interpreter.from_csv_to_dataframe(uploaded_file)
+    if errors:
+        abort(400, errors)
 
     features = list(data_frame.columns)
 

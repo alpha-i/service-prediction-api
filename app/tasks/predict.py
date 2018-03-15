@@ -4,8 +4,8 @@ import time
 from celery.result import AsyncResult, allow_join_result
 
 from app import celery
-from app import services
 from app import interpreters
+from app import services
 from app.core.models import Task, Result, TaskStatus
 from app.core.schemas import prediction_request_schema
 from app.core.utils import json_reload

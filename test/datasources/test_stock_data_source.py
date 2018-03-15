@@ -15,10 +15,13 @@ class TestStockDataSource(BaseTestClass):
 
     def setUp(self):
         super().setUp()
+        self.create_superuser()
+        self.login_superuser()
         self.register_company()
         self.register_user()
-        self.login()
         self.set_company_configuration()
+        self.logout()
+        self.login()
 
     def get_company_configuration(self):
         configuration = {
@@ -154,7 +157,7 @@ class TestStockDataSource(BaseTestClass):
             resp = self.client.post(
                 url_for('datasource.upload'),
                 content_type='multipart/form-data',
-                data={'upload': (test_upload_file, 'test_data.csv')},
+                data={'upload': (test_upload_file, 'test_stock_standardised.csv')},
                 headers={'Accept': 'application/html'}
             )
             assert resp.status_code == 302  # in order to redirect to the dashboard
@@ -163,13 +166,22 @@ class TestStockDataSource(BaseTestClass):
 
 def test_from_oldmutual_csv_to_dataframe():
     with open(os.path.join(HERE, '../resources/test_stock_standardised.csv'), 'rb') as csv_file:
-        source_dataframe = interpreters.datasource.StockDataSourceInterpreter.from_csv_to_dataframe(csv_file=csv_file)
-    dataframe = interpreters.datasource.StockDataSourceInterpreter.from_dataframe_to_data_dict(source_dataframe)
+        source_dataframe, _ = interpreters.datasource.StockDataSourceInterpreter().from_csv_to_dataframe(
+            csv_file=csv_file)
+    dataframe = interpreters.datasource.StockDataSourceInterpreter().from_dataframe_to_data_dict(source_dataframe)
     assert isinstance(dataframe['Returns'], pd.DataFrame), type(dataframe['Returns'])
+
+
+def test_validator_works():
+    with open(os.path.join(HERE, '../resources/test_stock_standardised.csv'), 'rb') as csv_file:
+        source_dataframe, errors = interpreters.datasource.GymDataSourceInterpreter().from_csv_to_dataframe(
+            csv_file=csv_file)
+        assert not source_dataframe
+        assert errors == ["'date' is not in list"]
 
 
 def test_from_gymdata_to_dataframe():
     with open(os.path.join(HERE, '../resources/test_full_data.csv'), 'rb') as csv_file:
-        source_dataframe = interpreters.datasource.GymDataSourceInterpreter.from_csv_to_dataframe(csv_file)
-    dataframe = interpreters.datasource.GymDataSourceInterpreter.from_dataframe_to_data_dict(source_dataframe)
+        source_dataframe, _ = interpreters.datasource.GymDataSourceInterpreter().from_csv_to_dataframe(csv_file)
+    dataframe = interpreters.datasource.GymDataSourceInterpreter().from_dataframe_to_data_dict(source_dataframe)
     assert isinstance(dataframe['number_people'], pd.DataFrame), type(dataframe['number_people'])

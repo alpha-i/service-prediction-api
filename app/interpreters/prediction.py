@@ -1,8 +1,8 @@
 import abc
 import datetime
 
-from alphai_cromulon_oracle.oracle import OraclePrediction
-from alphai_delphi.oracle import PredictionResult
+import pytz
+from dateutil import parser
 
 from config import DATE_FORMAT
 
@@ -55,9 +55,9 @@ def prediction_interpreter(prediction_result):
     - Crocubot uses a PredictionResult(mean_vector, covariance_matrix, prediction_timestamp, target_timestamp)
     - Cromulon uses OraclePrediction(mean_forecast, lower_bound, upper_bound, current_timestamp)
     """
-    if isinstance(prediction_result, PredictionResult):  # TODO: changeme!
+    if prediction_result.__class__.__name__ == 'PredictionResult':  # TODO: changeme!
         return CrocubotResultInterpreter(prediction_result)()
-    elif isinstance(prediction_result, OraclePrediction):
+    elif prediction_result.__class__.__name__ == 'OraclePrediction':
         return CromulonResultInterpreter(prediction_result)()
     else:
         raise ValueError("No interpreter available for %s", prediction_result.__class__)
@@ -68,7 +68,7 @@ def prediction_result_to_dataframe(prediction):
     prediction_start = datetime.strptime(start, DATE_FORMAT).astimezone(pytz.utc)
 
     end = prediction.prediction_request['end_time']
-    prediction_end = datetime.strptime(end, DATE_FORMAT).astimezone(pytz.utc) + timedelta(days=1)
+    prediction_end = datetime.strptime(end, DATE_FORMAT).astimezone(pytz.utc) + datetime.timedelta(days=1)
 
     result = []
     if prediction.prediction_result:

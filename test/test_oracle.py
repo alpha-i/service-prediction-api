@@ -5,7 +5,8 @@ import unittest
 
 import pandas as pd
 import pytest
-from alphai_cromulon_oracle.oracle import CromulonOracle
+# TODO: Cromulon is delphi-incompatible
+#from alphai_cromulon_oracle.oracle import CromulonOracle
 
 from app.interpreters.datasource import GymDataSourceInterpreter
 
