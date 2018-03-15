@@ -14,9 +14,13 @@ class TestPredictionAPI(BaseTestClass):
     TEST_USER_ID = '99'
 
     def setUp(self):
-        super(TestPredictionAPI, self).setUp()
+        super().setUp()
+        self.create_superuser()
+        self.login_superuser()
         self.register_company()
         self.register_user()
+        self.set_company_configuration()
+        self.logout()
 
     def test_upload_file_for_customer(self):
         self.login()
@@ -42,7 +46,7 @@ class TestPredictionAPI(BaseTestClass):
                 'upload_code': 'a033d3ae-cd6c-4435-b00b-0bbc9ab09fe6'
             }
             """
-            assert resp.json['user_id'] == 1
+            assert resp.json['user_id'] == 2
 
             assert resp.json['start_date'] == '2015-08-15T00:00:11+00:00'
             assert resp.json['end_date'] == '2015-08-15T03:21:14+00:00'
@@ -115,7 +119,7 @@ class TestPredictionAPI(BaseTestClass):
 
     def test_predict_on_a_file(self):
         self.login()
-        self.set_company_configuration()
+
         # first you upload a file
         with open(os.path.join(HERE, '../resources/test_full_data.csv'), 'rb') as test_upload_file:
             resp = self.client.post(
@@ -172,7 +176,7 @@ class TestPredictionAPI(BaseTestClass):
         }
         """
         assert resp.status_code == 200
-        assert resp.json['user_id'] == 1
+        assert resp.json['user_id'] == 2
 
         task_status = resp.json['status']
 
@@ -220,6 +224,6 @@ class TestPredictionAPI(BaseTestClass):
         """
 
         assert resp.status_code == 200
-        assert resp.json['user_id'] == 1
+        assert resp.json['user_id'] == 2
         assert resp.json['result']
         os.remove(file_location)

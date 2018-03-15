@@ -45,7 +45,7 @@ def predict_task(self, user_id, upload_code, prediction_request):
     data_frame_content = uploaded_file.get_file()
     data_dict = datasource_interpreter(data_frame_content)
     oracle = services.oracle.get_oracle_for_configuration(
-        services.company.get_configuration_for_id(uploaded_file.company_id)
+        services.company.get_configuration_for_company_id(uploaded_file.company_id)
     )
     oracle.config['n_forecast'] = MAXIMUM_DAYS_FORECAST + 2
 

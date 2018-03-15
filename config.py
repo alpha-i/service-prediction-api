@@ -1,7 +1,14 @@
+import logging
 import os
+import sys
+
 from dotenv import load_dotenv
 
-load_dotenv(os.getenv('APP_CONFIG'))
+try:
+    load_dotenv(os.getenv('APP_CONFIG'))
+except TypeError:
+    logging.error("Invalid configuration file. Did you set the APP_CONFIG env variable?")
+    sys.exit(1)
 
 DEBUG = eval(os.getenv('DEBUG'))
 PORT = int(os.getenv('PORT'))
@@ -23,4 +30,6 @@ MAILGUN_API_KEY = os.getenv('MAILGUN_API_KEY')
 DATE_FORMAT = os.getenv('DATE_FORMAT')
 DATETIME_FORMAT = os.getenv('DATETIME_FORMAT')
 DATETIME_TZ_FORMAT = os.getenv('DATETIME_TZ_FORMAT')
+SUPERUSER_EMAIL = os.getenv('SUPERUSER_EMAIL')
+SUPERUSER_PASSWORD = os.getenv('SUPERUSER_PASSWORD')
 TARGET_FEATURE = 'number_people'

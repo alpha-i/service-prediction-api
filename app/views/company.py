@@ -1,7 +1,7 @@
 from flask import Blueprint, g, abort, request
 
 from app import services
-from app.core.auth import requires_access_token
+from app.core.auth import requires_access_token, requires_admin_permissions
 from app.core.content import ApiResponse
 from app.core.models import Company, CompanyConfiguration
 from app.core.schemas import OracleConfigurationSchema
@@ -22,6 +22,7 @@ def show_current_company_info():
 
 @company_blueprint.route('/register', methods=['POST'])
 @parse_request_data
+@requires_admin_permissions
 def register():
     company_name = g.json.get('name')
     domain = g.json.get('domain')
@@ -55,31 +56,29 @@ def current_configuration():
     return response()
 
 
-@company_blueprint.route('/configuration/<int:id>')
-@requires_access_token
-def configuration_detail(id):
-    configuration = services.company.get_configuration_for_id(id)
+@company_blueprint.route('/configuration/<int:company_id>')
+@requires_admin_permissions
+def configuration_detail(company_id):
+    configuration = services.company.get_configuration_for_company_id(company_id)
     if not configuration:
         abort(404, 'No such configuration found')
-    if configuration.company_id != g.user.company.id:
-        abort(401, 'Unauthorised')
     return ApiResponse(
         content_type=request.accept_mimetypes.best,
         context=configuration
     )()
 
 
-@company_blueprint.route('/configuration', methods=['POST'])
-@requires_access_token
+@company_blueprint.route('/configuration/<int:company_id>', methods=['POST'])
+@requires_admin_permissions
 @parse_request_data
-def configuration_update():
+def configuration_update(company_id):
     configuration_request = g.json
     data, errors = OracleConfigurationSchema().load(configuration_request)
     if errors or not data:
         return abort(400, str(errors))
 
     configuration = CompanyConfiguration(
-        company_id=g.user.company_id,
+        company_id=company_id,
         configuration=json_reload(data)
     )
 

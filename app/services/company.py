@@ -18,8 +18,8 @@ def insert(company):
     return Company.from_model(model)
 
 
-def get_configuration_for_id(id):
-    model = CompanyConfigurationEntity.get_by_id(id)
+def get_configuration_for_company_id(id):
+    model = CompanyConfigurationEntity.get_by_company_id(id)
     return CompanyConfiguration.from_model(model)
 
 
