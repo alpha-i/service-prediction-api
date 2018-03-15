@@ -2,6 +2,7 @@ import json
 import os
 import time
 
+import pytest
 from flask import url_for
 
 from test.functional.base_test_class import BaseTestClass
@@ -119,6 +120,7 @@ class TestPredictionAPI(BaseTestClass):
         os.remove(original_file_location)
         os.remove(second_file_location)
 
+    @pytest.mark.skip('Waiting for the oracle to be fixed...')
     def test_predict_on_a_file(self):
         self.login()
 

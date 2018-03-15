@@ -1,8 +1,11 @@
 import datetime
 
+import pytest
+
 from app import services
 
 
+@pytest.mark.skip('Waiting for crocubot to be implemented...')
 def test_prediction():
     prediction_request = {
         'end_time': datetime.date(2017, 1, 2),
