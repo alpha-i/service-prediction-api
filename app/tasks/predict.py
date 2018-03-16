@@ -1,5 +1,4 @@
 import logging
-import time
 
 from celery.result import AsyncResult, allow_join_result
 
@@ -21,12 +20,17 @@ def predict_task(self, user_id, upload_code, prediction_request):
         logging.warning("No upload could be found for code %s", upload_code)
         return
 
-    prediction_task = create_task(self.request.id, user_id, uploaded_file.id, prediction_request['name'])
-    set_task_status(prediction_task, TaskStatusTypes.queued)
+    prediction_task = create_queued_prediction_task(
+        task_name=prediction_request['name'],
+        task_code=self.request.id,
+        user_id=user_id,
+        upload_code=uploaded_file.id,
+    )
 
     prediction_request, errors = PredictionRequestSchema().load(prediction_request)
     if errors:
         logging.warning(errors)
+        set_task_status(prediction_task, TaskStatusTypes.failed)
         raise Exception(errors)
 
     prediction_task.prediction_request = json_reload(prediction_request)
@@ -34,7 +38,6 @@ def predict_task(self, user_id, upload_code, prediction_request):
 
     logging.info("Prediction request %s received: %s", upload_code, prediction_request)
 
-    time.sleep(1)
     logging.info("*** TASK STARTED! %s", prediction_task.task_code)
     set_task_status(prediction_task, TaskStatusTypes.started)
 
@@ -73,17 +76,23 @@ def prediction_failure(uuid):
         print(exc)
 
     prediction_task = services.prediction.get_task_by_code(uuid)
+    logging.warning(f"Exception was: {exc}")
     set_task_status(prediction_task, TaskStatusTypes.failed)
     print('Task {0} raised exception: {1!r}\n{2!r}'.format(uuid, exc, result.traceback))
 
 
-def create_task(task_code, user_id, upload_code, name):
-    return services.prediction.insert_task(
+def create_queued_prediction_task(task_name, task_code, user_id, upload_code):
+    task = services.prediction.insert_task(
         Task(task_code=task_code,
              user_id=user_id,
              datasource_id=upload_code,
-             name=name)
+             name=task_name)
     )
+    services.prediction.insert_status(
+        TaskStatus(prediction_task_id=task.id,
+                   state=TaskStatusTypes.queued.value)
+    )
+    return task
 
 
 def set_task_status(task, status):

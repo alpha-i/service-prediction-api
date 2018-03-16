@@ -48,7 +48,6 @@
                 <th></th>
             </tr>
             {% for task in task_list %}
-                {% if task.statuses %}
                 <tr>
                     <td scope="row">{{ task.name }}</td>
                     <td scope="row">{{ task.task_code }}</td>
@@ -69,7 +68,6 @@
                         {% endif %}
                     </td>
                 </tr>
-                {% endif %}
             {% endfor %}
             </tbody>
         </table>
