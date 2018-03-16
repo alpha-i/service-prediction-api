@@ -1,3 +1,4 @@
+import logging
 import time
 
 from flask import Blueprint, jsonify, url_for, g, request, abort
@@ -61,6 +62,7 @@ def get_tasks():
 def get_single_task(task_code):
     prediction_task = services.prediction.get_task_by_code(task_code)
     if not prediction_task:
+        logging.debug(f"No task found for code {task_code}")
         return abort(404, 'No task found!')
 
     response = ApiResponse(
@@ -86,6 +88,7 @@ def result(task_code):
     """
     prediction_result = services.prediction.get_result_by_code(task_code)
     if not prediction_result:
+        logging.debug(f"No result was found for task code {task_code}")
         abort(404, 'No result found!')
 
     response = ApiResponse(

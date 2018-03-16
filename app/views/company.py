@@ -1,3 +1,5 @@
+import logging
+
 from flask import Blueprint, g, abort, request
 
 from app import services
@@ -27,10 +29,13 @@ def register():
     company_name = g.json.get('name')
     domain = g.json.get('domain')
 
-    assert company_name and domain, abort(400, 'Request error: please specify company name and company domain.')
+    if not company_name and domain:
+        logging.debug("Company name and/or domain weren't supplied")
+        abort(400, 'Request error: please specify company name and company domain.')
 
     existing_company = services.company.get_for_domain(domain)
     if existing_company:
+        logging.debug(f"Cannot recreate an existing company: {domain}")
         abort(400, 'Unable to create existing company')
 
     company = Company(name=company_name, domain=domain)
@@ -61,6 +66,7 @@ def current_configuration():
 def configuration_detail(company_id):
     configuration = services.company.get_configuration_for_company_id(company_id)
     if not configuration:
+        logging.debug(f"No configuration found for company id {company_id}")
         abort(404, 'No such configuration found')
     return ApiResponse(
         content_type=request.accept_mimetypes.best,
@@ -75,7 +81,8 @@ def configuration_update(company_id):
     configuration_request = g.json
     data, errors = OracleConfigurationSchema().load(configuration_request)
     if errors or not data:
-        return abort(400, str(errors))
+        logging.debug(f"Invalid configuration supplied: {str(errors)}")
+        return abort(400, f"Invalid configuration: {str(errors)}")
 
     configuration = CompanyConfiguration(
         company_id=company_id,
