@@ -1,6 +1,6 @@
+import importlib
 import uuid
 from functools import wraps
-import importlib
 
 from flask import request, g, json, current_app
 

@@ -4,7 +4,7 @@ from flask import Blueprint, jsonify, render_template, g, request, abort, Respon
 
 from app import services
 from app.core.auth import requires_access_token
-from app.core.schemas import user_schema
+from app.core.schemas import UserSchema
 from app.db import db
 from app.entities import CompanyConfigurationEntity, DataSourceEntity, PredictionTaskEntity
 from app.interpreters.prediction import prediction_result_to_dataframe
@@ -17,7 +17,7 @@ customer_blueprint = Blueprint('customer', __name__)
 @requires_access_token
 def get_user_profile():
     customer = g.user
-    user = user_schema.dump(customer).data
+    user = UserSchema().dump(customer).data
     return jsonify(user)
 
 
