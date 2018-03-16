@@ -16,6 +16,7 @@ def requires_access_token(fn):
             g.user = User.from_model(user)
             return fn(*args, **kwargs)
         elif request.content_type == 'application/json':
+            logging.debug("No authorisation supplied")
             abort(401, "Unauthorised")
         else:
             return redirect(url_for('main.login'))
@@ -28,17 +29,14 @@ def requires_admin_permissions(fn):
     def wrapper(*args, **kwargs):
         user = is_user_logged()
         if not user.permissions == UserPermissions.ADMIN:
+            logging.debug(f"User {user.email} was not allowed an admin action")
             abort(403, 'Only admins can do that!')
         return fn(*args, **kwargs)
+
     return wrapper
 
 
 def is_user_logged():
-    """
-    Check if user is logged if the token exists and is valid
-
-    :return customer|False:
-    """
     if 'X-Token' in request.headers:
         token = request.headers['X-Token']
     elif 'token' in request.cookies:
@@ -46,9 +44,10 @@ def is_user_logged():
     elif request.content_type == 'application/json':
         token = request.json.get('token')
     else:
-        logging.info("No token provided!")
+        logging.debug("No token provided!")
         return None
     if not token:
+        logging.debug("No authentication was supplied")
         abort(401, 'Please supply authentication')
 
     user = UserEntity.verify_auth_token(token)

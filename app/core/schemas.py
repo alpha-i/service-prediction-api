@@ -27,16 +27,10 @@ class PredictionRequestSchema(Schema):
     end_time = fields.Date(required=True)
 
 
-prediction_request_schema = PredictionRequestSchema()
-
-
 class PredictionResultSchema(Schema):
     user_id = fields.String(required=True)
     task_code = fields.UUID(required=True)
     prediction = fields.Nested(PredictionSchema)
-
-
-prediction_result_schema = PredictionResultSchema()
 
 
 class BaseModelSchema(Schema):
@@ -137,6 +131,3 @@ class UserSchema(BaseModelSchema):
     results = fields.Nested(ResultSchema, many=True, default=[])
     actions = fields.Nested(CustomerActionSchema, many=True, default=[])
     permissions = EnumField(UserPermissions)
-
-
-user_schema = UserSchema()

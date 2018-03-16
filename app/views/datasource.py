@@ -1,3 +1,4 @@
+import logging
 import os
 
 import pandas as pd
@@ -40,6 +41,7 @@ def current():
 def get(datasource_id):
     datasource = services.datasource.get_by_upload_code(datasource_id)
     if not datasource:
+        logging.debug(f"No datasource was found for id {datasource_id}")
         abort(404, 'No data source found!')
 
     response = ApiResponse(
@@ -55,11 +57,13 @@ def get(datasource_id):
 def upload():
     user = g.user
     if not len(request.files):
+        logging.debug("No file was uploaded")
         abort(400, "No file provided!")
 
     uploaded_file = request.files['upload']
 
     if not allowed_extension(uploaded_file.filename):
+        logging.debug(f"Invalid extension for upload {uploaded_file.filename}")
         abort(400, f'File extension for {uploaded_file.filename} not allowed!')
 
     upload_code = generate_upload_code()
@@ -68,6 +72,7 @@ def upload():
     interpreter = services.company.get_datasource_interpreter(g.user.company.current_configuration)
     data_frame, errors = interpreter.from_csv_to_dataframe(uploaded_file)
     if errors:
+        logging.debug(f"Invalid file uploaded: {errors}")
         abort(400, errors)
 
     features = list(data_frame.columns)
@@ -111,6 +116,7 @@ def upload():
 def delete(datasource_id):
     datasource = services.datasource.get_by_upload_code(datasource_id)
     if datasource.is_original:
+        logging.debug(f"Tried to delete original ingestion datasource: {datasource_id}")
         abort(400)
 
     services.datasource.delete(datasource)
