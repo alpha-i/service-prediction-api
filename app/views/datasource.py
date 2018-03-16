@@ -70,10 +70,14 @@ def upload():
     filename = services.datasource.generate_filename(upload_code, uploaded_file.filename)
 
     interpreter = services.company.get_datasource_interpreter(g.user.company.current_configuration)
+    target_feature = g.user.company.current_configuration.configuration.target_feature
     data_frame, errors = interpreter.from_csv_to_dataframe(uploaded_file)
+
     if errors:
-        logging.debug(f"Invalid file uploaded: {errors}")
-        abort(400, errors)
+        logging.debug(f"Invalid file uploaded: {', '.join(errors)}")
+        abort(400, ', '.join(errors))
+    if not target_feature in list(data_frame.columns):
+        abort(400, f"Required feature {target_feature} not in {uploaded_file.filename}")
 
     features = list(data_frame.columns)
 
@@ -97,7 +101,8 @@ def upload():
         start_date=data_frame.index[0].to_pydatetime(),
         end_date=data_frame.index[-1].to_pydatetime(),
         is_original=original,
-        features=', '.join(features)
+        features=', '.join(features),
+        target_feature=target_feature,
     )
 
     datasource = services.datasource.insert(upload)

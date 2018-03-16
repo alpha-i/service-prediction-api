@@ -61,7 +61,7 @@ def current_configuration():
     return response()
 
 
-@company_blueprint.route('/configuration/<int:company_id>')
+@company_blueprint.route('/configuration/<int:company_id>', methods=['GET'])
 @requires_admin_permissions
 def configuration_detail(company_id):
     configuration = services.company.get_configuration_for_company_id(company_id)
@@ -80,6 +80,7 @@ def configuration_detail(company_id):
 def configuration_update(company_id):
     configuration_request = g.json
     data, errors = OracleConfigurationSchema().load(configuration_request)
+
     if errors or not data:
         logging.debug(f"Invalid configuration supplied: {str(errors)}")
         return abort(400, f"Invalid configuration: {str(errors)}")

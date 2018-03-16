@@ -54,6 +54,7 @@ class DataSourceSchema(BaseModelSchema):
     end_date = fields.DateTime()
     is_original = fields.Boolean(allow_none=True)
     features = fields.List(fields.String)
+    target_feature = fields.String()
 
     @pre_load
     def process_list_of_features(self, data):
@@ -64,13 +65,13 @@ class DataSourceSchema(BaseModelSchema):
 
 
 class OracleConfigurationSchema(BaseModelSchema):
-    scheduling = fields.Dict()
-    oracle = fields.Dict()
-    oracle_class = fields.String()
-    calendar_name = fields.String()
-    target_feature = fields.String()
-    datasource_interpreter = fields.String()
-    prediction_result_interpreter = fields.String()
+    scheduling = fields.Dict(required=True)
+    oracle = fields.Dict(required=True)
+    oracle_class = fields.String(required=True)
+    calendar_name = fields.String(required=True)
+    target_feature = fields.String(required=True)
+    datasource_interpreter = fields.String(required=True)
+    prediction_result_interpreter = fields.String(required=True)
 
 
 class CompanyConfigurationSchema(BaseModelSchema):

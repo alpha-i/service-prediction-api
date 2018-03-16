@@ -28,6 +28,8 @@ def requires_admin_permissions(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
         user = is_user_logged()
+        if not user:
+            abort(403)
         if not user.permissions == UserPermissions.ADMIN:
             logging.debug(f"User {user.email} was not allowed an admin action")
             abort(403, 'Only admins can do that!')
