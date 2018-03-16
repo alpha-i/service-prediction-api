@@ -73,11 +73,11 @@ def upload():
     target_feature = g.user.company.current_configuration.configuration.target_feature
     data_frame, errors = interpreter.from_csv_to_dataframe(uploaded_file)
 
+    if errors:
+        logging.debug(f"Invalid file uploaded: {', '.join(errors)}")
+        abort(400, ', '.join(errors))
     if not target_feature in list(data_frame.columns):
         abort(400, f"Required feature {target_feature} not in {uploaded_file.filename}")
-    if errors:
-        logging.debug(f"Invalid file uploaded: {errors}")
-        abort(400, errors)
 
     features = list(data_frame.columns)
 
