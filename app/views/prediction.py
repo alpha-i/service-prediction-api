@@ -1,3 +1,4 @@
+import logging
 import time
 
 from flask import Blueprint, jsonify, url_for, g, request, abort
@@ -5,7 +6,7 @@ from flask import Blueprint, jsonify, url_for, g, request, abort
 from app import services
 from app.core.auth import requires_access_token
 from app.core.content import ApiResponse
-from app.core.schemas import prediction_request_schema
+from app.core.schemas import PredictionRequestSchema
 from app.core.utils import parse_request_data
 from app.tasks.predict import predict_task, prediction_failure
 
@@ -24,7 +25,7 @@ def submit():
 
     # the user can only predict against the _latest_ datasource
     upload_code = g.user.current_data_source.upload_code
-    prediction_request, errors = prediction_request_schema.load(g.json)
+    prediction_request, errors = PredictionRequestSchema().load(g.json)
     if errors:
         return jsonify(errors=errors), 400
 
@@ -37,7 +38,7 @@ def submit():
 
     response = ApiResponse(
         content_type=request.accept_mimetypes.best,
-        next=url_for('customer.dashboard'),  # TODO: changeme, it should point to the status
+        next=url_for('customer.dashboard'),
         context={
             'task_code': celery_prediction_task.id,
             'task_status': url_for('prediction.get_single_task', task_code=celery_prediction_task.id, _external=True),
@@ -61,6 +62,7 @@ def get_tasks():
 def get_single_task(task_code):
     prediction_task = services.prediction.get_task_by_code(task_code)
     if not prediction_task:
+        logging.debug(f"No task found for code {task_code}")
         return abort(404, 'No task found!')
 
     response = ApiResponse(
@@ -86,6 +88,7 @@ def result(task_code):
     """
     prediction_result = services.prediction.get_result_by_code(task_code)
     if not prediction_result:
+        logging.debug(f"No result was found for task code {task_code}")
         abort(404, 'No result found!')
 
     response = ApiResponse(
