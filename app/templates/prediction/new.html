@@ -42,11 +42,7 @@
                         <div class="form-group">
                             <label for="feature">Feature</label>
                             <div class="input-group">
-                                <select name="feature" id="feature">
-                                    {% for feature in datasource.features %}
-                                        <option value="{{ feature }}">{{ feature }}</option>
-                                    {% endfor %}
-                                </select>
+                                <input required type="text" class="form-control" name="feature" value="{{ datasource.target_feature }}" id="name" readonly>
                             </div>
                         </div>
                         <div class="form-group">

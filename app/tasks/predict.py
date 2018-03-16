@@ -10,7 +10,6 @@ from app.core.models import Task, Result, TaskStatus
 from app.core.schemas import PredictionRequestSchema
 from app.core.utils import json_reload
 from app.entities import TaskStatusTypes
-from config import MAXIMUM_DAYS_FORECAST
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -41,15 +40,14 @@ def predict_task(self, user_id, upload_code, prediction_request):
 
     data_frame_content = uploaded_file.get_file()
     company_configuration = services.company.get_configuration_for_company_id(uploaded_file.company_id)
-    oracle = services.oracle.get_oracle_for_configuration(company_configuration)
-    oracle.config['n_forecast'] = MAXIMUM_DAYS_FORECAST + 2
+
     interpreter = services.company.get_datasource_interpreter(company_configuration)
     data_dict = interpreter.from_dataframe_to_data_dict(data_frame_content)
 
     oracle_prediction_result = services.oracle.make_prediction(
         prediction_request=prediction_request,
         data_dict=data_dict,
-        company_configuration=company_configuration.configuration
+        company_configuration=company_configuration
     )
     prediction_result = interpreters.prediction.prediction_interpreter(oracle_prediction_result)
 
