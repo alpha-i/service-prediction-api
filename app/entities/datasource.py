@@ -37,6 +37,7 @@ class DataSourceEntity(BaseEntity):
 
     is_original = db.Column(db.Boolean, default=False)
     features = db.Column(db.String, nullable=True)
+    target_feature = db.Column(db.String, nullable=True)
 
     def get_file(self):
         with pd.HDFStore(self.location) as hdf_store:

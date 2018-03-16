@@ -54,12 +54,12 @@
                                 <input type="file" class="hidden" name="upload" id="upload">
                             </div>
                             <div class="col-xs-2">
-                                <input class="btn btn-primary" type="submit" value="Upload file" name="submit">
+                                <input class="btn btn-primary" type="submit" value="Upload file" id="datasource_submit_button" name="submit" disabled>
                             </div>
                         </div>
                     </form>
                     <p class="mt-4">
-                        <a href="{{ url_for('static', filename='demo/data_template.csv') }}" target="_blank"><i class="fa fa-download"></i> &nbsp;Download file template</a>
+                        <a href="{{ url_for('customer.get_company_datasource_template') }}" target="_blank"><i class="fa fa-download"></i> &nbsp;Download file template</a>
                     </p>
                 </div>
             </div>
@@ -112,7 +112,13 @@
         });
 
         $('#upload').change(function () {
+            file_path = $(this).val();
             $('#file_path').val($(this).val());
+            if(file_path){
+                $('#datasource_submit_button').attr('disabled', false)
+            } else {
+                $('#datasource_submit_button').attr('disabled', true)
+            }
         });
 
         $('#file_path').click(function () {

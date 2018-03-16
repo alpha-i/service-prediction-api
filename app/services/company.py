@@ -1,5 +1,4 @@
 from app.core.models import Company, CompanyConfiguration
-from app.core.utils import import_class
 from app.entities import CompanyEntity, CompanyConfigurationEntity
 
 

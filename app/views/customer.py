@@ -1,6 +1,7 @@
 import logging
 from datetime import timedelta
 
+import pandas as pd
 from flask import Blueprint, jsonify, render_template, g, request, abort, Response
 
 from app import services
@@ -48,6 +49,19 @@ def list_datasources():
     return render_template('datasource/list.html', **context)
 
 
+@customer_blueprint.route('/datasource/template')
+@requires_access_token
+def get_company_datasource_template():
+    csv_interpreter = services.company.get_datasource_interpreter(g.user.company.current_configuration)
+    columns = [csv_interpreter.INDEX_COLUMN] + csv_interpreter.COLUMNS
+
+    return Response(
+        pd.DataFrame(columns=columns).to_csv(header=True, index=False),
+        mimetype='text/csv',
+        headers={"Content-disposition": f"attachment; filename={g.user.company.name}_template.csv"}
+    )
+
+
 @customer_blueprint.route('/datasource/<string:datasource_id>', methods=['GET'])
 @requires_access_token
 def view_datasource(datasource_id):
@@ -76,7 +90,8 @@ def view_datasource(datasource_id):
 @requires_access_token
 def new_prediction():
     if not g.user.current_data_source:
-        logging.debug(f"Asked to create a prediction when no data source was available for company {g.user.company.name}")
+        logging.debug(
+            f"Asked to create a prediction when no data source was available for company {g.user.company.name}")
         abort(400, "No data source available. Upload one first!")
     datasource_min_date = g.user.current_data_source.end_date
     max_date = datasource_min_date + timedelta(days=MAXIMUM_DAYS_FORECAST)
@@ -192,6 +207,7 @@ def list_customer_tasks():
     return jsonify(g.user.tasks)
 
 
+# TODO: temporary view to show the customer results
 @customer_blueprint.route('/results')
 @requires_access_token
 def list_customer_results():
