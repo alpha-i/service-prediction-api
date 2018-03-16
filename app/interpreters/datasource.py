@@ -8,7 +8,7 @@ InterpreterResult = namedtuple('InterpreterResult', 'result errors')
 
 class AbstractDataSourceInterpreter(metaclass=abc.ABCMeta):
     COLUMNS = []
-    INDEX_COLUMN = []
+    INDEX_COLUMN = ''
 
     def __init__(self):
         self.errors = []
