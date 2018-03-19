@@ -5,6 +5,7 @@ from itsdangerous import (
     TimedJSONWebSignatureSerializer as Serializer, BadSignature, SignatureExpired
 )
 from passlib.apps import custom_app_context as pwd_context
+from sqlalchemy import event
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -17,6 +18,7 @@ class Actions(Enum):
     FILE_UPLOAD = 'FILE_UPLOAD'
     PREDICTION_STARTED = 'PREDICTION_STARTED'
     CONFIGURATION_UPDATE = 'CONFIGURATION_UPDATE'
+    TRAINING_STARTED = 'TRAINING_STARTED'
 
 
 class UserPermissions(Enum):
@@ -33,6 +35,7 @@ class CompanyEntity(BaseEntity):
     logo = db.Column(db.String)
     domain = db.Column(db.String, nullable=False)
     profile = db.Column(db.JSON)
+    actions = relationship('CustomerActionEntity', back_populates='company')
     configuration = relationship('CompanyConfigurationEntity', back_populates='company')
     data_sources = relationship('DataSourceEntity', back_populates='company')
     users = relationship('UserEntity', back_populates='company')
@@ -77,7 +80,7 @@ class UserEntity(BaseEntity):
     tasks = relationship('PredictionTaskEntity', back_populates='user')
     results = relationship('PredictionResultEntity', back_populates='user')
     data_sources = relationship('DataSourceEntity', back_populates='user')
-    actions = relationship('CustomerActionEntity', back_populates='user')
+
     company_id = db.Column(db.ForeignKey('company.id'), nullable=False)
     company = relationship('CompanyEntity', foreign_keys=company_id)
     profile = relationship('UserProfileEntity', uselist=False)
@@ -125,8 +128,8 @@ class UserEntity(BaseEntity):
 class CustomerActionEntity(BaseEntity):
     __tablename__ = 'customer_action'
 
-    user_id = db.Column(db.ForeignKey('user.id'), nullable=False)
-    user = relationship('UserEntity', foreign_keys=user_id)
+    company_id = db.Column(db.ForeignKey('company.id'), nullable=False)
+    company = relationship('CompanyEntity', foreign_keys=company_id)
     action = db.Column(db.Enum(Actions))
 
 
@@ -160,3 +163,16 @@ class CompanyConfigurationEntity(BaseEntity):
         except NoResultFound:
             return None
         return configuration
+
+
+def update_user_action(mapper, connection, self):
+    session = db.create_scoped_session()
+    action = CustomerActionEntity(
+        company_id=self.company_id,
+        action=Actions.CONFIGURATION_UPDATE
+    )
+    session.add(action)
+    session.commit()
+
+
+event.listen(CompanyConfigurationEntity, 'after_insert', update_user_action)

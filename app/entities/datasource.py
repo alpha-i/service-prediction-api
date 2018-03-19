@@ -34,6 +34,8 @@ class DataSourceEntity(BaseEntity):
 
     prediction_task_list = relationship('PredictionTaskEntity', back_populates='datasource',
                                         cascade='all, delete-orphan')
+    training_task_list = relationship('TrainingTaskEntity', back_populates='datasource',
+                                      cascade='all, delete-orphan')
 
     is_original = db.Column(db.Boolean, default=False)
     features = db.Column(db.String, nullable=True)
@@ -63,7 +65,7 @@ class DataSourceEntity(BaseEntity):
 def update_user_action(mapper, connection, self):
     session = db.create_scoped_session()
     action = CustomerActionEntity(
-        user_id=self.user_id,
+        company_id=self.company_id,
         action=Actions.FILE_UPLOAD
     )
     session.add(action)
