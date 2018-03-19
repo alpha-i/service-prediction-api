@@ -5,7 +5,7 @@ from celery.result import AsyncResult, allow_join_result
 from app import celery
 from app import interpreters
 from app import services
-from app.core.models import Task, Result, TaskStatus
+from app.core.models import Task, Result, PredictionTaskStatus
 from app.core.schemas import PredictionRequestSchema
 from app.core.utils import json_reload
 from app.entities import TaskStatusTypes
@@ -47,7 +47,7 @@ def predict_task(self, user_id, upload_code, prediction_request):
     interpreter = services.company.get_datasource_interpreter(company_configuration)
     data_dict = interpreter.from_dataframe_to_data_dict(data_frame_content)
 
-    oracle_prediction_result = services.oracle.make_prediction(
+    oracle_prediction_result = services.oracle.predict(
         prediction_request=prediction_request,
         data_dict=data_dict,
         company_configuration=company_configuration
@@ -89,15 +89,16 @@ def create_queued_prediction_task(task_name, task_code, user_id, upload_code):
              name=task_name)
     )
     services.prediction.insert_status(
-        TaskStatus(prediction_task_id=task.id,
-                   state=TaskStatusTypes.queued.value)
+        PredictionTaskStatus(
+            prediction_task_id=task.id,
+            state=TaskStatusTypes.queued.value)
     )
     return task
 
 
 def set_task_status(task, status):
     services.prediction.insert_status(
-        TaskStatus(
+        PredictionTaskStatus(
             prediction_task_id=task.id,
             state=status.value
         )

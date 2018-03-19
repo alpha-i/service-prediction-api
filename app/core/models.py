@@ -4,12 +4,14 @@ import pandas as pd
 from flask import json
 
 from app.core.schemas import (
-    UserSchema, CompanySchema, TaskSchema, ResultSchema, DataSourceSchema, CompanyConfigurationSchema, TaskStatusSchema
+    UserSchema, CompanySchema, TaskSchema, ResultSchema, DataSourceSchema,
+    CompanyConfigurationSchema, PredictionTaskStatusSchema, TrainingTaskSchema
 )
 from app.entities import (
     UserEntity, CompanyEntity, PredictionTaskEntity, PredictionResultEntity, DataSourceEntity,
-    CompanyConfigurationEntity, TaskStatusEntity
+    CompanyConfigurationEntity, PredictionTaskStatusEntity, TrainingTaskEntity
 )
+from app.entities.training import TrainingTaskStatusEntity
 from config import HDF5_STORE_INDEX
 
 
@@ -79,9 +81,9 @@ class Task(BaseModel):
     MODEL = PredictionTaskEntity
 
 
-class TaskStatus(BaseModel):
-    SCHEMA = TaskStatusSchema
-    MODEL = TaskStatusEntity
+class PredictionTaskStatus(BaseModel):
+    SCHEMA = PredictionTaskStatusSchema
+    MODEL = PredictionTaskStatusEntity
 
 
 class DataSource(BaseModel):
@@ -102,3 +104,13 @@ class Result(BaseModel):
 class CompanyConfiguration(BaseModel):
     SCHEMA = CompanyConfigurationSchema
     MODEL = CompanyConfigurationEntity
+
+
+class TrainingTask(BaseModel):
+    SCHEMA = TrainingTaskSchema
+    MODEL = TrainingTaskEntity
+
+
+class TrainingTaskStatus(BaseModel):
+    SCHEMA = PredictionTaskStatusSchema
+    MODEL = TrainingTaskStatusEntity

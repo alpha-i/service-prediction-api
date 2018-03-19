@@ -79,11 +79,16 @@ class CompanyConfigurationSchema(BaseModelSchema):
     configuration = fields.Nested(OracleConfigurationSchema, many=False)
 
 
+class CustomerActionSchema(BaseModelSchema):
+    action = fields.String()
+
+
 class CompanySchema(BaseModelSchema):
     name = fields.String()
     domain = fields.String()
     data_sources = fields.Nested(DataSourceSchema, many=True, default=[])
     current_configuration = fields.Nested(CompanyConfigurationSchema, default=None, allow_none=True)
+    actions = fields.Nested(CustomerActionSchema, many=True, default=[])
 
     @validates('domain')
     def validate_domain(self, value):
@@ -91,15 +96,11 @@ class CompanySchema(BaseModelSchema):
             raise ValidationError("Invalid domain name")
 
 
-class CustomerActionSchema(BaseModelSchema):
-    action = fields.String()
-
-
 class UserProfileSchema(BaseModelSchema):
     pass
 
 
-class TaskStatusSchema(BaseModelSchema):
+class PredictionTaskStatusSchema(BaseModelSchema):
     state = fields.String()
     message = fields.String(allow_none=True)
 
@@ -116,7 +117,7 @@ class TaskSchema(BaseModelSchema):
     task_code = fields.String()
     status = fields.String(allow_none=True)
     is_completed = fields.Boolean()
-    statuses = fields.Nested(TaskStatusSchema, many=True, default=[])
+    statuses = fields.Nested(PredictionTaskStatusSchema, many=True, default=[])
     datasource = fields.Nested(DataSourceSchema)
     prediction_request = fields.Nested(PredictionRequestSchema, allow_none=True)
 
@@ -130,5 +131,12 @@ class UserSchema(BaseModelSchema):
     data_sources = fields.Nested(DataSourceSchema, many=True, default=[])
     tasks = fields.Nested(TaskSchema, many=True, default=[])
     results = fields.Nested(ResultSchema, many=True, default=[])
-    actions = fields.Nested(CustomerActionSchema, many=True, default=[])
     permissions = EnumField(UserPermissions)
+
+
+class TrainingTaskSchema(BaseModelSchema):
+    task_code = fields.String()
+    datasource_id = fields.Integer()
+    datasource = fields.Nested(DataSourceSchema)
+    status = fields.String(allow_none=True)
+    statuses = fields.Nested(PredictionTaskStatusSchema, many=True)

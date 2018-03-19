@@ -140,4 +140,4 @@ def test_prediction():
 
     data_dict = {}
 
-    services.oracle.make_prediction(prediction_request, data_dict, configuration)
+    services.oracle.predict(prediction_request, data_dict, configuration)
