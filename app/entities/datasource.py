@@ -34,6 +34,8 @@ class DataSourceEntity(BaseEntity):
 
     prediction_task_list = relationship('PredictionTaskEntity', back_populates='datasource',
                                         cascade='all, delete-orphan')
+    training_task_list = relationship('TrainingTaskEntity', back_populates='datasource',
+                                      cascade='all, delete-orphan')
 
     is_original = db.Column(db.Boolean, default=False)
     features = db.Column(db.String, nullable=True)

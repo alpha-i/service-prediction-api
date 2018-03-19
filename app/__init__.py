@@ -32,6 +32,7 @@ def create_app(config_filename, register_blueprints=True):
         from app.views.customer import customer_blueprint
         from app.views.datasource import datasource_blueprint
         from app.views.authentication import authentication_blueprint
+        from app.views.training import train_blueprint
         app.register_blueprint(home_blueprint, url_prefix='/')
         app.register_blueprint(user_blueprint, url_prefix='/user')
         app.register_blueprint(authentication_blueprint, url_prefix='/auth')
@@ -39,6 +40,7 @@ def create_app(config_filename, register_blueprints=True):
         app.register_blueprint(datasource_blueprint, url_prefix='/datasource')
         app.register_blueprint(predict_blueprint, url_prefix='/prediction')
         app.register_blueprint(customer_blueprint, url_prefix='/customer')
+        app.register_blueprint(train_blueprint, url_prefix='/training')
 
         @app.before_request
         def before_request():

@@ -25,7 +25,7 @@ class PredictionTaskEntity(BaseEntity):
     user = relationship('UserEntity', back_populates='tasks')
 
     task_code = db.Column(db.String(60), unique=True, nullable=False)
-    statuses = relationship('TaskStatusEntity', cascade='all, delete-orphan')
+    statuses = relationship('PredictionTaskStatusEntity', cascade='all, delete-orphan')
 
     datasource_id = db.Column(db.Integer, db.ForeignKey('data_source.id'), nullable=False)
     datasource = relationship('DataSourceEntity', back_populates='prediction_task_list')
@@ -56,8 +56,8 @@ class PredictionTaskEntity(BaseEntity):
         return self.status in [TaskStatusTypes.successful.value, TaskStatusTypes.failed.value]
 
 
-class TaskStatusEntity(BaseEntity):
-    __tablename__ = 'task_status'
+class PredictionTaskStatusEntity(BaseEntity):
+    __tablename__ = 'prediction_task_status'
 
     prediction_task_id = db.Column(db.Integer, db.ForeignKey('prediction_task.id'), nullable=False)
     prediction_task = relationship('PredictionTaskEntity', back_populates='statuses')

@@ -65,7 +65,7 @@ def get_company_datasource_template():
 @customer_blueprint.route('/datasource/<string:datasource_id>', methods=['GET'])
 @requires_access_token
 def view_datasource(datasource_id):
-    datasource = services.datasource.get_by_upload_code(datasource_id=datasource_id)
+    datasource = services.datasource.get_by_upload_code(upload_code=datasource_id)
     result_dataframe = services.datasource.get_dataframe(datasource)
 
     data_source = {

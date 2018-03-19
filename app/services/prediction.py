@@ -1,6 +1,6 @@
 import logging
 
-from app.core.models import Task, Result, TaskStatus
+from app.core.models import Task, Result, PredictionTaskStatus
 from app.entities import PredictionTaskEntity, PredictionResultEntity
 
 
@@ -27,7 +27,7 @@ def update_task(prediction_task):
         try:
             setattr(model, k, v)
         except AttributeError:
-            logging.warning(f"CANNOT SET {k} to {v}")
+            logging.debug(f"CANNOT SET {k} to {v}")
     model.update()
     return Task.from_model(model)
 
@@ -41,4 +41,4 @@ def insert_result(prediction_result):
 def insert_status(status):
     model = status.to_model()
     model.save()
-    return TaskStatus.from_model(model)
+    return PredictionTaskStatus.from_model(model)

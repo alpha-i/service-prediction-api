@@ -99,7 +99,7 @@ class UserProfileSchema(BaseModelSchema):
     pass
 
 
-class TaskStatusSchema(BaseModelSchema):
+class PredictionTaskStatusSchema(BaseModelSchema):
     state = fields.String()
     message = fields.String(allow_none=True)
 
@@ -116,7 +116,7 @@ class TaskSchema(BaseModelSchema):
     task_code = fields.String()
     status = fields.String(allow_none=True)
     is_completed = fields.Boolean()
-    statuses = fields.Nested(TaskStatusSchema, many=True, default=[])
+    statuses = fields.Nested(PredictionTaskStatusSchema, many=True, default=[])
     datasource = fields.Nested(DataSourceSchema)
     prediction_request = fields.Nested(PredictionRequestSchema, allow_none=True)
 
@@ -132,3 +132,9 @@ class UserSchema(BaseModelSchema):
     results = fields.Nested(ResultSchema, many=True, default=[])
     actions = fields.Nested(CustomerActionSchema, many=True, default=[])
     permissions = EnumField(UserPermissions)
+
+
+class TrainingTaskSchema(BaseModelSchema):
+    task_code = fields.String()
+    datasource_id = fields.Integer()
+    datasource = fields.Nested(DataSourceSchema)
