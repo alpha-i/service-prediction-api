@@ -3,9 +3,10 @@ from app.entities import TaskStatusTypes
 from app.entities.training import TrainingTaskEntity, TrainingTaskStatusEntity
 
 
-def create_new_task(task_code, datasource_id):
+def create_new_task(task_code, company_id, datasource_id):
     training_task = TrainingTask(
         task_code=task_code,
+        company_id=company_id,
         datasource_id=datasource_id
     )
     training_task = insert(training_task)

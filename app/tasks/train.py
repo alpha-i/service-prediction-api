@@ -8,13 +8,14 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 @celery.task(bind=True)
-def traing_task(self, upload_code):
+def training_task(self, upload_code):
     task_code = self.request.id
     datasource = services.datasource.get_by_upload_code(upload_code)
     company_configuration = services.company.get_configuration_for_company_id(datasource.company_id)
     training_task = services.training.create_new_task(
         task_code=task_code,
-        datasource_id=datasource.id
+        company_id=datasource.company_id,
+        datasource_id=datasource.id,
     )
     logging.info(training_task)
     services.oracle.train({}, company_configuration)

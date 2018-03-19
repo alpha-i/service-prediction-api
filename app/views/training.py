@@ -4,7 +4,7 @@ from app import ApiResponse
 from app import services
 from app.core.auth import requires_admin_permissions
 from app.core.utils import parse_request_data
-from app.tasks.train import traing_task, training_failure
+from app.tasks.train import training_task, training_failure
 
 train_blueprint = Blueprint('training', __name__)
 
@@ -28,7 +28,7 @@ def detail(task_code: str):
 @parse_request_data
 @requires_admin_permissions
 def new(upload_code: str):
-    async_training_task = traing_task.apply_async(
+    async_training_task = training_task.apply_async(
         (upload_code,), link_error=training_failure.s()
     )
 

@@ -88,7 +88,7 @@ class PredictionResultEntity(BaseEntity):
 def update_user_action(mapper, connection, self):
     session = db.create_scoped_session()
     action = CustomerActionEntity(
-        user_id=self.user_id,
+        company_id=self.user.company_id,
         action=Actions.PREDICTION_STARTED
     )
     session.add(action)

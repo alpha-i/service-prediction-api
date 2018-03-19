@@ -79,20 +79,21 @@ class CompanyConfigurationSchema(BaseModelSchema):
     configuration = fields.Nested(OracleConfigurationSchema, many=False)
 
 
+class CustomerActionSchema(BaseModelSchema):
+    action = fields.String()
+
+
 class CompanySchema(BaseModelSchema):
     name = fields.String()
     domain = fields.String()
     data_sources = fields.Nested(DataSourceSchema, many=True, default=[])
     current_configuration = fields.Nested(CompanyConfigurationSchema, default=None, allow_none=True)
+    actions = fields.Nested(CustomerActionSchema, many=True, default=[])
 
     @validates('domain')
     def validate_domain(self, value):
         if not re.match(r'^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$', value):
             raise ValidationError("Invalid domain name")
-
-
-class CustomerActionSchema(BaseModelSchema):
-    action = fields.String()
 
 
 class UserProfileSchema(BaseModelSchema):
@@ -130,7 +131,6 @@ class UserSchema(BaseModelSchema):
     data_sources = fields.Nested(DataSourceSchema, many=True, default=[])
     tasks = fields.Nested(TaskSchema, many=True, default=[])
     results = fields.Nested(ResultSchema, many=True, default=[])
-    actions = fields.Nested(CustomerActionSchema, many=True, default=[])
     permissions = EnumField(UserPermissions)
 
 

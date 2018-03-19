@@ -1,8 +1,9 @@
+from sqlalchemy import event
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm.exc import NoResultFound
 
 from app.db import db
-from app.entities import BaseEntity
+from app.entities import BaseEntity, Actions, CustomerActionEntity
 
 
 class TrainingTaskStatusEntity(BaseEntity):
@@ -22,6 +23,9 @@ class TrainingTaskEntity(BaseEntity):
     task_code = db.Column(db.String(60), unique=True, nullable=False)
     statuses = relationship('TrainingTaskStatusEntity', cascade='all, delete-orphan')
 
+    company_id = db.Column(db.ForeignKey('company.id'), nullable=False)
+    company = relationship('CompanyEntity')
+
     datasource_id = db.Column(db.ForeignKey('data_source.id'), nullable=False)
     datasource = relationship('DataSourceEntity', back_populates='training_task_list')
 
@@ -36,3 +40,16 @@ class TrainingTaskEntity(BaseEntity):
     def status(self):
         if len(self.statuses):
             return self.statuses[-1].state
+
+
+def update_user_action(mapper, connection, self):
+    session = db.create_scoped_session()
+    action = CustomerActionEntity(
+        company_id=self.company_id,
+        action=Actions.TRAINING_STARTED
+    )
+    session.add(action)
+    session.commit()
+
+
+event.listen(TrainingTaskEntity, 'after_insert', update_user_action)
