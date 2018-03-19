@@ -17,7 +17,7 @@ class TrainingTaskStatusEntity(BaseEntity):
 class TrainingTaskEntity(BaseEntity):
     __tablename__ = 'training_task'
 
-    INCLUDE_ATTRIBUTES = ('task_code', 'statuses', 'datasource_id', 'datasource')
+    INCLUDE_ATTRIBUTES = ('task_code', 'statuses', 'datasource_id', 'datasource', 'status')
 
     task_code = db.Column(db.String(60), unique=True, nullable=False)
     statuses = relationship('TrainingTaskStatusEntity', cascade='all, delete-orphan')
@@ -31,3 +31,8 @@ class TrainingTaskEntity(BaseEntity):
             return TrainingTaskEntity.query.filter(TrainingTaskEntity.task_code == task_code).one()
         except NoResultFound:
             return None
+
+    @property
+    def status(self):
+        if len(self.statuses):
+            return self.statuses[-1].state

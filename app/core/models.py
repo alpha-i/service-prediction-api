@@ -11,6 +11,7 @@ from app.entities import (
     UserEntity, CompanyEntity, PredictionTaskEntity, PredictionResultEntity, DataSourceEntity,
     CompanyConfigurationEntity, PredictionTaskStatusEntity, TrainingTaskEntity
 )
+from app.entities.training import TrainingTaskStatusEntity
 from config import HDF5_STORE_INDEX
 
 
@@ -108,3 +109,8 @@ class CompanyConfiguration(BaseModel):
 class TrainingTask(BaseModel):
     SCHEMA = TrainingTaskSchema
     MODEL = TrainingTaskEntity
+
+
+class TrainingTaskStatus(BaseModel):
+    SCHEMA = PredictionTaskStatusSchema
+    MODEL = TrainingTaskStatusEntity

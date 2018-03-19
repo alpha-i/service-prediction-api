@@ -1,3 +1,5 @@
+import time
+
 from app.core.utils import import_class
 from config import MAXIMUM_DAYS_FORECAST
 
@@ -18,7 +20,7 @@ def get_oracle_for_configuration(company_configuration):
     )
 
 
-def make_prediction(prediction_request, data_dict, company_configuration):
+def predict(prediction_request, data_dict, company_configuration):
     start_time = prediction_request['start_time']
     oracle = get_oracle_for_configuration(company_configuration)
     oracle.config['n_forecast'] = MAXIMUM_DAYS_FORECAST + 2
@@ -29,3 +31,8 @@ def make_prediction(prediction_request, data_dict, company_configuration):
         number_of_iterations=1
     )
     return oracle_prediction_result
+
+
+def train(data_dict, company_configuration):
+    # oracle = get_oracle_for_configuration(company_configuration)
+    time.sleep(1)

@@ -9,7 +9,7 @@ from app.tasks.train import traing_task, training_failure
 train_blueprint = Blueprint('training', __name__)
 
 
-@train_blueprint.route('<string:task_code>', methods=['GET'])
+@train_blueprint.route('/<string:task_code>', methods=['GET'])
 @parse_request_data
 def detail(task_code: str):
     training_task = services.training.get_for_task_code(task_code)
@@ -24,7 +24,7 @@ def detail(task_code: str):
     return response()
 
 
-@train_blueprint.route('<string:upload_code>', methods=['POST'])
+@train_blueprint.route('/<string:upload_code>', methods=['POST'])
 @parse_request_data
 @requires_admin_permissions
 def new(upload_code: str):

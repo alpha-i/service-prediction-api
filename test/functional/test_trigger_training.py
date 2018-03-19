@@ -3,6 +3,7 @@ import os
 import time
 from flask import url_for
 
+from app.entities import TaskStatusTypes
 from test.functional.base_test_class import BaseTestClass
 
 HERE = os.path.join(os.path.dirname(__file__))
@@ -47,10 +48,12 @@ class TestTrainingTask(BaseTestClass):
         train_task_code = resp.json['task_code']
 
         self.logout()
-        time.sleep(1)  # wait for task creation
+        time.sleep(3)  # wait for task completion
 
         resp = self.client.get(
             url_for('training.detail', task_code=train_task_code)
         )
 
         assert resp.status_code == 200
+        assert resp.json['status'] == TaskStatusTypes.successful.value
+        assert len(resp.json['statuses']) == 2

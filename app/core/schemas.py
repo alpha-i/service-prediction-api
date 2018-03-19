@@ -138,3 +138,5 @@ class TrainingTaskSchema(BaseModelSchema):
     task_code = fields.String()
     datasource_id = fields.Integer()
     datasource = fields.Nested(DataSourceSchema)
+    status = fields.String(allow_none=True)
+    statuses = fields.Nested(PredictionTaskStatusSchema, many=True)

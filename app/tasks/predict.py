@@ -47,7 +47,7 @@ def predict_task(self, user_id, upload_code, prediction_request):
     interpreter = services.company.get_datasource_interpreter(company_configuration)
     data_dict = interpreter.from_dataframe_to_data_dict(data_frame_content)
 
-    oracle_prediction_result = services.oracle.make_prediction(
+    oracle_prediction_result = services.oracle.predict(
         prediction_request=prediction_request,
         data_dict=data_dict,
         company_configuration=company_configuration
