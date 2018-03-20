@@ -65,5 +65,7 @@ class StockDataSourceInterpreter(AbstractDataSourceInterpreter):
     INDEX_COLUMN = 'DateStamps'
 
     def from_dataframe_to_data_dict(self, dataframe):
+        dataframe.index = dataframe.index.map(lambda t: t.replace(hour=7))
+        dataframe.index = dataframe.index.tz_localize('UTC')
         features = set(dataframe.columns) - {'DateStamps', 'Ticker'}
         return {feature: dataframe.pivot(columns='Ticker', values=feature) for feature in features}

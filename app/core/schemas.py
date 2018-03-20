@@ -9,10 +9,10 @@ from app.entities.datasource import UploadTypes
 
 
 class DataPointSchema(Schema):
-    feature = fields.String()
-    value = fields.Float()
-    lower = fields.Float()
-    upper = fields.Float()
+    symbol = fields.String()
+    value = fields.Float(allow_none=True)
+    lower = fields.Float(allow_none=True)
+    upper = fields.Float(allow_none=True)
 
 
 class DataPointsListSchema(Schema):
@@ -27,7 +27,6 @@ class PredictionResultResultSchema(Schema):
 
 class PredictionRequestSchema(Schema):
     name = fields.String(required=True)
-    feature = fields.String(required=True)
     start_time = fields.Date(required=True)
     end_time = fields.Date(required=True)
 

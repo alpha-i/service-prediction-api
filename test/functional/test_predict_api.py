@@ -1,9 +1,12 @@
+import datetime
 import json
 import os
 import time
 
 from flask import url_for
 
+from app import services, interpreters
+from app.interpreters.prediction import metacrocubot_prediction_interpreter
 from test.functional.base_test_class import BaseTestClass
 
 HERE = os.path.join(os.path.dirname(__file__))
@@ -41,9 +44,9 @@ class TestPredictionAPI(BaseTestClass):
             content_type='application/json',
             data=json.dumps({
                 "name": "TESTPREDICTION",
-                "feature": "number_people",
-                "start_time": "2017-01-01T00:00:00",
-                "end_time": "2017-01-02T00:00:00"}),
+                "start_time": "2017-09-29T00:00:00",  # has to be the last date in the source
+                "end_time": "2017-01-02T00:00:00"}  # is ignored by the metacrocubot
+            ),
             headers={'Authorization': self.token,
                      'Accept': 'application/html'}
         )
@@ -125,3 +128,37 @@ class TestPredictionAPI(BaseTestClass):
         assert resp.status_code == 200
         assert resp.json['company_id'] == 2
         assert resp.json['result']
+
+    def test_predict_no_task(self):
+        self.login()
+        with open(os.path.join(HERE, '../resources/test_stock_standardised.csv'), 'rb') as test_upload_file:
+            resp = self.client.post(
+                url_for('datasource.upload'),
+                content_type='multipart/form-data',
+                data={'upload': (test_upload_file, 'test_stock_standardised.csv')},
+            )
+
+            assert resp.status_code == 201
+            upload_code = resp.json['upload_code']
+            company_id = resp.json['company_id']
+            assert upload_code
+        self.logout()
+
+        company_configuration = services.company.get_configuration_for_company_id(company_id)
+
+        datasource = services.datasource.get_by_upload_code(upload_code)
+        dataframe = services.datasource.get_dataframe(datasource)
+
+        data_dict = interpreters.datasource.StockDataSourceInterpreter().from_dataframe_to_data_dict(dataframe)
+
+        prediction = services.oracle.predict(
+            prediction_request={
+                "name": "TESTPREDICTION",
+                "start_time": datetime.datetime(2017, 9, 29, 0, 0),
+                "end_time": datetime.datetime(2017, 10, 29, 0, 0)  # is ignored anyway, so...
+            },
+            data_dict=data_dict,
+            company_configuration=company_configuration
+        )
+
+        interpreted_prediction = metacrocubot_prediction_interpreter(prediction)

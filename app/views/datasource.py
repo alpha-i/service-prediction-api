@@ -82,8 +82,8 @@ def upload():
     features = list(data_frame.columns)
 
     if user.current_data_source:
-        data_souce = services.datasource.get_by_upload_code(user.current_data_source.upload_code)
-        existing_data_frame = data_souce._model.get_file()
+        data_source = services.datasource.get_by_upload_code(user.current_data_source.upload_code)
+        existing_data_frame = data_source._model.get_file()
         data_frame = pd.concat([existing_data_frame, data_frame])
 
     saved_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename + '.hdf5')

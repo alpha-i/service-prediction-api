@@ -2,6 +2,7 @@ import abc
 import datetime
 
 import pandas as pd
+import numpy as np
 import pytz
 from dateutil import parser
 
@@ -100,26 +101,36 @@ def prediction_result_to_dataframe(prediction):
     return None
 
 
-def mock_crocubot_prediction_interpreter(mock_crocubot_prediction) -> dict:
+def metacrocubot_prediction_interpreter(metacrocubot_prediction) -> dict:
     """
-    :type mock_crocubot_prediction: OraclePrediction
+    :type metacrocubot_prediction: OraclePrediction
     """
-    mean_vector_values = getattr(mock_crocubot_prediction, 'mean_vector')
-    upper_bounds = getattr(mock_crocubot_prediction, 'upper_bound')
-    lower_bounds = getattr(mock_crocubot_prediction, 'lower_bound')
-    feature_sensitivity = getattr(mock_crocubot_prediction, 'features_sensitivity')
+    mean_vector_values = getattr(metacrocubot_prediction, 'mean_vector')
+    upper_bounds = getattr(metacrocubot_prediction, 'upper_bound')
+    lower_bounds = getattr(metacrocubot_prediction, 'lower_bound')
+    feature_sensitivity = getattr(metacrocubot_prediction, 'features_sensitivity')
+    target_timestamp = getattr(metacrocubot_prediction, 'target_timestamp')
+
 
     result_list = []
-    for timestamp in mean_vector_values.index:
+
+    for timestamp in [target_timestamp]:  # metacrocubot only gives ONE datapoint
         datapoint = {}
         datapoint['timestamp'] = str(timestamp)
         datapoint['prediction'] = []
-        for symbol in mean_vector_values.loc[timestamp].index:
+
+        # Drop NaNs from the results
+        # otherwise we can't save results to a DB...
+        mean_vector_values = mean_vector_values.where(pd.notnull(mean_vector_values), None)
+        upper_bounds = upper_bounds.where(pd.notnull(upper_bounds), None)
+        lower_bounds = lower_bounds.where(pd.notnull(lower_bounds), None)
+
+        for symbol in mean_vector_values.index:
             datapoint['prediction'].append(
-                {'feature': symbol,
-                 'value': round(mean_vector_values.loc[timestamp][symbol], 2),
-                 'upper': round(upper_bounds.loc[timestamp][symbol], 2),
-                 'lower': round(lower_bounds.loc[timestamp][symbol], 2)
+                {'symbol': symbol,
+                 'value': round(mean_vector_values[symbol], 2) if mean_vector_values[symbol] else None,
+                 'upper': round(upper_bounds[symbol], 2) if upper_bounds[symbol] else None,
+                 'lower': round(lower_bounds[symbol], 2) if lower_bounds[symbol] else None
                  })
         result_list.append(datapoint)
 
