@@ -1,9 +1,13 @@
 import abc
 import datetime
+from typing import List
 
+import pandas as pd
 import pytz
 from dateutil import parser
 
+from app.core.utils import import_class
+from app.oracle import OraclePrediction
 from config import DATE_FORMAT
 
 
@@ -49,6 +53,9 @@ class CromulonResultInterpreter(AbstractPredictionResultInterpreter):
     LOWER_BOUND_ATTRIBUTE = 'lower_bound'
 
 
+def get_prediction_interpreter(company_configuration):
+    return import_class(company_configuration.configuration['prediction_result_interpreter'])
+
 def prediction_interpreter(prediction_result):
     """
     We're in a stage where the oracle may output *two* different result classes:
@@ -92,3 +99,25 @@ def prediction_result_to_dataframe(prediction):
         return pd.DataFrame.from_dict(result).set_index('timestamp')
 
     return None
+
+
+def mock_crocubot_prediction_interpreter(mock_crocubot_prediction: OraclePrediction) -> List[dict]:
+    mean_vector_values = getattr(mock_crocubot_prediction, 'mean_vector')
+    upper_bounds = getattr(mock_crocubot_prediction, 'upper_bound')
+    lower_bounds = getattr(mock_crocubot_prediction, 'lower_bound')
+
+    result_list = []
+    for timestamp in mean_vector_values.index:
+        datapoint = {}
+        datapoint['timestamp'] = str(timestamp)
+        datapoint['prediction'] = []
+        for symbol in mean_vector_values.loc[timestamp].index:
+            datapoint['prediction'].append(
+                {'feature': symbol,
+                 'value': round(mean_vector_values.loc[timestamp][symbol], 2),
+                 'upper': round(upper_bounds.loc[timestamp][symbol], 2),
+                 'lower': round(lower_bounds.loc[timestamp][symbol], 2)
+                 })
+        result_list.append(datapoint)
+
+    return result_list

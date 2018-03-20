@@ -21,7 +21,7 @@ def submit():
     Submit a prediction task for a customer
     """
 
-    user_id = g.user.id
+    company_id = g.user.company.id
 
     # the user can only predict against the _latest_ datasource
     upload_code = g.user.current_data_source.upload_code
@@ -30,7 +30,7 @@ def submit():
         return jsonify(errors=errors), 400
 
     celery_prediction_task = predict_task.apply_async(
-        (user_id, upload_code, prediction_request),
+        (company_id, upload_code, prediction_request),
         link_error=prediction_failure.s()
     )
 

@@ -2,7 +2,6 @@ import json
 import os
 import time
 
-import pytest
 from flask import url_for
 
 from test.functional.base_test_class import BaseTestClass
@@ -22,102 +21,18 @@ class TestPredictionAPI(BaseTestClass):
         self.set_company_configuration()
         self.logout()
 
-    def test_upload_file_for_customer(self):
-        self.login()
-        with open(os.path.join(HERE, '../resources/test_data.csv'), 'rb') as test_upload_file:
-            resp = self.client.post(
-                url_for('datasource.upload'),
-                content_type='multipart/form-data',
-                data={'upload': (test_upload_file, 'test_data.csv')},
-                headers={'Accept': 'application/html'}
-            )
-            assert resp.status_code == 302  # in order to redirect to the dashboard
-            assert resp.json
-
-            """
-            Response looks like:
-            {
-                'created_at': 'Wed, 07 Feb 2018 15:02:39 GMT', 
-                'user_id': '99', 
-                'id': 1, 
-                'last_update': 'Wed, 07 Feb 2018 15:02:39 GMT', 
-                'location': '/Users/gabalese/projects/service-prediction-api/uploads/a033d3ae-cd6c-4435-b00b-0bbc9ab09fe6_test_data.csv', 
-                'type': 'FILESYSTEM', 
-                'upload_code': 'a033d3ae-cd6c-4435-b00b-0bbc9ab09fe6'
-            }
-            """
-            assert resp.json['user_id'] == 2
-
-            assert resp.json['start_date'] == '2015-08-15T00:00:11+00:00'
-            assert resp.json['end_date'] == '2015-08-15T03:21:14+00:00'
-
-        with open(os.path.join(HERE, '../resources/additional_test_data.csv'), 'rb') as updated_data_file:
-            resp = self.client.post(
-                url_for('datasource.upload'),
-                content_type='multipart/form-data',
-                data={'upload': (updated_data_file, 'test_data.csv')},
-                headers={'Accept': 'application/html'}
-            )
-            assert resp.status_code == 302  # in order to redirect to the dashboard
-            assert resp.json
-            assert resp.json['start_date'] == '2015-08-15T00:00:11+00:00'
-            assert resp.json['end_date'] == '2017-08-15T03:21:14+00:00'
-
-    def test_user_can_delete_a_datasource(self):
-        self.login()
-        with open(os.path.join(HERE, '../resources/test_data.csv'), 'rb') as test_upload_file:
-            resp = self.client.post(
-                url_for('datasource.upload'),
-                content_type='multipart/form-data',
-                data={'upload': (test_upload_file, 'test_data.csv')},
-                headers={'Accept': 'application/html'}
-            )
-            assert resp.status_code == 302  # in order to redirect to the dashboard
-            assert resp.json
-            original_upload_code = resp.json['upload_code']
-
-        with open(os.path.join(HERE, '../resources/test_data.csv'), 'rb') as test_upload_file:
-            resp = self.client.post(
-                url_for('datasource.upload'),
-                content_type='multipart/form-data',
-                data={'upload': (test_upload_file, 'test_data.csv')},
-                headers={'Accept': 'application/html'}
-            )
-            assert resp.status_code == 302  # in order to redirect to the dashboard
-            assert resp.json
-            second_upload_code = resp.json['upload_code']
-
-        # users can't delete the original data source
-        resp = self.client.post(
-            url_for('datasource.delete', datasource_id=original_upload_code),
-            content_type='application/json',
-            headers={'Accept': 'application/html'}
-        )
-
-        assert resp.status_code == 400
-
-        # but they can delete updates
-        resp = self.client.post(
-            url_for('datasource.delete', datasource_id=second_upload_code),
-            content_type='application/json',
-            headers={'Accept': 'application/html'}
-        )
-
-        assert resp.status_code == 302
-
-    @pytest.mark.skip('Waiting for the oracle to be fixed...')
     def test_predict_on_a_file(self):
         self.login()
 
         # first you upload a file
-        with open(os.path.join(HERE, '../resources/test_full_data.csv'), 'rb') as test_upload_file:
+        with open(os.path.join(HERE, '../resources/test_stock_standardised.csv'), 'rb') as test_upload_file:
             resp = self.client.post(
                 url_for('datasource.upload'),
                 content_type='multipart/form-data',
-                data={'upload': (test_upload_file, 'test_full_data.csv')},
-                headers={'Accept': 'application/html'}
+                data={'upload': (test_upload_file, 'test_stock_standardised.csv')},
             )
 
+            assert resp.status_code == 201
             upload_code = resp.json['upload_code']
             assert upload_code
 
@@ -150,12 +65,11 @@ class TestPredictionAPI(BaseTestClass):
         time.sleep(4)
         resp = self.client.get(
             url_for('prediction.get_single_task', task_code=task_code)
-            # headers={'Authorization': self.token}
         )
         """
         {
             'created_at': 'Wed, 07 Feb 2018 16:00:20 GMT', 
-            'user_id': 99, 
+            'company_id': 99, 
             'id': 1, 
             'last_update': 'Wed, 07 Feb 2018 16:00:20 GMT', 
             'status': 'QUEUED', 
@@ -163,7 +77,7 @@ class TestPredictionAPI(BaseTestClass):
         }
         """
         assert resp.status_code == 200
-        assert resp.json['user_id'] == 2
+        assert resp.json['company_id'] == 2
 
         task_status = resp.json['status']
 
@@ -171,19 +85,17 @@ class TestPredictionAPI(BaseTestClass):
             time.sleep(2)
             resp = self.client.get(
                 url_for('prediction.get_single_task', task_code=task_code),
-                # headers={'Authorization': self.token}
             )
             task_status = resp.json['status']
 
         # check the result
         resp = self.client.get(
             url_for('prediction.result', task_code=task_code),
-            # headers={'Authorization': self.token}
         )
 
         """
         {
-            "user_id": "99",
+            "company_id": "99",
             "result": [
                 {
                     "prediction": [
@@ -211,5 +123,5 @@ class TestPredictionAPI(BaseTestClass):
         """
 
         assert resp.status_code == 200
-        assert resp.json['user_id'] == 2
+        assert resp.json['company_id'] == 2
         assert resp.json['result']

@@ -4,7 +4,7 @@ import pandas as pd
 from flask import json
 
 from app.core.schemas import (
-    UserSchema, CompanySchema, TaskSchema, ResultSchema, DataSourceSchema,
+    UserSchema, CompanySchema, PredictionTaskSchema, ResultSchema, DataSourceSchema,
     CompanyConfigurationSchema, PredictionTaskStatusSchema, TrainingTaskSchema
 )
 from app.entities import (
@@ -76,8 +76,8 @@ class Company(BaseModel):
     MODEL = CompanyEntity
 
 
-class Task(BaseModel):
-    SCHEMA = TaskSchema
+class PredictionTask(BaseModel):
+    SCHEMA = PredictionTaskSchema
     MODEL = PredictionTaskEntity
 
 

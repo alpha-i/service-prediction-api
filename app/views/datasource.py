@@ -110,7 +110,8 @@ def upload():
     response = ApiResponse(
         content_type=request.accept_mimetypes.best,
         context=datasource,
-        next=url_for('customer.list_datasources')
+        next=url_for('customer.list_datasources'),
+        status_code=201
     )
 
     return response()

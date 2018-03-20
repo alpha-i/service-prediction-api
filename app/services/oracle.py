@@ -28,7 +28,7 @@ def predict(prediction_request, data_dict, company_configuration):
     oracle_prediction_result = oracle.predict(
         data=data_dict,
         current_timestamp=start_time,
-        number_of_iterations=1
+        target_timestamp=start_time  # TODO: change this?
     )
     return oracle_prediction_result
 

@@ -35,6 +35,10 @@ class CompanyEntity(BaseEntity):
     logo = db.Column(db.String)
     domain = db.Column(db.String, nullable=False)
     profile = db.Column(db.JSON)
+
+    prediction_tasks = relationship('PredictionTaskEntity', back_populates='company')
+    training_tasks = relationship('TrainingTaskEntity', back_populates='company')
+    prediction_results = relationship('PredictionResultEntity', back_populates='company')
     actions = relationship('CustomerActionEntity', back_populates='company')
     configuration = relationship('CompanyConfigurationEntity', back_populates='company')
     data_sources = relationship('DataSourceEntity', back_populates='company')
@@ -72,17 +76,17 @@ class CompanyEntity(BaseEntity):
 class UserEntity(BaseEntity):
     __tablename__ = 'user'
 
-    INCLUDE_ATTRIBUTES = ('data_sources', 'current_data_source', 'actions', 'company', 'tasks', 'results')
+    INCLUDE_ATTRIBUTES = ('data_sources', 'current_data_source', 'actions', 'company')
     EXCLUDE_ATTRIBUTES = ('password_hash',)
 
     email = db.Column(db.String(32), index=True)
     password_hash = db.Column(db.String(128))
-    tasks = relationship('PredictionTaskEntity', back_populates='user')
-    results = relationship('PredictionResultEntity', back_populates='user')
+
     data_sources = relationship('DataSourceEntity', back_populates='user')
 
     company_id = db.Column(db.ForeignKey('company.id'), nullable=False)
     company = relationship('CompanyEntity', foreign_keys=company_id)
+
     profile = relationship('UserProfileEntity', uselist=False)
     permissions = db.Column(db.Enum(UserPermissions), default=UserPermissions.USER)
 

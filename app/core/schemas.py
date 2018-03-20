@@ -106,14 +106,14 @@ class PredictionTaskStatusSchema(BaseModelSchema):
 
 
 class ResultSchema(BaseModelSchema):
-    user_id = fields.Integer()
+    company_id = fields.Integer()
     task_code = fields.String()
     result = fields.Nested(PredictionSchema, many=True)
 
 
-class TaskSchema(BaseModelSchema):
+class PredictionTaskSchema(BaseModelSchema):
     name = fields.String()
-    user_id = fields.Integer()
+    company_id = fields.Integer()
     task_code = fields.String()
     status = fields.String(allow_none=True)
     is_completed = fields.Boolean()
@@ -129,13 +129,14 @@ class UserSchema(BaseModelSchema):
     company = fields.Nested(CompanySchema, many=False)
     current_data_source = fields.Nested(DataSourceSchema, allow_none=True)
     data_sources = fields.Nested(DataSourceSchema, many=True, default=[])
-    tasks = fields.Nested(TaskSchema, many=True, default=[])
+    tasks = fields.Nested(PredictionTaskSchema, many=True, default=[])
     results = fields.Nested(ResultSchema, many=True, default=[])
     permissions = EnumField(UserPermissions)
 
 
 class TrainingTaskSchema(BaseModelSchema):
     task_code = fields.String()
+    company_id = fields.Integer()
     datasource_id = fields.Integer()
     datasource = fields.Nested(DataSourceSchema)
     status = fields.String(allow_none=True)

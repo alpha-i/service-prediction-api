@@ -1,30 +1,20 @@
-import json
 import os
 
 from flask import url_for
-from flask_testing import TestCase
 
-from app.db import db
-from app.services.superuser import create_admin
-from app.services.user import generate_confirmation_token
-from config import SUPERUSER_EMAIL, SUPERUSER_PASSWORD
-from test.test_app import APP
+from test.functional.base_test_class import BaseTestClass
+
+HERE = os.path.join(os.path.dirname(__file__))
 
 
-class BaseTestClass(TestCase):
+class TestDataSourceUpload(BaseTestClass):
     TESTING = True
-    DB = db
-
-    SUPERUSER_EMAIL = SUPERUSER_EMAIL
-    SUPERUSER_PASSWORD = SUPERUSER_PASSWORD
-    USER_EMAIL = 'test_user@email.com'
-    USER_PASSWORD = 'password'
 
     COMPANY_CONFIGURATION = {
         'oracle_class': 'app.oracle.MockMetaCrocubot',
         'calendar_name': 'GYMUK',
-        'target_feature': 'Returns',
-        'datasource_interpreter': 'StockDataSourceInterpreter',
+        'target_feature': 'number_people',
+        'datasource_interpreter': 'GymDataSourceInterpreter',
         'prediction_result_interpreter': 'app.interpreters.prediction.mock_crocubot_prediction_interpreter',
         'oracle': {
             'universe': {
@@ -141,109 +131,94 @@ class BaseTestClass(TestCase):
         },
     }
 
-    def create_app(self):
-        return APP
-
     def setUp(self):
-        self.DB.drop_all()
-        self.DB.create_all()
+        super().setUp()
+        self.create_superuser()
+        self.login_superuser()
+        self.register_company()
+        self.register_user()
+        self.set_company_configuration()
+        self.logout()
 
-    def tearDown(self):
-        from app.entities.datasource import DataSourceEntity
-        uploads = [datasource.location for datasource in DataSourceEntity.query.all()]
-        for upload in uploads:
-            os.remove(upload)
-
-        self.DB.session.remove()
-        self.DB.drop_all()
-
-    def create_superuser(self):
-        create_admin(self.SUPERUSER_EMAIL, self.SUPERUSER_PASSWORD)
-
-    def login_superuser(self):
-        resp = self.client.post(
-            url_for('authentication.login'),
-            content_type='application/json',
-            data=json.dumps({'email': self.SUPERUSER_EMAIL, 'password': self.SUPERUSER_PASSWORD}),
-            headers={'Accept': 'application/json'}
-        )
-        assert resp.status_code == 200
-        self.token = resp.json['token']
-
-    def register_company(self):
-        resp = self.client.post(
-            url_for('company.register'),
-            content_type='application/json',
-            data=json.dumps(
-                {'name': 'ACME Inc',
-                 'domain': 'email.com'}
+    def test_upload_file_for_customer(self):
+        self.login()
+        with open(os.path.join(HERE, '../resources/test_data.csv'), 'rb') as test_upload_file:
+            resp = self.client.post(
+                url_for('datasource.upload'),
+                content_type='multipart/form-data',
+                data={'upload': (test_upload_file, 'test_data.csv')},
+                headers={'Accept': 'application/html'}
             )
-        )
-        assert resp.status_code == 201
+            assert resp.status_code == 302  # in order to redirect to the dashboard
+            assert resp.json
 
-    def set_company_configuration(self):
+            """
+            Response looks like:
+            {
+                'created_at': 'Wed, 07 Feb 2018 15:02:39 GMT', 
+                'user_id': '99', 
+                'id': 1, 
+                'last_update': 'Wed, 07 Feb 2018 15:02:39 GMT', 
+                'location': '/Users/gabalese/projects/service-prediction-api/uploads/a033d3ae-cd6c-4435-b00b-0bbc9ab09fe6_test_data.csv', 
+                'type': 'FILESYSTEM', 
+                'upload_code': 'a033d3ae-cd6c-4435-b00b-0bbc9ab09fe6'
+            }
+            """
+            assert resp.json['user_id'] == 2
+
+            assert resp.json['start_date'] == '2015-08-15T00:00:11+00:00'
+            assert resp.json['end_date'] == '2015-08-15T03:21:14+00:00'
+
+        with open(os.path.join(HERE, '../resources/additional_test_data.csv'), 'rb') as updated_data_file:
+            resp = self.client.post(
+                url_for('datasource.upload'),
+                content_type='multipart/form-data',
+                data={'upload': (updated_data_file, 'test_data.csv')},
+                headers={'Accept': 'application/html'}
+            )
+            assert resp.status_code == 302  # in order to redirect to the dashboard
+            assert resp.json
+            assert resp.json['start_date'] == '2015-08-15T00:00:11+00:00'
+            assert resp.json['end_date'] == '2017-08-15T03:21:14+00:00'
+
+    def test_user_can_delete_a_datasource(self):
+        self.login()
+        with open(os.path.join(HERE, '../resources/test_data.csv'), 'rb') as test_upload_file:
+            resp = self.client.post(
+                url_for('datasource.upload'),
+                content_type='multipart/form-data',
+                data={'upload': (test_upload_file, 'test_data.csv')},
+                headers={'Accept': 'application/html'}
+            )
+            assert resp.status_code == 302  # in order to redirect to the dashboard
+            assert resp.json
+            original_upload_code = resp.json['upload_code']
+
+        with open(os.path.join(HERE, '../resources/test_data.csv'), 'rb') as test_upload_file:
+            resp = self.client.post(
+                url_for('datasource.upload'),
+                content_type='multipart/form-data',
+                data={'upload': (test_upload_file, 'test_data.csv')},
+                headers={'Accept': 'application/html'}
+            )
+            assert resp.status_code == 302  # in order to redirect to the dashboard
+            assert resp.json
+            second_upload_code = resp.json['upload_code']
+
+        # users can't delete the original data source
         resp = self.client.post(
-            url_for('company.configuration_update', company_id=2),  # company 1 is the super-company...
-            data=json.dumps(self.COMPANY_CONFIGURATION),
+            url_for('datasource.delete', datasource_id=original_upload_code),
             content_type='application/json',
-            headers={'Accept': 'application/json'}
-        )
-
-        assert resp.status_code == 201
-
-    def register_user(self):
-        # we won't accept a registration for a user not in the company...
-        resp = self.client.post(
-            url_for('user.register'),
-            content_type='application/json',
-            data=json.dumps({
-                'email': 'test_user@email.co.uk',
-                'password': 'password'
-            })
+            headers={'Accept': 'application/html'}
         )
 
         assert resp.status_code == 400
 
+        # but they can delete updates
         resp = self.client.post(
-            url_for('user.register'),
+            url_for('datasource.delete', datasource_id=second_upload_code),
             content_type='application/json',
-            data=json.dumps({
-                'email': self.USER_EMAIL,
-                'password': self.USER_PASSWORD
-            })
-        )
-        assert resp.status_code == 201
-        confirmation_token = generate_confirmation_token('test_user@email.com')
-
-        # we won't accept a login for a unconfirmed user...
-        resp = self.client.post(
-            url_for('authentication.login'),
-            content_type='application/json',
-            data=json.dumps({'email': self.USER_EMAIL, 'password': self.USER_PASSWORD})
-        )
-        assert resp.status_code == 401
-
-        # we now require a confirmation for the user
-        resp = self.client.get(
-            url_for('user.confirm', token=confirmation_token)
-        )
-        assert resp.status_code == 200
-
-    def login(self):
-        # we now require a token authorization for the endpoints
-        resp = self.client.post(
-            url_for('authentication.login'),
-            content_type='application/json',
-            data=json.dumps({'email': self.USER_EMAIL, 'password': self.USER_PASSWORD}),
-            headers={'Accept': 'application/json'}
+            headers={'Accept': 'application/html'}
         )
 
-        assert resp.status_code == 200
-
-        self.token = resp.json['token']
-
-    def logout(self):
-        resp = self.client.get(
-            url_for('authentication.logout')
-        )
-        assert resp.status_code == 200
+        assert resp.status_code == 302
