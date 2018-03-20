@@ -1,6 +1,6 @@
 import logging
 
-from app.core.models import PredictionTask, Result, PredictionTaskStatus
+from app.core.models import PredictionTask, PredictionResult, PredictionTaskStatus
 from app.entities import PredictionTaskEntity, PredictionResultEntity
 
 
@@ -11,7 +11,7 @@ def get_task_by_code(task_code):
 
 def get_result_by_code(task_code):
     model = PredictionResultEntity.get_for_task(task_code)
-    return Result.from_model(model)
+    return PredictionResult.from_model(model)
 
 
 def insert_task(prediction_task):
@@ -35,7 +35,7 @@ def update_task(prediction_task):
 def insert_result(prediction_result):
     model = prediction_result.to_model()
     model.save()
-    return Result.from_model(model)
+    return PredictionResult.from_model(model)
 
 
 def insert_status(status):

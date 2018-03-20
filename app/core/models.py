@@ -4,9 +4,9 @@ import pandas as pd
 from flask import json
 
 from app.core.schemas import (
-    UserSchema, CompanySchema, PredictionTaskSchema, ResultSchema, DataSourceSchema,
-    CompanyConfigurationSchema, PredictionTaskStatusSchema, TrainingTaskSchema
-)
+    UserSchema, CompanySchema, PredictionTaskSchema, DataSourceSchema,
+    CompanyConfigurationSchema, PredictionTaskStatusSchema, TrainingTaskSchema,
+    PredictionResultSchema)
 from app.entities import (
     UserEntity, CompanyEntity, PredictionTaskEntity, PredictionResultEntity, DataSourceEntity,
     CompanyConfigurationEntity, PredictionTaskStatusEntity, TrainingTaskEntity
@@ -96,8 +96,8 @@ class DataSource(BaseModel):
             return dataframe
 
 
-class Result(BaseModel):
-    SCHEMA = ResultSchema
+class PredictionResult(BaseModel):
+    SCHEMA = PredictionResultSchema
     MODEL = PredictionResultEntity
 
 

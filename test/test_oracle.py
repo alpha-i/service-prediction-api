@@ -3,6 +3,7 @@ import logging
 import os
 import unittest
 
+from app.core.schemas import PredictionResultResultSchema
 from app.core.utils import import_class
 from app.oracle import MockMetaCrocubot
 
@@ -172,11 +173,8 @@ class TestMetaCrocubotExecution(unittest.TestCase):
         decoded_prediction = decoder(prediction)
 
         assert decoded_prediction
-        data_point = decoded_prediction[0]
 
-        assert set(data_point.keys()) == {'timestamp', 'prediction'}
-
-        prediction = data_point['prediction'][0]
-        assert set(prediction.keys()) == {'feature', 'value', 'upper', 'lower'}
+        data, errors = PredictionResultResultSchema().load(decoded_prediction)
+        assert not errors
 
 

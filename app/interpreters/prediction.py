@@ -1,6 +1,5 @@
 import abc
 import datetime
-from typing import List
 
 import pandas as pd
 import pytz
@@ -56,6 +55,7 @@ class CromulonResultInterpreter(AbstractPredictionResultInterpreter):
 def get_prediction_interpreter(company_configuration):
     return import_class(company_configuration.configuration['prediction_result_interpreter'])
 
+
 def prediction_interpreter(prediction_result):
     """
     We're in a stage where the oracle may output *two* different result classes:
@@ -101,10 +101,11 @@ def prediction_result_to_dataframe(prediction):
     return None
 
 
-def mock_crocubot_prediction_interpreter(mock_crocubot_prediction: OraclePrediction) -> List[dict]:
+def mock_crocubot_prediction_interpreter(mock_crocubot_prediction: OraclePrediction) -> dict:
     mean_vector_values = getattr(mock_crocubot_prediction, 'mean_vector')
     upper_bounds = getattr(mock_crocubot_prediction, 'upper_bound')
     lower_bounds = getattr(mock_crocubot_prediction, 'lower_bound')
+    feature_sensitivity = getattr(mock_crocubot_prediction, 'features_sensitivity')
 
     result_list = []
     for timestamp in mean_vector_values.index:
@@ -120,4 +121,11 @@ def mock_crocubot_prediction_interpreter(mock_crocubot_prediction: OraclePredict
                  })
         result_list.append(datapoint)
 
-    return result_list
+    result = {}
+    result['datapoints'] = result_list
+    result['factors'] = {}
+
+    for feature, sensitivity in feature_sensitivity.items():
+        result['factors'][feature] = sensitivity
+
+    return result

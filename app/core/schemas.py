@@ -15,9 +15,14 @@ class DataPointSchema(Schema):
     upper = fields.Float()
 
 
-class PredictionSchema(Schema):
+class DataPointsListSchema(Schema):
     timestamp = fields.DateTime(required=True)
     prediction = fields.Nested(DataPointSchema, many=True)
+
+
+class PredictionResultResultSchema(Schema):
+    factors = fields.Dict(allow_none=True)
+    datapoints = fields.Nested(DataPointsListSchema, many=True, default=[])
 
 
 class PredictionRequestSchema(Schema):
@@ -28,9 +33,10 @@ class PredictionRequestSchema(Schema):
 
 
 class PredictionResultSchema(Schema):
-    user_id = fields.String(required=True)
+    company_id = fields.Integer(required=True)
+    prediction_task_id = fields.Integer(required=True)
     task_code = fields.UUID(required=True)
-    prediction = fields.Nested(PredictionSchema)
+    result = fields.Nested(PredictionResultResultSchema)
 
 
 class BaseModelSchema(Schema):
@@ -83,32 +89,9 @@ class CustomerActionSchema(BaseModelSchema):
     action = fields.String()
 
 
-class CompanySchema(BaseModelSchema):
-    name = fields.String()
-    domain = fields.String()
-    data_sources = fields.Nested(DataSourceSchema, many=True, default=[])
-    current_configuration = fields.Nested(CompanyConfigurationSchema, default=None, allow_none=True)
-    actions = fields.Nested(CustomerActionSchema, many=True, default=[])
-
-    @validates('domain')
-    def validate_domain(self, value):
-        if not re.match(r'^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$', value):
-            raise ValidationError("Invalid domain name")
-
-
-class UserProfileSchema(BaseModelSchema):
-    pass
-
-
 class PredictionTaskStatusSchema(BaseModelSchema):
     state = fields.String()
     message = fields.String(allow_none=True)
-
-
-class ResultSchema(BaseModelSchema):
-    company_id = fields.Integer()
-    task_code = fields.String()
-    result = fields.Nested(PredictionSchema, many=True)
 
 
 class PredictionTaskSchema(BaseModelSchema):
@@ -122,6 +105,25 @@ class PredictionTaskSchema(BaseModelSchema):
     prediction_request = fields.Nested(PredictionRequestSchema, allow_none=True)
 
 
+class CompanySchema(BaseModelSchema):
+    name = fields.String()
+    domain = fields.String()
+    data_sources = fields.Nested(DataSourceSchema, many=True, default=[])
+    current_configuration = fields.Nested(CompanyConfigurationSchema, default=None, allow_none=True)
+    actions = fields.Nested(CustomerActionSchema, many=True, default=[])
+    tasks = fields.Nested(PredictionTaskSchema, many=True, default=[])
+    results = fields.Nested(PredictionResultSchema, many=True, default=[])
+
+    @validates('domain')
+    def validate_domain(self, value):
+        if not re.match(r'^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$', value):
+            raise ValidationError("Invalid domain name")
+
+
+class UserProfileSchema(BaseModelSchema):
+    pass
+
+
 class UserSchema(BaseModelSchema):
     email = fields.Email()
     confirmed = fields.Boolean(allow_none=True)
@@ -129,8 +131,6 @@ class UserSchema(BaseModelSchema):
     company = fields.Nested(CompanySchema, many=False)
     current_data_source = fields.Nested(DataSourceSchema, allow_none=True)
     data_sources = fields.Nested(DataSourceSchema, many=True, default=[])
-    tasks = fields.Nested(PredictionTaskSchema, many=True, default=[])
-    results = fields.Nested(ResultSchema, many=True, default=[])
     permissions = EnumField(UserPermissions)
 
 
