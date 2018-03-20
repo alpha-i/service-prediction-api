@@ -1,11 +1,12 @@
+import datetime
 import json
 import os
 import time
 
-import datetime
 from flask import url_for
 
 from app import services, interpreters
+from app.interpreters.prediction import metacrocubot_prediction_interpreter
 from test.functional.base_test_class import BaseTestClass
 
 HERE = os.path.join(os.path.dirname(__file__))
@@ -150,7 +151,7 @@ class TestPredictionAPI(BaseTestClass):
 
         data_dict = interpreters.datasource.StockDataSourceInterpreter().from_dataframe_to_data_dict(dataframe)
 
-        services.oracle.predict(
+        prediction = services.oracle.predict(
             prediction_request={
                 "name": "TESTPREDICTION",
                 "start_time": datetime.datetime(2017, 9, 29, 0, 0),
@@ -159,3 +160,5 @@ class TestPredictionAPI(BaseTestClass):
             data_dict=data_dict,
             company_configuration=company_configuration
         )
+
+        interpreted_prediction = metacrocubot_prediction_interpreter(prediction)

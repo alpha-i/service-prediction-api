@@ -15,7 +15,7 @@ class TestDataSourceUpload(BaseTestClass):
         'calendar_name': 'GYMUK',
         'target_feature': 'number_people',
         'datasource_interpreter': 'GymDataSourceInterpreter',
-        'prediction_result_interpreter': 'app.interpreters.prediction.mock_crocubot_prediction_interpreter',
+        'prediction_result_interpreter': 'app.interpreters.prediction.metacrocubot_prediction_interpreter',
         'oracle': {
             'universe': {
                 'method': 'liquidity',

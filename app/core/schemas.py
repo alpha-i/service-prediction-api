@@ -9,10 +9,10 @@ from app.entities.datasource import UploadTypes
 
 
 class DataPointSchema(Schema):
-    feature = fields.String()
-    value = fields.Float()
-    lower = fields.Float()
-    upper = fields.Float()
+    symbol = fields.String()
+    value = fields.Float(allow_none=True)
+    lower = fields.Float(allow_none=True)
+    upper = fields.Float(allow_none=True)
 
 
 class DataPointsListSchema(Schema):
