@@ -49,10 +49,9 @@ class TestConfigurationAPI(BaseTestClass):
 
         resp = self.client.post(
             url_for('company.configuration_update', company_id=1),
-            data=json.dumps(self.get_company_configuration()),
+            data=json.dumps(self.COMPANY_CONFIGURATION),
             content_type='application/json',
             headers={'Accept': 'application/json'}
         )
 
-
-        assert resp.json == self.get_company_configuration()
+        assert resp.json == self.COMPANY_CONFIGURATION

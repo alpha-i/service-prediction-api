@@ -9,7 +9,7 @@ from test.functional.base_test_class import BaseTestClass
 HERE = os.path.join(os.path.dirname(__file__))
 
 
-class TestTrainingTask(BaseTestClass):
+class TestTriggerTrainingTask(BaseTestClass):
     TESTING = True
 
     def setUp(self):
@@ -23,11 +23,11 @@ class TestTrainingTask(BaseTestClass):
 
     def test_trigger_training_task(self):
         self.login()
-        with open(os.path.join(HERE, '../resources/test_data.csv'), 'rb') as test_upload_file:
+        with open(os.path.join(HERE, '../resources/test_stock_standardised.csv'), 'rb') as test_upload_file:
             resp = self.client.post(
                 url_for('datasource.upload'),
                 content_type='multipart/form-data',
-                data={'upload': (test_upload_file, 'test_data.csv')},
+                data={'upload': (test_upload_file, 'test_stock_standardised.csv')},
             )
             assert resp.json
 

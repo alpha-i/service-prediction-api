@@ -17,7 +17,6 @@ def training_task(self, upload_code):
         company_id=datasource.company_id,
         datasource_id=datasource.id,
     )
-    logging.info(training_task)
     services.oracle.train({}, company_configuration)
     services.training.set_task_status(training_task, TaskStatusTypes.successful)
     return

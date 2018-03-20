@@ -24,4 +24,6 @@ class CustomJSONEncoder(JSONEncoder):
             return obj.strftime('%Y-%m-%d')
         if isinstance(obj, numpy.float32):
             return obj.tolist()
+        if isinstance(obj, numpy.int64):
+            return obj.tolist()
         return super(CustomJSONEncoder, self).default(obj)
