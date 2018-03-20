@@ -11,7 +11,7 @@ class TestDataSourceUpload(BaseTestClass):
     TESTING = True
 
     COMPANY_CONFIGURATION = {
-        'oracle_class': 'app.oracle.MockMetaCrocubot',
+        'oracle_class': 'test.mock_oracle.MockMetaCrocubot',
         'calendar_name': 'GYMUK',
         'target_feature': 'number_people',
         'datasource_interpreter': 'GymDataSourceInterpreter',

@@ -21,7 +21,7 @@ class BaseTestClass(TestCase):
     USER_PASSWORD = 'password'
 
     COMPANY_CONFIGURATION = {
-        'oracle_class': 'app.oracle.MockMetaCrocubot',
+        'oracle_class': 'test.mock_oracle.MockMetaCrocubot',
         'calendar_name': 'GYMUK',
         'target_feature': 'Returns',
         'datasource_interpreter': 'StockDataSourceInterpreter',

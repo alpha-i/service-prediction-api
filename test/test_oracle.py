@@ -5,7 +5,6 @@ import unittest
 
 from app.core.schemas import PredictionResultResultSchema
 from app.core.utils import import_class
-from app.oracle import MockMetaCrocubot
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -13,7 +12,7 @@ EXECUTION_TIME = datetime.datetime(2017, 12, 12, 0)
 TEST_DATA_FILE = os.path.join(os.path.dirname(__file__), 'resources/test_full_data.csv')
 
 
-ORACLE_CLASS = import_class('app.oracle.MockMetaCrocubot')
+ORACLE_CLASS = import_class('test.mock_oracle.MockMetaCrocubot')
 
 
 class TestMetaCrocubotExecution(unittest.TestCase):
@@ -23,7 +22,7 @@ class TestMetaCrocubotExecution(unittest.TestCase):
     def load_config(self):
         configuration = {
             # this is the company_configuration.configuration
-            "oracle_class": "app.oracle.MockMetaCrocubot",
+            "oracle_class": ORACLE_CLASS,
             "calendar_name": "NYSE",
             "target_feature": "number_people",
             "datasource_interpreter": "GymDataSourceInterpreter",
@@ -150,11 +149,10 @@ class TestMetaCrocubotExecution(unittest.TestCase):
 
         data_dict = {'data': 1}
 
-        oracle = ORACLE_CLASS(
+        oracle = config['oracle_class'](
             calendar_name=config['calendar_name'],
             scheduling_configuration=config['scheduling'],
             oracle_configuration=config['oracle']
-
         )
         oracle.train(data_dict, EXECUTION_TIME)
 

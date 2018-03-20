@@ -6,7 +6,6 @@ import pytz
 from dateutil import parser
 
 from app.core.utils import import_class
-from app.oracle import OraclePrediction
 from config import DATE_FORMAT
 
 
@@ -101,7 +100,10 @@ def prediction_result_to_dataframe(prediction):
     return None
 
 
-def mock_crocubot_prediction_interpreter(mock_crocubot_prediction: OraclePrediction) -> dict:
+def mock_crocubot_prediction_interpreter(mock_crocubot_prediction) -> dict:
+    """
+    :type mock_crocubot_prediction: OraclePrediction
+    """
     mean_vector_values = getattr(mock_crocubot_prediction, 'mean_vector')
     upper_bounds = getattr(mock_crocubot_prediction, 'upper_bound')
     lower_bounds = getattr(mock_crocubot_prediction, 'lower_bound')
