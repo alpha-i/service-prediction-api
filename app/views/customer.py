@@ -26,11 +26,15 @@ def get_user_profile():
 @customer_blueprint.route('/dashboard')
 @requires_access_token
 def dashboard():
+
+    prediction_tasks = g.user.company.prediction_tasks if g.user.company.prediction_tasks else []
+    training_tasks = g.user.company.training_tasks if g.user.company.training_tasks else []
     context = {
         'user_id': g.user.id,
         'profile': {'email': g.user.email},
         'datasource': g.user.current_data_source,
-        'task_list': list(reversed(g.user.tasks))[:5]
+        'prediction_task_list': list(reversed(prediction_tasks))[:5],
+        'training_task_list': list(reversed(training_tasks))[:5]
     }
 
     return render_template('dashboard.html', **context)
@@ -181,11 +185,13 @@ def view_company_use_case():
 @customer_blueprint.route('/prediction')
 @requires_access_token
 def list_predictions():
+    prediction_tasks = g.user.company.prediction_tasks if g.user.company.prediction_tasks else []
+
     context = {
         'user_id': g.user.id,
         'profile': {'email': g.user.email},
         'datasource': g.user.current_data_source,
-        'task_list': list(reversed(g.user.tasks))
+        'prediction_task_list': list(reversed(prediction_tasks))
     }
 
     return render_template("prediction/list.html", **context)
