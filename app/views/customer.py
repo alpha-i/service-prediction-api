@@ -1,15 +1,20 @@
 import logging
 from datetime import timedelta
 
+import os
 import pandas as pd
-from flask import Blueprint, jsonify, render_template, g, request, abort, Response, flash, redirect, url_for
+from flask import Blueprint, jsonify, render_template, g, request, abort, Response, flash, redirect, url_for, \
+    current_app
+from werkzeug.utils import secure_filename
 
-from app import services
+from app import services, ApiResponse
 from app.core.auth import requires_access_token
+from app.core.models import DataSource
 from app.core.schemas import UserSchema
-from app.core.utils import redirect_url, handle_error
+from app.core.utils import redirect_url, handle_error, allowed_extension, generate_upload_code
 from app.db import db
 from app.entities import CompanyConfigurationEntity, DataSourceEntity, PredictionTaskEntity
+from app.entities.datasource import UploadTypes
 from app.interpreters.prediction import prediction_result_to_dataframe
 from config import MAXIMUM_DAYS_FORECAST, DATETIME_FORMAT, TARGET_FEATURE, DEFAULT_TIME_RESOLUTION
 
@@ -201,27 +206,94 @@ def list_predictions():
     return render_template("prediction/list.html", **context)
 
 
-# TODO: temporary view to show the uploads for this customer
-@customer_blueprint.route('/uploads')
+@customer_blueprint.route('/datasource/upload', methods=['POST'])
 @requires_access_token
-def list_customer_uploads():
-    user_id = g.user.id
-    uploads = DataSourceEntity.get_for_user(user_id)
-    return jsonify(uploads)
+def datasource_upload():
+
+    if not len(request.files):
+        logging.debug("No file was uploaded")
+        handle_error(request, 400, "No file Provided!")
+
+    uploaded_file = request.files['upload']
+
+    if not allowed_extension(uploaded_file.filename):
+        logging.debug(f"Invalid extension for upload {uploaded_file.filename}")
+        return handle_error(request, 400, f'File extension for {uploaded_file.filename} not allowed!')
+
+    interpreter = services.company.get_datasource_interpreter(g.user.company.current_configuration)
+    data_frame, errors = interpreter.from_csv_to_dataframe(uploaded_file)
+    target_feature = g.user.company.current_configuration.configuration.target_feature
+    if errors:
+        logging.debug(f"Invalid file uploaded: {', '.join(errors)}")
+        return handle_error(request, 400, ', '.join(errors))
+
+    if not target_feature in list(data_frame.columns):
+        return handle_error(request, 400, f"Required feature {target_feature} not present in the file")
+
+    upload_code = generate_upload_code()
+    saved_path = os.path.join(current_app.config['UPLOAD_FOLDER'], upload_code)
+
+    data_frame.to_csv(saved_path)
+    context = {
+        'upload_code': upload_code
+    }
+
+    return render_template('datasource/confirm.html', **context)
 
 
-# TODO: temporary view to show the customer tasks
-@customer_blueprint.route('/tasks')
+@customer_blueprint.route('/datasource/confirm', methods=['POST'])
 @requires_access_token
-def list_customer_tasks():
-    return jsonify(g.user.tasks)
+def datasource_confirm():
+    user = g.user
 
+    try:
+        upload_code = request.form['upload_code']
+    except KeyError as e:
+        logging.error("Trying to confirm an upload for a non existent code {}".format(upload_code))
+        flash("An error occurred while confirming the data source")
+        return redirect(url_for('customer.list_datasources'), 400)
 
-# TODO: temporary view to show the customer results
-@customer_blueprint.route('/results')
-@requires_access_token
-def list_customer_results():
-    return jsonify(g.user.results)
+    csv_file = open(os.path.join(current_app.config['UPLOAD_FOLDER'], request.form.get('upload_code')), 'r')
+    interpreter = services.company.get_datasource_interpreter(g.user.company.current_configuration)
+    data_frame, errors = interpreter.from_csv_to_dataframe(csv_file)
+
+    features = list(data_frame.columns)
+
+    if user.current_data_source:
+        data_source = services.datasource.get_by_upload_code(user.current_data_source.upload_code)
+        existing_data_frame = data_source._model.get_file()
+        data_frame = pd.concat([existing_data_frame, data_frame])
+
+    saved_path = os.path.join(current_app.config['UPLOAD_FOLDER'], upload_code + '.hdf5')
+    data_frame.to_hdf(saved_path, key=current_app.config['HDF5_STORE_INDEX'])
+
+    original = True if len(user.company.data_sources) == 0 else False
+
+    target_feature = g.user.company.current_configuration.configuration.target_feature
+    upload = DataSource(
+        user_id=user.id,
+        company_id=user.company_id,
+        upload_code=upload_code,
+        type=UploadTypes.FILESYSTEM,
+        location=saved_path,
+        filename=upload_code,
+        start_date=data_frame.index[0].to_pydatetime(),
+        end_date=data_frame.index[-1].to_pydatetime(),
+        is_original=original,
+        features=', '.join(features),
+        target_feature=target_feature,
+    )
+
+    datasource = services.datasource.insert(upload)
+
+    response = ApiResponse(
+        content_type=request.accept_mimetypes.best,
+        context=datasource,
+        next=url_for('customer.list_datasources'),
+        status_code=201
+    )
+
+    return response()
 
 
 @customer_blueprint.route('/configuration', methods=['POST'])
