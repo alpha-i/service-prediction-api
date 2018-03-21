@@ -2,7 +2,16 @@ import importlib
 import uuid
 from functools import wraps
 
-from flask import request, g, json, current_app
+from flask import request, g, json, current_app, url_for
+
+from app.core.auth import is_user_logged
+
+
+def redirect_url():
+    default_route = 'customer.dashboard' if is_user_logged() else 'login'
+    return request.args.get('next') or \
+           request.referrer or \
+           url_for(default_route)
 
 
 def parse_request_data(fn):
