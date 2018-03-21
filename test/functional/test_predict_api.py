@@ -1,9 +1,12 @@
+import datetime
 import json
 import os
 import time
 
 from flask import url_for
 
+from app import services, interpreters
+from app.interpreters.prediction import metacrocubot_prediction_interpreter
 from test.functional.base_test_class import BaseTestClass
 
 HERE = os.path.join(os.path.dirname(__file__))
@@ -11,7 +14,6 @@ HERE = os.path.join(os.path.dirname(__file__))
 
 class TestPredictionAPI(BaseTestClass):
     TESTING = True
-    TEST_USER_ID = '99'
 
     def setUp(self):
         super().setUp()
@@ -22,126 +24,29 @@ class TestPredictionAPI(BaseTestClass):
         self.set_company_configuration()
         self.logout()
 
-    def test_upload_file_for_customer(self):
-        self.login()
-        with open(os.path.join(HERE, '../resources/test_data.csv'), 'rb') as test_upload_file:
-            resp = self.client.post(
-                url_for('datasource.upload'),
-                content_type='multipart/form-data',
-                data={'upload': (test_upload_file, 'test_data.csv')},
-                headers={'Accept': 'application/html'}
-            )
-            assert resp.status_code == 302  # in order to redirect to the dashboard
-            assert resp.json
-
-            """
-            Response looks like:
-            {
-                'created_at': 'Wed, 07 Feb 2018 15:02:39 GMT', 
-                'user_id': '99', 
-                'id': 1, 
-                'last_update': 'Wed, 07 Feb 2018 15:02:39 GMT', 
-                'location': '/Users/gabalese/projects/service-prediction-api/uploads/a033d3ae-cd6c-4435-b00b-0bbc9ab09fe6_test_data.csv', 
-                'type': 'FILESYSTEM', 
-                'upload_code': 'a033d3ae-cd6c-4435-b00b-0bbc9ab09fe6'
-            }
-            """
-            assert resp.json['user_id'] == 2
-
-            assert resp.json['start_date'] == '2015-08-15T00:00:11+00:00'
-            assert resp.json['end_date'] == '2015-08-15T03:21:14+00:00'
-
-            first_file_location = resp.json['location']
-
-        with open(os.path.join(HERE, '../resources/additional_test_data.csv'), 'rb') as updated_data_file:
-            resp = self.client.post(
-                url_for('datasource.upload'),
-                content_type='multipart/form-data',
-                data={'upload': (updated_data_file, 'test_data.csv')},
-                headers={'Accept': 'application/html'}
-            )
-            assert resp.status_code == 302  # in order to redirect to the dashboard
-            assert resp.json
-            assert resp.json['start_date'] == '2015-08-15T00:00:11+00:00'
-            assert resp.json['end_date'] == '2017-08-15T03:21:14+00:00'
-
-            second_file_location = resp.json['location']
-
-        os.remove(first_file_location)
-        os.remove(second_file_location)
-
-    def test_user_can_delete_a_datasource(self):
-        self.login()
-        with open(os.path.join(HERE, '../resources/test_data.csv'), 'rb') as test_upload_file:
-            resp = self.client.post(
-                url_for('datasource.upload'),
-                content_type='multipart/form-data',
-                data={'upload': (test_upload_file, 'test_data.csv')},
-                headers={'Accept': 'application/html'}
-            )
-            assert resp.status_code == 302  # in order to redirect to the dashboard
-            assert resp.json
-            original_upload_code = resp.json['upload_code']
-            original_file_location = resp.json['location']
-
-        with open(os.path.join(HERE, '../resources/test_data.csv'), 'rb') as test_upload_file:
-            resp = self.client.post(
-                url_for('datasource.upload'),
-                content_type='multipart/form-data',
-                data={'upload': (test_upload_file, 'test_data.csv')},
-                headers={'Accept': 'application/html'}
-            )
-            assert resp.status_code == 302  # in order to redirect to the dashboard
-            assert resp.json
-            second_upload_code = resp.json['upload_code']
-            second_file_location = resp.json['location']
-
-        # users can't delete the original data source
-        resp = self.client.post(
-            url_for('datasource.delete', datasource_id=original_upload_code),
-            content_type='application/json',
-            headers={'Accept': 'application/html'}
-        )
-
-        assert resp.status_code == 400
-
-        # but they can delete updates
-        resp = self.client.post(
-            url_for('datasource.delete', datasource_id=second_upload_code),
-            content_type='application/json',
-            headers={'Accept': 'application/html'}
-        )
-
-        assert resp.status_code == 302
-
-        os.remove(original_file_location)
-        os.remove(second_file_location)
-
     def test_predict_on_a_file(self):
         self.login()
 
         # first you upload a file
-        with open(os.path.join(HERE, '../resources/test_full_data.csv'), 'rb') as test_upload_file:
+        with open(os.path.join(HERE, '../resources/test_stock_standardised.csv'), 'rb') as test_upload_file:
             resp = self.client.post(
                 url_for('datasource.upload'),
                 content_type='multipart/form-data',
-                data={'upload': (test_upload_file, 'test_full_data.csv')},
-                headers={'Accept': 'application/html'}
+                data={'upload': (test_upload_file, 'test_stock_standardised.csv')},
             )
 
+            assert resp.status_code == 201
             upload_code = resp.json['upload_code']
-            file_location = resp.json['location']
             assert upload_code
-            assert file_location
 
         resp = self.client.post(
             url_for('prediction.submit'),
             content_type='application/json',
             data=json.dumps({
                 "name": "TESTPREDICTION",
-                "feature": "number_people",
-                "start_time": "2017-01-01T00:00:00",
-                "end_time": "2017-01-02T00:00:00"}),
+                "start_time": "2017-09-29T00:00:00",  # has to be the last date in the source
+                "end_time": "2017-01-02T00:00:00"}  # is ignored by the metacrocubot
+            ),
             headers={'Authorization': self.token,
                      'Accept': 'application/html'}
         )
@@ -163,12 +68,11 @@ class TestPredictionAPI(BaseTestClass):
         time.sleep(4)
         resp = self.client.get(
             url_for('prediction.get_single_task', task_code=task_code)
-            # headers={'Authorization': self.token}
         )
         """
         {
             'created_at': 'Wed, 07 Feb 2018 16:00:20 GMT', 
-            'user_id': 99, 
+            'company_id': 99, 
             'id': 1, 
             'last_update': 'Wed, 07 Feb 2018 16:00:20 GMT', 
             'status': 'QUEUED', 
@@ -176,7 +80,7 @@ class TestPredictionAPI(BaseTestClass):
         }
         """
         assert resp.status_code == 200
-        assert resp.json['user_id'] == 2
+        assert resp.json['company_id'] == 2
 
         task_status = resp.json['status']
 
@@ -184,19 +88,17 @@ class TestPredictionAPI(BaseTestClass):
             time.sleep(2)
             resp = self.client.get(
                 url_for('prediction.get_single_task', task_code=task_code),
-                # headers={'Authorization': self.token}
             )
             task_status = resp.json['status']
 
         # check the result
         resp = self.client.get(
             url_for('prediction.result', task_code=task_code),
-            # headers={'Authorization': self.token}
         )
 
         """
         {
-            "user_id": "99",
+            "company_id": "99",
             "result": [
                 {
                     "prediction": [
@@ -224,6 +126,39 @@ class TestPredictionAPI(BaseTestClass):
         """
 
         assert resp.status_code == 200
-        assert resp.json['user_id'] == 2
+        assert resp.json['company_id'] == 2
         assert resp.json['result']
-        os.remove(file_location)
+
+    def test_predict_no_task(self):
+        self.login()
+        with open(os.path.join(HERE, '../resources/test_stock_standardised.csv'), 'rb') as test_upload_file:
+            resp = self.client.post(
+                url_for('datasource.upload'),
+                content_type='multipart/form-data',
+                data={'upload': (test_upload_file, 'test_stock_standardised.csv')},
+            )
+
+            assert resp.status_code == 201
+            upload_code = resp.json['upload_code']
+            company_id = resp.json['company_id']
+            assert upload_code
+        self.logout()
+
+        company_configuration = services.company.get_configuration_for_company_id(company_id)
+
+        datasource = services.datasource.get_by_upload_code(upload_code)
+        dataframe = services.datasource.get_dataframe(datasource)
+
+        data_dict = interpreters.datasource.StockDataSourceInterpreter().from_dataframe_to_data_dict(dataframe)
+
+        prediction = services.oracle.predict(
+            prediction_request={
+                "name": "TESTPREDICTION",
+                "start_time": datetime.datetime(2017, 9, 29, 0, 0),
+                "end_time": datetime.datetime(2017, 10, 29, 0, 0)  # is ignored anyway, so...
+            },
+            data_dict=data_dict,
+            company_configuration=company_configuration
+        )
+
+        interpreted_prediction = metacrocubot_prediction_interpreter(prediction)

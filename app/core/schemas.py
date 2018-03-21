@@ -9,34 +9,33 @@ from app.entities.datasource import UploadTypes
 
 
 class DataPointSchema(Schema):
-    feature = fields.String()
-    value = fields.Float()
-    lower = fields.Float()
-    upper = fields.Float()
+    symbol = fields.String()
+    value = fields.Float(allow_none=True)
+    lower = fields.Float(allow_none=True)
+    upper = fields.Float(allow_none=True)
 
 
-class PredictionSchema(Schema):
+class DataPointsListSchema(Schema):
     timestamp = fields.DateTime(required=True)
     prediction = fields.Nested(DataPointSchema, many=True)
 
 
+class PredictionResultResultSchema(Schema):
+    factors = fields.Dict(allow_none=True)
+    datapoints = fields.Nested(DataPointsListSchema, many=True, default=[])
+
+
 class PredictionRequestSchema(Schema):
     name = fields.String(required=True)
-    feature = fields.String(required=True)
     start_time = fields.Date(required=True)
     end_time = fields.Date(required=True)
 
 
-prediction_request_schema = PredictionRequestSchema()
-
-
 class PredictionResultSchema(Schema):
-    user_id = fields.String(required=True)
+    company_id = fields.Integer(required=True)
+    prediction_task_id = fields.Integer(required=True)
     task_code = fields.UUID(required=True)
-    prediction = fields.Nested(PredictionSchema)
-
-
-prediction_result_schema = PredictionResultSchema()
+    result = fields.Nested(PredictionResultResultSchema)
 
 
 class BaseModelSchema(Schema):
@@ -60,6 +59,7 @@ class DataSourceSchema(BaseModelSchema):
     end_date = fields.DateTime()
     is_original = fields.Boolean(allow_none=True)
     features = fields.List(fields.String)
+    target_feature = fields.String()
 
     @pre_load
     def process_list_of_features(self, data):
@@ -70,9 +70,13 @@ class DataSourceSchema(BaseModelSchema):
 
 
 class OracleConfigurationSchema(BaseModelSchema):
-    scheduling = fields.Dict()
-    oracle = fields.Dict()
-    oracle_class = fields.String()
+    scheduling = fields.Dict(required=True)
+    oracle = fields.Dict(required=True)
+    oracle_class = fields.String(required=True)
+    calendar_name = fields.String(required=True)
+    target_feature = fields.String(required=True)
+    datasource_interpreter = fields.String(required=True)
+    prediction_result_interpreter = fields.String(required=True)
 
 
 class CompanyConfigurationSchema(BaseModelSchema):
@@ -80,11 +84,34 @@ class CompanyConfigurationSchema(BaseModelSchema):
     configuration = fields.Nested(OracleConfigurationSchema, many=False)
 
 
+class CustomerActionSchema(BaseModelSchema):
+    action = fields.String()
+
+
+class PredictionTaskStatusSchema(BaseModelSchema):
+    state = fields.String()
+    message = fields.String(allow_none=True)
+
+
+class PredictionTaskSchema(BaseModelSchema):
+    name = fields.String()
+    company_id = fields.Integer()
+    task_code = fields.String()
+    status = fields.String(allow_none=True)
+    is_completed = fields.Boolean()
+    statuses = fields.Nested(PredictionTaskStatusSchema, many=True, default=[])
+    datasource = fields.Nested(DataSourceSchema)
+    prediction_request = fields.Nested(PredictionRequestSchema, allow_none=True)
+
+
 class CompanySchema(BaseModelSchema):
     name = fields.String()
     domain = fields.String()
     data_sources = fields.Nested(DataSourceSchema, many=True, default=[])
     current_configuration = fields.Nested(CompanyConfigurationSchema, default=None, allow_none=True)
+    actions = fields.Nested(CustomerActionSchema, many=True, default=[])
+    tasks = fields.Nested(PredictionTaskSchema, many=True, default=[])
+    results = fields.Nested(PredictionResultSchema, many=True, default=[])
 
     @validates('domain')
     def validate_domain(self, value):
@@ -92,34 +119,8 @@ class CompanySchema(BaseModelSchema):
             raise ValidationError("Invalid domain name")
 
 
-class CustomerActionSchema(BaseModelSchema):
-    action = fields.String()
-
-
 class UserProfileSchema(BaseModelSchema):
     pass
-
-
-class TaskStatusSchema(BaseModelSchema):
-    state = fields.String()
-    message = fields.String(allow_none=True)
-
-
-class ResultSchema(BaseModelSchema):
-    user_id = fields.Integer()
-    task_code = fields.String()
-    result = fields.Nested(PredictionSchema, many=True)
-
-
-class TaskSchema(BaseModelSchema):
-    name = fields.String()
-    user_id = fields.Integer()
-    task_code = fields.String()
-    status = fields.String(allow_none=True)
-    is_completed = fields.Boolean()
-    statuses = fields.Nested(TaskStatusSchema, many=True, default=[])
-    datasource = fields.Nested(DataSourceSchema)
-    prediction_request = fields.Nested(PredictionRequestSchema, allow_none=True)
 
 
 class UserSchema(BaseModelSchema):
@@ -129,10 +130,13 @@ class UserSchema(BaseModelSchema):
     company = fields.Nested(CompanySchema, many=False)
     current_data_source = fields.Nested(DataSourceSchema, allow_none=True)
     data_sources = fields.Nested(DataSourceSchema, many=True, default=[])
-    tasks = fields.Nested(TaskSchema, many=True, default=[])
-    results = fields.Nested(ResultSchema, many=True, default=[])
-    actions = fields.Nested(CustomerActionSchema, many=True, default=[])
     permissions = EnumField(UserPermissions)
 
 
-user_schema = UserSchema()
+class TrainingTaskSchema(BaseModelSchema):
+    task_code = fields.String()
+    company_id = fields.Integer()
+    datasource_id = fields.Integer()
+    datasource = fields.Nested(DataSourceSchema)
+    status = fields.String(allow_none=True)
+    statuses = fields.Nested(PredictionTaskStatusSchema, many=True)

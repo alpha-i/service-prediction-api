@@ -46,10 +46,7 @@ tables
 numpy
 sklearn
 # Oracle-related dependencies
-alphai_finance==2.0.0
-alphai_delphi==1.1.6
-alphai_covariance>=0.1.3
-alphai_feature_generation==1.4.0-dev-gym
+alphai_delphi==2.2.0
 tensorflow==1.4.0
-alphai_cromulon_oracle==0.0.1
+alphai_metacrocubot_oracle
 gunicorn

@@ -1,5 +1,3 @@
-import datetime
-
 from flask import url_for, json
 
 from test.functional.base_test_class import BaseTestClass
@@ -33,6 +31,8 @@ class TestConfigurationAPI(BaseTestClass):
 
     def test_admin_can_push_a_configuration(self):
         self.login_superuser()
+
+        # cannot push an invalid config...
         configuration = {
             "scheduling": {"something": "random"},
             "oracle": {"something": "else"},
@@ -45,9 +45,13 @@ class TestConfigurationAPI(BaseTestClass):
             headers={'Accept': 'application/json'}
         )
 
-        assert resp.status_code == 201
-        assert resp.json == {
-            'oracle': {'something': 'else'},
-            'oracle_class': 'alphai_cromulon_oracle.oracle.CromulonOracle',
-            'scheduling': {'something': 'random'}
-        }
+        assert resp.status_code == 400
+
+        resp = self.client.post(
+            url_for('company.configuration_update', company_id=1),
+            data=json.dumps(self.COMPANY_CONFIGURATION),
+            content_type='application/json',
+            headers={'Accept': 'application/json'}
+        )
+
+        assert resp.json == self.COMPANY_CONFIGURATION

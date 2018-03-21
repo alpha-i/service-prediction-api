@@ -41,6 +41,7 @@ def current():
 def get(datasource_id):
     datasource = services.datasource.get_by_upload_code(datasource_id)
     if not datasource:
+        logging.debug(f"No datasource was found for id {datasource_id}")
         abort(404, 'No data source found!')
 
     response = ApiResponse(
@@ -56,23 +57,33 @@ def get(datasource_id):
 def upload():
     user = g.user
     if not len(request.files):
+        logging.debug("No file was uploaded")
         abort(400, "No file provided!")
 
     uploaded_file = request.files['upload']
 
     if not allowed_extension(uploaded_file.filename):
+        logging.debug(f"Invalid extension for upload {uploaded_file.filename}")
         abort(400, f'File extension for {uploaded_file.filename} not allowed!')
 
     upload_code = generate_upload_code()
-
     filename = services.datasource.generate_filename(upload_code, uploaded_file.filename)
 
-    data_frame = pd.read_csv(uploaded_file, sep=',', index_col='date', parse_dates=True)
+    interpreter = services.company.get_datasource_interpreter(g.user.company.current_configuration)
+    target_feature = g.user.company.current_configuration.configuration.target_feature
+    data_frame, errors = interpreter.from_csv_to_dataframe(uploaded_file)
+
+    if errors:
+        logging.debug(f"Invalid file uploaded: {', '.join(errors)}")
+        abort(400, ', '.join(errors))
+    if not target_feature in list(data_frame.columns):
+        abort(400, f"Required feature {target_feature} not in {uploaded_file.filename}")
+
     features = list(data_frame.columns)
 
     if user.current_data_source:
-        data_souce = services.datasource.get_by_upload_code(user.current_data_source.upload_code)
-        existing_data_frame = data_souce._model.get_file()
+        data_source = services.datasource.get_by_upload_code(user.current_data_source.upload_code)
+        existing_data_frame = data_source._model.get_file()
         data_frame = pd.concat([existing_data_frame, data_frame])
 
     saved_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename + '.hdf5')
@@ -90,7 +101,8 @@ def upload():
         start_date=data_frame.index[0].to_pydatetime(),
         end_date=data_frame.index[-1].to_pydatetime(),
         is_original=original,
-        features=', '.join(features)
+        features=', '.join(features),
+        target_feature=target_feature,
     )
 
     datasource = services.datasource.insert(upload)
@@ -98,7 +110,8 @@ def upload():
     response = ApiResponse(
         content_type=request.accept_mimetypes.best,
         context=datasource,
-        next=url_for('customer.list_datasources')
+        next=url_for('customer.list_datasources'),
+        status_code=201
     )
 
     return response()
@@ -109,6 +122,7 @@ def upload():
 def delete(datasource_id):
     datasource = services.datasource.get_by_upload_code(datasource_id)
     if datasource.is_original:
+        logging.debug(f"Tried to delete original ingestion datasource: {datasource_id}")
         abort(400)
 
     services.datasource.delete(datasource)

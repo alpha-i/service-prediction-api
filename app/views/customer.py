@@ -1,24 +1,25 @@
+import logging
 from datetime import timedelta
 
+import pandas as pd
 from flask import Blueprint, jsonify, render_template, g, request, abort, Response
 
 from app import services
 from app.core.auth import requires_access_token
-from app.core.interpreters import prediction_result_to_dataframe, DEFAULT_TIME_RESOLUTION
-from app.core.schemas import user_schema
+from app.core.schemas import UserSchema
 from app.db import db
 from app.entities import CompanyConfigurationEntity, DataSourceEntity, PredictionTaskEntity
-from config import MAXIMUM_DAYS_FORECAST, DATETIME_FORMAT, TARGET_FEATURE
+from app.interpreters.prediction import prediction_result_to_dataframe
+from config import MAXIMUM_DAYS_FORECAST, DATETIME_FORMAT, TARGET_FEATURE, DEFAULT_TIME_RESOLUTION
 
 customer_blueprint = Blueprint('customer', __name__)
 
 
-# TODO: get rid of me before committing
 @customer_blueprint.route('/')
 @requires_access_token
 def get_user_profile():
     customer = g.user
-    user = user_schema.dump(customer).data
+    user = UserSchema().dump(customer).data
     return jsonify(user)
 
 
@@ -48,10 +49,23 @@ def list_datasources():
     return render_template('datasource/list.html', **context)
 
 
+@customer_blueprint.route('/datasource/template')
+@requires_access_token
+def get_company_datasource_template():
+    csv_interpreter = services.company.get_datasource_interpreter(g.user.company.current_configuration)
+    columns = [csv_interpreter.INDEX_COLUMN] + csv_interpreter.COLUMNS
+
+    return Response(
+        pd.DataFrame(columns=columns).to_csv(header=True, index=False),
+        mimetype='text/csv',
+        headers={"Content-disposition": f"attachment; filename={g.user.company.name}_template.csv"}
+    )
+
+
 @customer_blueprint.route('/datasource/<string:datasource_id>', methods=['GET'])
 @requires_access_token
 def view_datasource(datasource_id):
-    datasource = services.datasource.get_by_upload_code(datasource_id=datasource_id)
+    datasource = services.datasource.get_by_upload_code(upload_code=datasource_id)
     result_dataframe = services.datasource.get_dataframe(datasource)
 
     data_source = {
@@ -76,6 +90,8 @@ def view_datasource(datasource_id):
 @requires_access_token
 def new_prediction():
     if not g.user.current_data_source:
+        logging.debug(
+            f"Asked to create a prediction when no data source was available for company {g.user.company.name}")
         abort(400, "No data source available. Upload one first!")
     datasource_min_date = g.user.current_data_source.end_date
     max_date = datasource_min_date + timedelta(days=MAXIMUM_DAYS_FORECAST)
@@ -106,6 +122,7 @@ def view_prediction(task_code):
 
     result_dataframe = prediction_result_to_dataframe(prediction)
     if result_dataframe is None:
+        logging.debug(f"No result for task code {task_code}")
         abort(404, f'Task {task_code} has no result')
 
     latest_date_in_datasource = g.user.current_data_source.end_date.date()
@@ -190,6 +207,7 @@ def list_customer_tasks():
     return jsonify(g.user.tasks)
 
 
+# TODO: temporary view to show the customer results
 @customer_blueprint.route('/results')
 @requires_access_token
 def list_customer_results():
@@ -200,7 +218,9 @@ def list_customer_results():
 @requires_access_token
 def update_customer_configuration():
     user = g.user
-    assert request.is_json, abort(400)
+    if not request.is_json:
+        logging.debug("New company configuration wasn't uploaded via JSON")
+        abort(400, "Invalid request format, must be json")
     new_configuration = request.json  # TODO: needs to implement a schema!
     configuration_entity = user.configuration
     if not configuration_entity:
