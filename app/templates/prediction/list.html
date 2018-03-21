@@ -16,14 +16,21 @@
 {% block content %}
     <div class="row">
         <div class="col-md-12">
-            <div class="box box-success">
+            <div class="box box-info">
                 <h3 class="box-header with-border">Predictions</h3>
                 <div class="box-body">
-                    <div class="mb-3">
-                        <a class="btn btn-primary" href="{{ url_for('customer.new_prediction') }}"><i
-                                class="fa fa-plus"></i> new prediction</a>
-                    </div>
-                    {{ macros.print_task_list(prediction_task_list) }}
+                    {% if datasource %}
+                        <div class="mb-3">
+                            <a class="btn btn-primary" href="{{ url_for('customer.new_prediction') }}"><i class="fa fa-plus"></i> new prediction</a>
+                        </div>
+                        {{ macros.print_task_list(prediction_task_list) }}
+                    {% else %}
+                        <div class="callout callout-warning">
+                            <p>
+                                Can't create a prediction with out a datasource. Please manage your datasaource in the <a href='{{ url_for('customer.list_datasources') }}'>datasource page</a>.
+                            </p>
+                        </div>
+                    {%  endif %}
                 </div>
             </div>
         </div>

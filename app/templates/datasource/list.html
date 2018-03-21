@@ -17,20 +17,15 @@
     <div class="row">
         <div class="col-xs-12">
             <div class="box box-primary">
-                <div class="box box-success">
-                    <h3 class="box-header with-border">Overview</h3>
-                    <div class="box-body">
+                <h3 class="box-header with-border">Overview</h3>
+                <div class="box-body">
 
-                        {% if current_datasource %}
-                            {{ macros.print_datasource_info(current_datasource) }}
-                        {% else %}
-                            <div class="callout callout-warning">
-                                <h4>No datasource set</h4>
-                                <p>To use our prediction engine you need a datasource</p>
-                            </div>
-                        {% endif %}
+                    {% if current_datasource %}
+                        {{ macros.print_datasource_info(current_datasource) }}
+                    {% else %}
+                        <p>You don't have any datasource.</p>
+                    {% endif %}
 
-                    </div>
                 </div>
             </div>
         </div>
