@@ -21,8 +21,8 @@ def insert_task(prediction_task):
 
 
 def update_task(prediction_task):
-    prediction = get_task_by_code(prediction_task.task_code)
-    model = prediction._model
+    model = prediction_task._model
+    prediction_task.refresh()
     for k, v in prediction_task.__dict__.items():
         try:
             setattr(model, k, v)

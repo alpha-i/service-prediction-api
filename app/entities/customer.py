@@ -29,7 +29,8 @@ class UserPermissions(Enum):
 class CompanyEntity(BaseEntity):
     __tablename__ = 'company'
 
-    INCLUDE_ATTRIBUTES = ('current_configuration', 'data_sources')
+    INCLUDE_ATTRIBUTES = ('current_configuration', 'data_sources', 'prediction_tasks', 'training_tasks',
+                          'prediction_results')
 
     name = db.Column(db.String, nullable=False)
     logo = db.Column(db.String)
@@ -118,7 +119,9 @@ class UserEntity(BaseEntity):
         except BadSignature:
             return None
 
-        user = UserEntity.query.get(data['id'])
+        session = db.session()
+        user = session.query(UserEntity).get(data['id'])
+        session.refresh(user)
         return user
 
     @staticmethod
@@ -177,6 +180,7 @@ def update_user_action(mapper, connection, self):
     )
     session.add(action)
     session.commit()
+    session.flush()
 
 
 event.listen(CompanyConfigurationEntity, 'after_insert', update_user_action)

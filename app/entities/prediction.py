@@ -26,7 +26,7 @@ class PredictionTaskEntity(BaseEntity):
     company = relationship('CompanyEntity', foreign_keys=company_id)
 
     task_code = db.Column(db.String(60), unique=True, nullable=False)
-    statuses = relationship('PredictionTaskStatusEntity', cascade='all, delete-orphan')
+    statuses = relationship('PredictionTaskStatusEntity')
 
     datasource_id = db.Column(db.Integer, db.ForeignKey('data_source.id'), nullable=False)
     datasource = relationship('DataSourceEntity', back_populates='prediction_task_list')
@@ -95,6 +95,7 @@ def update_user_action(mapper, connection, self):
     )
     session.add(action)
     session.commit()
+    session.flush()
 
 
 event.listen(PredictionTaskEntity, 'after_insert', update_user_action)

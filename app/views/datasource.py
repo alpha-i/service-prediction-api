@@ -56,6 +56,7 @@ def get(datasource_id):
 @requires_access_token
 def upload():
     user = g.user
+    company_configuration = g.user.company.current_configuration
     if not len(request.files):
         logging.debug("No file was uploaded")
         abort(400, "No file provided!")
@@ -69,8 +70,9 @@ def upload():
     upload_code = generate_upload_code()
     filename = services.datasource.generate_filename(upload_code, uploaded_file.filename)
 
-    interpreter = services.company.get_datasource_interpreter(g.user.company.current_configuration)
-    target_feature = g.user.company.current_configuration.configuration.target_feature
+    interpreter = services.company.get_datasource_interpreter(company_configuration)
+    target_feature = company_configuration.configuration.target_feature
+    upload_strategy_class = company_configuration.configuration.upload_strategy
     data_frame, errors = interpreter.from_csv_to_dataframe(uploaded_file)
 
     if errors:
@@ -106,6 +108,9 @@ def upload():
     )
 
     datasource = services.datasource.insert(upload)
+
+    upload_strategy = services.strategies.get_upload_strategy(upload_strategy_class)
+    upload_strategy.run(datasource=datasource, company_configuration=company_configuration)
 
     response = ApiResponse(
         content_type=request.accept_mimetypes.best,

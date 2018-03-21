@@ -8,7 +8,7 @@ from app.core.auth import requires_access_token
 from app.core.content import ApiResponse
 from app.core.schemas import PredictionRequestSchema
 from app.core.utils import parse_request_data
-from app.tasks.predict import predict_task, prediction_failure
+from app.tasks.predict import prediction_task, prediction_failure
 
 predict_blueprint = Blueprint('prediction', __name__)
 
@@ -29,7 +29,7 @@ def submit():
     if errors:
         return jsonify(errors=errors), 400
 
-    celery_prediction_task = predict_task.apply_async(
+    celery_prediction_task = prediction_task.apply_async(
         (company_id, upload_code, prediction_request),
         link_error=prediction_failure.s()
     )
@@ -53,7 +53,7 @@ def submit():
 @requires_access_token
 @parse_request_data
 def get_tasks():
-    return jsonify(g.user.tasks)
+    return jsonify(g.user.company.prediction_tasks)
 
 
 @predict_blueprint.route('/<string:task_code>', methods=['GET'])
@@ -77,7 +77,7 @@ def get_single_task(task_code):
 @requires_access_token
 @parse_request_data
 def get_results():
-    return jsonify(g.user.results)
+    return jsonify(g.user.company.prediction_results)
 
 
 @predict_blueprint.route('/result/<string:task_code>')

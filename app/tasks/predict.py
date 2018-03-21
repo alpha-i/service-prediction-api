@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 @celery.task(bind=True)
-def predict_task(self, company_id, upload_code, prediction_request):
+def prediction_task(self, company_id, upload_code, prediction_request):
     uploaded_file = services.datasource.get_by_upload_code(upload_code)
     if not uploaded_file:
         logging.warning("No upload could be found for code %s", upload_code)
@@ -100,9 +100,10 @@ def create_queued_prediction_task(task_name, task_code, company_id, upload_code)
 
 
 def set_task_status(task, status):
-    services.prediction.insert_status(
+    task_status = services.prediction.insert_status(
         PredictionTaskStatus(
             prediction_task_id=task.id,
             state=status.value
         )
     )
+    return task_status

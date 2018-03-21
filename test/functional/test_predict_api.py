@@ -6,6 +6,7 @@ import time
 from flask import url_for
 
 from app import services, interpreters
+from app.db import db
 from app.interpreters.prediction import metacrocubot_prediction_interpreter
 from test.functional.base_test_class import BaseTestClass
 
@@ -14,6 +15,7 @@ HERE = os.path.join(os.path.dirname(__file__))
 
 class TestPredictionAPI(BaseTestClass):
     TESTING = True
+    DB = db
 
     def setUp(self):
         super().setUp()
@@ -90,6 +92,12 @@ class TestPredictionAPI(BaseTestClass):
                 url_for('prediction.get_single_task', task_code=task_code),
             )
             task_status = resp.json['status']
+
+        resp = self.client.get(
+            url_for('prediction.get_single_task', task_code=task_code),
+        )
+
+        assert len(resp.json['statuses']) == 3  # must have queued, started and succesfull
 
         # check the result
         resp = self.client.get(

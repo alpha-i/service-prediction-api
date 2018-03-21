@@ -27,6 +27,7 @@ class BaseTestClass(TestCase):
         'target_feature': 'Returns',
         'datasource_interpreter': 'StockDataSourceInterpreter',
         'prediction_result_interpreter': 'app.interpreters.prediction.metacrocubot_prediction_interpreter',
+        'upload_strategy': 'OnDemandPredictionStrategy',
         'oracle': {
             'prediction_horizon': {
                 'unit': 'days',
