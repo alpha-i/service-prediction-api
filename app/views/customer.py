@@ -7,7 +7,7 @@ from flask import Blueprint, jsonify, render_template, g, request, abort, Respon
 from app import services
 from app.core.auth import requires_access_token
 from app.core.schemas import UserSchema
-from app.core.utils import redirect_url
+from app.core.utils import redirect_url, handle_error
 from app.db import db
 from app.entities import CompanyConfigurationEntity, DataSourceEntity, PredictionTaskEntity
 from app.interpreters.prediction import prediction_result_to_dataframe
@@ -97,10 +97,10 @@ def new_prediction():
     if not g.user.current_data_source:
         logging.debug(
             f"Asked to create a prediction when no data source was available for company {g.user.company.name}")
-        flash("No data source available. <a href='{}'>Upload one</a> first!".format(
-            url_for('customer.list_datasources')
-        ), category='warning')
-        return redirect(redirect_url())
+        message = "No data source available. <a href='{}'>Upload one</a> first!".format(
+            url_for('customer.list_datasources'))
+        return handle_error(request, 400, message)
+
     datasource_min_date = g.user.current_data_source.end_date
     max_date = datasource_min_date + timedelta(days=MAXIMUM_DAYS_FORECAST)
 

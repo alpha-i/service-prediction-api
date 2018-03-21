@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 {% include 'partial/html_header.html' %}
+{% import 'macros.html' as macros %}
 <body class="hold-transition login-page">
 <div class="login-box">
   <div class="login-logo">
@@ -28,8 +29,9 @@
         <!-- /.col -->
       </div>
     </form>
-
   </div>
+    <p></p>
+     {{ macros.print_flash_messages(dismissible=False) }}
   <!-- /.login-box-body -->
 </div>
 <!-- /.login-box -->

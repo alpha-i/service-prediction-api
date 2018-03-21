@@ -21,6 +21,7 @@ def show_current_user_info():
     )
     return response()
 
+
 @user_blueprint.route('/register', methods=['POST'])
 @requires_admin_permissions
 @parse_request_data
@@ -64,6 +65,7 @@ def register():
     )
 
     return response()
+
 
 @user_blueprint.route('/confirm/<string:token>')
 def confirm(token):
