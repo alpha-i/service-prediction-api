@@ -3,6 +3,7 @@ import os
 
 import pandas as pd
 from flask import Blueprint, request, abort, current_app, url_for, g
+from werkzeug.utils import secure_filename
 
 from app import services
 from app.core.auth import requires_access_token
@@ -68,7 +69,8 @@ def upload():
         abort(400, f'File extension for {uploaded_file.filename} not allowed!')
 
     upload_code = generate_upload_code()
-    filename = services.datasource.generate_filename(upload_code, uploaded_file.filename)
+    filename = services.datasource.generate_filename(upload_code,
+                                                     secure_filename(uploaded_file.filename))
 
     interpreter = services.company.get_datasource_interpreter(company_configuration)
     target_feature = company_configuration.configuration.target_feature
