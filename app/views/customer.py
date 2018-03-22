@@ -25,13 +25,11 @@ customer_blueprint = Blueprint('customer', __name__)
 @requires_access_token
 def dashboard():
     prediction_tasks = g.user.company.prediction_tasks if g.user.company.prediction_tasks else []
-    training_tasks = g.user.company.training_tasks if g.user.company.training_tasks else []
     context = {
         'user_id': g.user.id,
         'profile': {'email': g.user.email},
         'datasource': g.user.current_data_source,
         'prediction_task_list': list(reversed(prediction_tasks))[:5],
-        'training_task_list': list(reversed(training_tasks))[:5]
     }
 
     return render_template('dashboard.html', **context)
