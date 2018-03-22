@@ -1,5 +1,5 @@
 import importlib
-import logging
+import string
 import uuid
 from functools import wraps
 
@@ -72,5 +72,19 @@ def handle_error(code, message, *args, **kwargs):
     return redirect(calculate_referrer_url())
 
 
+class MissingFieldsStringFormatter(string.Formatter):
+    def __init__(self, missing='~'):
+        self.missing = missing
 
+    def get_field(self, field_name, args, kwargs):
+        # Handle missing fields
+        try:
+            return super().get_field(field_name, args, kwargs)
+        except (KeyError, AttributeError):
+            return None, field_name
 
+    def format_field(self, value, spec):
+        if value is None:
+            return self.missing
+        else:
+            return super().format_field(value, spec)
