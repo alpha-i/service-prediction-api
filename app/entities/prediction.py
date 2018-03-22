@@ -11,6 +11,7 @@ from app.entities import BaseEntity, CustomerActionEntity, Actions
 class TaskStatusTypes(Enum):
     queued = 'QUEUED'
     started = 'STARTED'
+    in_progress = 'INPROGRESS'
     successful = 'SUCCESSFUL'
     failed = 'FAILED'
 
