@@ -16,7 +16,7 @@
     <div class="row">
         <div class="col-md-12">
             <div class="box box-primary">
-                <h3 class="box-header with-border">Data source</h3>
+                <h3 class="box-header with-border">Historical Data</h3>
                 <div class="box-body">
                     {% if datasource %}
                     <table class="table table-bordered">
@@ -40,11 +40,8 @@
                         </tbody>
                     </table>
                     {% else %}
-                      <div class="callout callout-warning">
-                          <h4>No datasource set</h4>
-                          <p>To use our prediction engine you need a datasource</p>
-                        </div>
-                       <p><a class="btn btn-primary nounderline" href="{{ url_for('customer.list_datasources') }}"><span class="fa fa-upload"></span> update</a></p>
+                       <p>Your Historical Data is empty.</p>
+                       <p><a class="btn btn-primary nounderline" href="{{ url_for('customer.list_datasources') }}"><span class="fa fa-upload"></span> create</a></p>
                     {% endif %}
                 </div>
             </div>
@@ -54,12 +51,26 @@
     <div class="row">
         <div class="col-md-12">
             <div class="box box-success">
+                <h3 class="box-header with-border">Training Tasks</h3>
+                <div class="box-body">
+                    {{ macros.print_task_list(training_task_list) }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="box box-success">
                 <h3 class="box-header with-border">Predictions</h3>
                 <div class="box-body">
-                    <div class="mb-3">
-                        <a class="btn btn-primary" href="{{ url_for('customer.new_prediction') }}"><i class="fa fa-plus"></i> new prediction</a>
-                    </div>
-                    {{ macros.print_task_list(task_list) }}
+                    {% if datasource %}
+                        <div class="mb-3">
+                            <a class="btn btn-primary" href="{{ url_for('customer.new_prediction') }}">
+                                <i class="fa fa-plus"></i> new prediction</a>
+                        </div>
+                    {% endif %}
+                    {{ macros.print_task_list(prediction_task_list) }}
                 </div>
             </div>
         </div>

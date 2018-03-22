@@ -17,20 +17,15 @@
     <div class="row">
         <div class="col-xs-12">
             <div class="box box-primary">
-                <div class="box box-success">
-                    <h3 class="box-header with-border">Overview</h3>
-                    <div class="box-body">
+                <h3 class="box-header with-border">Overview</h3>
+                <div class="box-body">
 
-                        {% if current_datasource %}
-                            {{ macros.print_datasource_info(current_datasource) }}
-                        {% else %}
-                            <div class="callout callout-warning">
-                                <h4>No datasource set</h4>
-                                <p>To use our prediction engine you need a datasource</p>
-                            </div>
-                        {% endif %}
+                    {% if current_datasource %}
+                        {{ macros.print_datasource_info(current_datasource) }}
+                    {% else %}
+                        <p>Your Historical Data is empty</p>
+                    {% endif %}
 
-                    </div>
                 </div>
             </div>
         </div>
@@ -40,7 +35,7 @@
             <div class="box">
                 <h3 class="box-header with-border">Update your historical data</h3>
                 <div class="box-body">
-                    <form action="{{ url_for('datasource.upload') }}" method="post" enctype="multipart/form-data" class="form-inline">
+                    <form action="{{ url_for('customer.datasource_upload') }}" method="post" enctype="multipart/form-data" class="form-inline">
                         <div class="form-group row">
                             <div class="col-xs-10">
                                 <div class="input-group">

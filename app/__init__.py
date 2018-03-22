@@ -1,3 +1,7 @@
+import os
+from pathlib import Path
+
+import errno
 from celery import Celery
 from flask import Flask, request, render_template
 from flask_migrate import Migrate
@@ -85,6 +89,12 @@ def create_app(config_filename, register_blueprints=True):
             return render_template('500.html'), 500
 
     app.json_encoder = CustomJSONEncoder
+
+    for folder in ['UPLOAD_FOLDER', 'TEMPORARY_CSV_FOLDER']:
+
+        path = Path(app.config[folder])
+        path.mkdir(parents=True, exist_ok=True)
+
     return app
 
 

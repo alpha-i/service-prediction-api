@@ -208,8 +208,17 @@ class TestDataSourceUpload(BaseTestClass):
         # users can't delete the original data source
         resp = self.client.post(
             url_for('datasource.delete', datasource_id=original_upload_code),
-            content_type='application/json',
+            content_type='application/html',
             headers={'Accept': 'application/html'}
+        )
+
+        assert resp.status_code == 302
+
+        # users can't delete the original data source
+        resp = self.client.post(
+            url_for('datasource.delete', datasource_id=original_upload_code),
+            content_type='application/json',
+            headers={'Accept': 'application/json'}
         )
 
         assert resp.status_code == 400

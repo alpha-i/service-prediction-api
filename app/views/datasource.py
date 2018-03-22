@@ -3,12 +3,13 @@ import os
 
 import pandas as pd
 from flask import Blueprint, request, abort, current_app, url_for, g
+from werkzeug.utils import secure_filename
 
 from app import services
 from app.core.auth import requires_access_token
 from app.core.content import ApiResponse
 from app.core.models import DataSource
-from app.core.utils import allowed_extension, generate_upload_code
+from app.core.utils import allowed_extension, generate_upload_code, handle_error
 from app.entities.datasource import UploadTypes
 
 datasource_blueprint = Blueprint('datasource', __name__)
@@ -59,16 +60,17 @@ def upload():
     company_configuration = g.user.company.current_configuration
     if not len(request.files):
         logging.debug("No file was uploaded")
-        abort(400, "No file provided!")
+        handle_error(request, 400, "No file Provided!")
 
     uploaded_file = request.files['upload']
 
     if not allowed_extension(uploaded_file.filename):
         logging.debug(f"Invalid extension for upload {uploaded_file.filename}")
-        abort(400, f'File extension for {uploaded_file.filename} not allowed!')
+        return handle_error(request, 400, f'File extension for {uploaded_file.filename} not allowed!')
 
     upload_code = generate_upload_code()
-    filename = services.datasource.generate_filename(upload_code, uploaded_file.filename)
+    filename = services.datasource.generate_filename(upload_code,
+                                                     secure_filename(uploaded_file.filename))
 
     interpreter = services.company.get_datasource_interpreter(company_configuration)
     target_feature = company_configuration.configuration.target_feature
@@ -76,9 +78,10 @@ def upload():
 
     if errors:
         logging.debug(f"Invalid file uploaded: {', '.join(errors)}")
-        abort(400, ', '.join(errors))
+        return handle_error(request, 400, ', '.join(errors))
+
     if not target_feature in list(data_frame.columns):
-        abort(400, f"Required feature {target_feature} not in {uploaded_file.filename}")
+        return handle_error(request, 400, f"Required feature {target_feature} not in {uploaded_file.filename}")
 
     features = list(data_frame.columns)
 
@@ -127,8 +130,9 @@ def upload():
 def delete(datasource_id):
     datasource = services.datasource.get_by_upload_code(datasource_id)
     if datasource.is_original:
-        logging.debug(f"Tried to delete original ingestion datasource: {datasource_id}")
-        abort(400)
+        message = f"Tried to delete original ingestion datasource: {datasource_id}"
+        logging.debug(message)
+        return handle_error(request, 400, message)
 
     services.datasource.delete(datasource)
 
