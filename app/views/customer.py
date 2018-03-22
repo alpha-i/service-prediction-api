@@ -1,15 +1,16 @@
 import logging
+import os
 from datetime import timedelta
 
-import os
 import pandas as pd
-from flask import Blueprint, jsonify, render_template, g, request, abort, Response, flash, redirect, url_for, \
-    current_app
+from flask import (
+    Blueprint, jsonify, render_template, g, request, abort, Response,
+    flash, redirect, url_for, current_app
+)
 
 from app import services, ApiResponse
 from app.core.auth import requires_access_token
 from app.core.models import DataSource
-from app.core.schemas import UserSchema
 from app.core.utils import handle_error, allowed_extension, generate_upload_code
 from app.db import db
 from app.entities import CompanyConfigurationEntity, PredictionTaskEntity
@@ -17,22 +18,12 @@ from app.entities.datasource import UploadTypes
 from app.interpreters.prediction import prediction_result_to_dataframe
 from config import MAXIMUM_DAYS_FORECAST, DATETIME_FORMAT, DEFAULT_TIME_RESOLUTION
 
-
 customer_blueprint = Blueprint('customer', __name__)
-
-
-@customer_blueprint.route('/')
-@requires_access_token
-def get_user_profile():
-    customer = g.user
-    user = UserSchema().dump(customer).data
-    return jsonify(user)
 
 
 @customer_blueprint.route('/dashboard')
 @requires_access_token
 def dashboard():
-
     prediction_tasks = g.user.company.prediction_tasks if g.user.company.prediction_tasks else []
     training_tasks = g.user.company.training_tasks if g.user.company.training_tasks else []
     context = {
@@ -145,7 +136,6 @@ def view_prediction(task_code):
     target_feature = g.user.company.current_configuration.configuration.target_feature
 
     if latest_date_in_datasource > latest_date_in_results:
-
         actuals_dataframe = services.datasource.get_dataframe(g.user.current_data_source)
         actuals_dataframe.index = actuals_dataframe.index.tz_localize('UTC')
         actuals_dataframe = actuals_dataframe.resample(DEFAULT_TIME_RESOLUTION).sum()
@@ -324,7 +314,6 @@ def datasource_confirm():
 @customer_blueprint.route('/datasource/discard/<string:upload_code>')
 @requires_access_token
 def datasource_discard(upload_code):
-
     temporary_csv = os.path.join(current_app.config['TEMPORARY_CSV_FOLDER'], f'{upload_code}.csv')
 
     try:
