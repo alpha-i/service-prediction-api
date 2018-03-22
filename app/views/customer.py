@@ -25,13 +25,11 @@ customer_blueprint = Blueprint('customer', __name__)
 @requires_access_token
 def dashboard():
     prediction_tasks = g.user.company.prediction_tasks if g.user.company.prediction_tasks else []
-    training_tasks = g.user.company.training_tasks if g.user.company.training_tasks else []
     context = {
         'user_id': g.user.id,
         'profile': {'email': g.user.email},
         'datasource': g.user.current_data_source,
         'prediction_task_list': list(reversed(prediction_tasks))[:5],
-        'training_task_list': list(reversed(training_tasks))[:5]
     }
 
     return render_template('dashboard.html', **context)
@@ -63,7 +61,7 @@ def get_company_datasource_template():
     )
 
 
-@customer_blueprint.route('/datasource/<string:datasource_id>', methods=['GET'])
+@customer_blueprint.route('/datasource/view/<string:datasource_id>', methods=['GET'])
 @requires_access_token
 def view_datasource(datasource_id):
     datasource = services.datasource.get_by_upload_code(upload_code=datasource_id)
@@ -95,7 +93,7 @@ def new_prediction():
         logging.debug(
             f"Asked to create a prediction when no data source was available for company {g.user.company.name}")
         message = f"No data source available. <a href='{url_for('customer.list_datasources')}'>Upload one</a> first!"
-        return handle_error(request, 400, message)
+        return handle_error(400, message)
 
     datasource_min_date = g.user.current_data_source.end_date
     max_date = datasource_min_date + timedelta(days=MAXIMUM_DAYS_FORECAST)
@@ -173,17 +171,6 @@ def download_prediction_csv(task_code):
         )})
 
 
-@customer_blueprint.route('/use_case')
-@requires_access_token
-def view_company_use_case():
-    context = {
-        'user_id': g.user.id,
-        'profile': {'email': g.user.email}
-    }
-
-    return render_template('company/use_case.html', **context)
-
-
 @customer_blueprint.route('/prediction')
 @requires_access_token
 def list_predictions():
@@ -203,25 +190,32 @@ def list_predictions():
 @requires_access_token
 def datasource_upload():
     user = g.user
+    company = user.company
+
     if not len(request.files):
         logging.debug("No file was uploaded")
-        handle_error(request, 400, "No file Provided!")
+        return handle_error(400, "No file Provided!")
 
+    company_configuration = company.current_configuration
     uploaded_file = request.files['upload']
+
+    if not company_configuration:
+        uploaded_file.close()
+        return handle_error(400, f"{company.name} cannot upload historical data yet, please contact support.")
 
     if not allowed_extension(uploaded_file.filename):
         logging.debug(f"Invalid extension for upload {uploaded_file.filename}")
-        return handle_error(request, 400, f'File extension for {uploaded_file.filename} not allowed!')
+        return handle_error(400, f'File extension for {uploaded_file.filename} not allowed!')
 
-    interpreter = services.company.get_datasource_interpreter(user.company.current_configuration)
+    interpreter = services.company.get_datasource_interpreter(company_configuration)
     uploaded_dataframe, errors = interpreter.from_csv_to_dataframe(uploaded_file)
-    target_feature = user.company.current_configuration.configuration.target_feature
+    target_feature = company_configuration.configuration.target_feature
     if errors:
         logging.debug(f"Invalid file uploaded: {', '.join(errors)}")
-        return handle_error(request, 400, ', '.join(errors))
+        return handle_error(400, ', '.join(errors))
 
     if target_feature not in list(uploaded_dataframe.columns):
-        return handle_error(request, 400, f"Required feature {target_feature} not present in the file")
+        return handle_error(400, f"Required feature {target_feature} not present in the file")
 
     upload_code = generate_upload_code()
     saved_path = os.path.join(current_app.config['TEMPORARY_CSV_FOLDER'], f"{upload_code}.csv")
