@@ -38,7 +38,7 @@
                         <div class="text-center">
                             <p>Please confirm or discard the uploaded data</p>
                             <p>
-                                <a href="{{ url_for('customer.list_datasources') }}" class="btn btn-danger">Discard</a>
+                                <a href="{{ url_for('customer.datasource_discard', upload_code=upload_code) }}" class="btn btn-danger">Discard</a>
                                 &nbsp;&nbsp;&nbsp;&nbsp;
                                 <input type="submit" class="btn btn-success" value="Confirm and Run Prediction" id="datasource_confirm_button">
                             </p>

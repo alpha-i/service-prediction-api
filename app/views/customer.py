@@ -309,7 +309,11 @@ def datasource_confirm():
     try:
         os.remove(temporary_csv)
     except OSError as e:
-        logging.warning("Trying to remove the original file {}.csv which doesn't exists".format(upload_code))
+        logging.warning(
+            "Trying to remove the original file {}.csv which doesn't exists while confirming the datasource".format(
+                upload_code,
+            )
+        )
 
     response = ApiResponse(
         content_type=request.accept_mimetypes.best,
@@ -319,6 +323,24 @@ def datasource_confirm():
     )
 
     return response()
+
+
+@customer_blueprint.route('/datasource/discard/<string:upload_code>')
+@requires_access_token
+def datasource_discard(upload_code):
+
+    temporary_csv = os.path.join(current_app.config['TEMPORARY_CSV_FOLDER'], '{}.csv'.format(upload_code))
+
+    try:
+        os.remove(temporary_csv)
+    except OSError:
+        logging.warning("trying to remove a non existent csv source {} user_id {} company_id {}".format(
+            upload_code,
+            g.user.id,
+            g.user.company_id
+        ))
+
+    return redirect(url_for('customer.list_datasources'))
 
 
 @customer_blueprint.route('/configuration', methods=['POST'])
