@@ -22,7 +22,7 @@ class TestTriggerTaskOnUpload(BaseTestClass):
         'target_feature': 'Returns',
         'datasource_interpreter': 'StockDataSourceInterpreter',
         'prediction_result_interpreter': 'app.interpreters.prediction.metacrocubot_prediction_interpreter',
-        'upload_strategy': 'PredictOnUploadStrategy',
+        'upload_strategy': 'TrainAndPredictOnUploadStrategy',
         'oracle': {
             'prediction_horizon': {
                 'unit': 'days',

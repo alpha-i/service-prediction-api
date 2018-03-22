@@ -72,7 +72,6 @@ def upload():
 
     interpreter = services.company.get_datasource_interpreter(company_configuration)
     target_feature = company_configuration.configuration.target_feature
-    upload_strategy_class = company_configuration.configuration.upload_strategy
     data_frame, errors = interpreter.from_csv_to_dataframe(uploaded_file)
 
     if errors:
@@ -109,6 +108,7 @@ def upload():
 
     datasource = services.datasource.insert(upload)
 
+    upload_strategy_class = company_configuration.configuration.upload_strategy
     upload_strategy = services.strategies.get_upload_strategy(upload_strategy_class)
     upload_strategy.run(datasource=datasource, company_configuration=company_configuration)
 

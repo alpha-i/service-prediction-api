@@ -19,7 +19,7 @@ def get_oracle_for_configuration(company_configuration):
     )
 
 
-def predict(prediction_request, data_dict, company_configuration):
+def train_and_predict(prediction_request, data_dict, company_configuration):
     start_time = prediction_request['start_time']
     oracle = get_oracle_for_configuration(company_configuration)
     oracle.train(data_dict, start_time)

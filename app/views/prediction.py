@@ -8,7 +8,7 @@ from app.core.auth import requires_access_token
 from app.core.content import ApiResponse
 from app.core.schemas import PredictionRequestSchema
 from app.core.utils import parse_request_data
-from app.tasks.predict import prediction_task, prediction_failure
+from app.tasks.predict import training_and_prediction_task, prediction_failure
 
 predict_blueprint = Blueprint('prediction', __name__)
 
@@ -29,7 +29,7 @@ def submit():
     if errors:
         return jsonify(errors=errors), 400
 
-    celery_prediction_task = prediction_task.apply_async(
+    celery_prediction_task = training_and_prediction_task.apply_async(
         (company_id, upload_code, prediction_request),
         link_error=prediction_failure.s()
     )

@@ -29,14 +29,13 @@ class OnDemandPredictionStrategy(AbstractUploadStrategy):
         pass
 
 
-class PredictOnUploadStrategy(AbstractUploadStrategy):
+class TrainAndPredictOnUploadStrategy(AbstractUploadStrategy):
     """
     If we select this strategy, after a file upload we'll trigger a train-predict immediately
     """
 
     def run(self, datasource: DataSource, company_configuration: CompanyConfiguration):
-        from app.tasks.train import training_task, training_failure
-        from app.tasks.predict import prediction_task, prediction_failure
+        from app.tasks.predict import training_and_prediction_task, prediction_failure
 
         now = datetime.datetime.now().isoformat()
         upload_code = datasource.upload_code
@@ -49,10 +48,11 @@ class PredictOnUploadStrategy(AbstractUploadStrategy):
             'end_time': now,
         }
 
-        async_prediction_task = prediction_task.apply_async(
+        async_training_and_prediction_task = training_and_prediction_task.apply_async(
             (company_id, upload_code, prediction_request),
             link_error=prediction_failure.s()
         )
+
         logging.debug(
-            f"Automatically triggered train task for company id {company_id}, with code {async_prediction_task.id}"
+            f"Automatically triggered train task for company id {company_id}, with code {async_training_and_prediction_task.id}"
         )

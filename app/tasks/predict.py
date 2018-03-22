@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 @celery.task(bind=True)
-def prediction_task(self, company_id, upload_code, prediction_request):
+def training_and_prediction_task(self, company_id, upload_code, prediction_request):
     uploaded_file = services.datasource.get_by_upload_code(upload_code)
     if not uploaded_file:
         logging.warning("No upload could be found for code %s", upload_code)
@@ -47,7 +47,7 @@ def prediction_task(self, company_id, upload_code, prediction_request):
     interpreter = services.company.get_datasource_interpreter(company_configuration)
     data_dict = interpreter.from_dataframe_to_data_dict(data_frame_content)
 
-    oracle_prediction_result = services.oracle.predict(
+    oracle_prediction_result = services.oracle.train_and_predict(
         prediction_request=prediction_request,
         data_dict=data_dict,
         company_configuration=company_configuration

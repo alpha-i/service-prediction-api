@@ -159,7 +159,7 @@ class TestPredictionAPI(BaseTestClass):
 
         data_dict = interpreters.datasource.StockDataSourceInterpreter().from_dataframe_to_data_dict(dataframe)
 
-        prediction = services.oracle.predict(
+        prediction = services.oracle.train_and_predict(
             prediction_request={
                 "name": "TESTPREDICTION",
                 "start_time": datetime.datetime(2017, 9, 29, 0, 0),
