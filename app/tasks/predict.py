@@ -5,38 +5,32 @@ from celery.result import AsyncResult, allow_join_result
 from app import celery
 from app import interpreters
 from app import services
-from app.core.models import PredictionTask, PredictionResult, PredictionTaskStatus
+from app.core.models import PredictionResult
 from app.core.schemas import PredictionRequestSchema
 from app.core.utils import json_reload
 from app.entities import TaskStatusTypes
+from app.services.prediction import set_task_status
 
 logging.basicConfig(level=logging.DEBUG)
 
 
 @celery.task(bind=True)
-def training_and_prediction_task(self, company_id, upload_code, prediction_request):
+def training_and_prediction_task(self, task_code, company_id, upload_code, prediction_request):
     uploaded_file = services.datasource.get_by_upload_code(upload_code)
+    prediction_task = services.prediction.get_task_by_code(task_code)
     if not uploaded_file:
         logging.warning("No upload could be found for code %s", upload_code)
         return
 
-    prediction_task = create_queued_prediction_task(
-        task_name=prediction_request['name'],
-        task_code=self.request.id,
-        company_id=company_id,
-        upload_code=uploaded_file.id,
-    )
-
     prediction_request, errors = PredictionRequestSchema().load(prediction_request)
+    logging.info("Prediction request %s received: %s", upload_code, prediction_request)
     if errors:
         logging.warning(errors)
         set_task_status(prediction_task, TaskStatusTypes.failed)
         raise Exception(errors)
 
-    prediction_task.prediction_request = json_reload(prediction_request)
-    prediction_task = services.prediction.update_task(prediction_task)
-
-    logging.info("Prediction request %s received: %s", upload_code, prediction_request)
+    prediction_task = services.prediction.add_prediction_request(
+        prediction_task, json_reload(prediction_request))
 
     logging.info("*** TASK STARTED! %s", prediction_task.task_code)
     set_task_status(prediction_task, TaskStatusTypes.started)
@@ -81,29 +75,3 @@ def prediction_failure(uuid):
     logging.warning(f"Exception was: {exc}")
     set_task_status(prediction_task, TaskStatusTypes.failed)
     print('Task {0} raised exception: {1!r}\n{2!r}'.format(uuid, exc, result.traceback))
-
-
-def create_queued_prediction_task(task_name, task_code, company_id, upload_code):
-    task = services.prediction.insert_task(
-        PredictionTask(name=task_name,
-                       task_code=task_code,
-                       company_id=company_id,
-                       datasource_id=upload_code)
-    )
-
-    services.prediction.insert_status(
-        PredictionTaskStatus(
-            prediction_task_id=task.id,
-            state=TaskStatusTypes.queued.value)
-    )
-    return task
-
-
-def set_task_status(task, status):
-    task_status = services.prediction.insert_status(
-        PredictionTaskStatus(
-            prediction_task_id=task.id,
-            state=status.value
-        )
-    )
-    return task_status
