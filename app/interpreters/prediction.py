@@ -1,13 +1,9 @@
 import abc
-import datetime
 
 import pandas as pd
-import numpy as np
-import pytz
 from dateutil import parser
 
-from app.core.utils import import_class
-from config import DATE_FORMAT
+from app.core.utils import import_class, MissingFieldsStringFormatter
 
 
 class AbstractPredictionResultInterpreter(metaclass=abc.ABCMeta):
@@ -71,30 +67,24 @@ def prediction_interpreter(prediction_result):
 
 
 def prediction_result_to_dataframe(prediction):
-    start = prediction.prediction_request['start_time']
-    prediction_start = datetime.strptime(start, DATE_FORMAT).astimezone(pytz.utc)
-
-    end = prediction.prediction_request['end_time']
-    prediction_end = datetime.strptime(end, DATE_FORMAT).astimezone(pytz.utc) + datetime.timedelta(days=1)
-
+    fmt = MissingFieldsStringFormatter(missing='N/A')
     result = []
     if prediction.prediction_result:
-        for prediction_element in prediction.prediction_result.result:
+        for prediction_element in prediction.prediction_result.result['datapoints']:
             result_timestamp = parser.parse(prediction_element['timestamp'])
-            is_result_in_prediction_time = prediction_start < result_timestamp <= prediction_end
-            if is_result_in_prediction_time:
-                result_row = {
-                    'timestamp': result_timestamp
-                }
-                for prediction_data in prediction_element['prediction']:
-                    result_row.update({
-                        prediction_data['feature']: "{:.2f};{:.2f};{:.2f}".format(
-                            prediction_data['lower'],
-                            prediction_data['value'],
-                            prediction_data['upper']
-                        )
-                    })
-                result.append(result_row)
+
+            result_row = {
+                'timestamp': result_timestamp
+            }
+            for prediction_data in prediction_element['prediction']:
+                result_row.update({
+                    prediction_data['symbol']: fmt.format(
+                        '{:.2f};{:.2f};{:.2f}',
+                        prediction_data['lower'],
+                        prediction_data['value'],
+                        prediction_data['upper'])
+                })
+            result.append(result_row)
 
         return pd.DataFrame.from_dict(result).set_index('timestamp')
 
@@ -110,7 +100,6 @@ def metacrocubot_prediction_interpreter(metacrocubot_prediction) -> dict:
     lower_bounds = getattr(metacrocubot_prediction, 'lower_bound')
     feature_sensitivity = getattr(metacrocubot_prediction, 'features_sensitivity')
     target_timestamp = getattr(metacrocubot_prediction, 'target_timestamp')
-
 
     result_list = []
 
