@@ -19,6 +19,19 @@
                 <div class="box box-success">
                     <h3 class="box-header with-border">Overview</h3>
                     <div class="box-body">
+                        <div>
+                            <h2>Current Datasource</h2>
+                            <p class="info">Last 5 lines of your current datasouce. (ascending order)</p>
+                            {{ current_datasource_dataframe.sort_index(ascending=True).tail(5).to_html()|safe }}
+                        </div>
+                        <div>
+                            <h2>Your uploaded data</h2>
+                            <p class="info">First 5 lines of your current datasouce</p>
+                            {{ uploaded_dataframe.sort_index(ascending=True).head(5).to_html()|safe }}
+
+                           <p class="info">Last 5 lines of your current datasouce</p>
+                            {{ uploaded_dataframe.sort_index(ascending=True).tail(5).to_html()|safe }}
+                        </div>
                         Do you want to confirm the datasource: {{ upload_code }}
                         <form action="{{ url_for('customer.datasource_confirm') }}" method="post">
                             <input type="hidden" name="upload_code" value="{{ upload_code }}">

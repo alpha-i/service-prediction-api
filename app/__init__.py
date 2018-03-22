@@ -1,3 +1,6 @@
+import os
+
+import errno
 from celery import Celery
 from flask import Flask, request, render_template
 from flask_migrate import Migrate
@@ -85,6 +88,14 @@ def create_app(config_filename, register_blueprints=True):
             return render_template('500.html'), 500
 
     app.json_encoder = CustomJSONEncoder
+
+    for folder in ['UPLOAD_FOLDER', 'TEMPORARY_CSV_FOLDER']:
+        try:
+            os.makedirs(app.config[folder])
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
+
     return app
 
 

@@ -55,8 +55,7 @@
                     <div class="box-body">
                         <form action="{{ url_for('datasource.delete', datasource_id=current_datasource.upload_code) }}"
                               method="POST">
-                            <div class="form-group row">
-                                {# Ugly to watch, plz halp #}
+                            <div class="form-group">
                                 <input class="btn btn-primary" type="submit" value="DELETE!" name="submit">
                             </div>
                         </form>

@@ -71,7 +71,7 @@ def handle_error(current_request, code, message, *args, **kwargs):
         abort(code, message, args, *kwargs)
 
     flash(message, category='warning')
-    return redirect(redirect_url(current_request), code=code)
+    return redirect(redirect_url(current_request))
 
 
 
