@@ -16,7 +16,7 @@
     <div class="row">
         <div class="col-md-12">
             <div class="box box-primary">
-                <h3 class="box-header with-border">Data source</h3>
+                <h3 class="box-header with-border">Historical Data</h3>
                 <div class="box-body">
                     {% if datasource %}
                     <table class="table table-bordered">
@@ -40,7 +40,7 @@
                         </tbody>
                     </table>
                     {% else %}
-                       <p>You don't have any datasource.</p>
+                       <p>Your Historical Data is empty.</p>
                        <p><a class="btn btn-primary nounderline" href="{{ url_for('customer.list_datasources') }}"><span class="fa fa-upload"></span> create</a></p>
                     {% endif %}
                 </div>

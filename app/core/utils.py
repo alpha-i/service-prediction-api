@@ -42,7 +42,7 @@ def import_class(name):
     return getattr(mod, components[-1])
 
 
-def redirect_url(current_request):
+def calculate_referrer_url(current_request):
     """
     Returns the referer. if not specified, it will fallback to the login page
     if the user is not logged in, otherwise it will go to the dashboard home.
@@ -71,7 +71,7 @@ def handle_error(current_request, code, message, *args, **kwargs):
         abort(code, message, args, *kwargs)
 
     flash(message, category='warning')
-    return redirect(redirect_url(current_request))
+    return redirect(calculate_referrer_url(current_request))
 
 
 

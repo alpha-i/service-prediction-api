@@ -10,7 +10,7 @@
 {% endblock %}
 {% block breadcrumb_items %}
     {{ super() }}
-    <li><a class="active"><i class="fa fa-database"></i> Datasource detail</a></li>
+    <li><a class="active"><i class="fa fa-database"></i> Historical Data detail</a></li>
 {% endblock %}
 
 {% block content %}
@@ -51,7 +51,7 @@
         <div class="row">
             <div class="col-xs-12">
                 <div class="box box-danger">
-                    <h3 class="box-header with-border">Delete datasource</h3>
+                    <h3 class="box-header with-border">Delete this Historical Data Update</h3>
                     <div class="box-body">
                         <form action="{{ url_for('datasource.delete', datasource_id=current_datasource.upload_code) }}"
                               method="POST">

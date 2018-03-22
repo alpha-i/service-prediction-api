@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 import errno
 from celery import Celery
@@ -90,11 +91,9 @@ def create_app(config_filename, register_blueprints=True):
     app.json_encoder = CustomJSONEncoder
 
     for folder in ['UPLOAD_FOLDER', 'TEMPORARY_CSV_FOLDER']:
-        try:
-            os.makedirs(app.config[folder])
-        except OSError as e:
-            if e.errno != errno.EEXIST:
-                raise
+
+        path = Path(app.config[folder])
+        path.mkdir(parents=True, exist_ok=True)
 
     return app
 

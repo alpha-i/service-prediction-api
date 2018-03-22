@@ -5,15 +5,14 @@ import os
 import pandas as pd
 from flask import Blueprint, jsonify, render_template, g, request, abort, Response, flash, redirect, url_for, \
     current_app
-from werkzeug.utils import secure_filename
 
 from app import services, ApiResponse
 from app.core.auth import requires_access_token
 from app.core.models import DataSource
 from app.core.schemas import UserSchema
-from app.core.utils import redirect_url, handle_error, allowed_extension, generate_upload_code
+from app.core.utils import handle_error, allowed_extension, generate_upload_code
 from app.db import db
-from app.entities import CompanyConfigurationEntity, DataSourceEntity, PredictionTaskEntity
+from app.entities import CompanyConfigurationEntity, PredictionTaskEntity
 from app.entities.datasource import UploadTypes
 from app.interpreters.prediction import prediction_result_to_dataframe
 from config import MAXIMUM_DAYS_FORECAST, DATETIME_FORMAT, DEFAULT_TIME_RESOLUTION
@@ -104,8 +103,7 @@ def new_prediction():
     if not g.user.current_data_source:
         logging.debug(
             f"Asked to create a prediction when no data source was available for company {g.user.company.name}")
-        message = "No data source available. <a href='{}'>Upload one</a> first!".format(
-            url_for('customer.list_datasources'))
+        message = f"No data source available. <a href='{url_for('customer.list_datasources')}'>Upload one</a> first!"
         return handle_error(request, 400, message)
 
     datasource_min_date = g.user.current_data_source.end_date
@@ -236,7 +234,7 @@ def datasource_upload():
         return handle_error(request, 400, f"Required feature {target_feature} not present in the file")
 
     upload_code = generate_upload_code()
-    saved_path = os.path.join(current_app.config['TEMPORARY_CSV_FOLDER'], "{}.csv".format(upload_code))
+    saved_path = os.path.join(current_app.config['TEMPORARY_CSV_FOLDER'], f"{upload_code}.csv")
 
     current_datasource_dataframe = pd.DataFrame()
     if user.current_data_source:
@@ -261,12 +259,12 @@ def datasource_confirm():
     try:
         upload_code = request.form['upload_code']
     except KeyError as e:
-        logging.error("Trying to confirm an upload for a non existent code {}".format(upload_code))
+        logging.error(f"Trying to confirm an upload for a non existent code {upload_code}")
         flash("An error occurred while confirming the data source")
         return redirect(url_for('customer.list_datasources'), 400)
 
     csv_path = os.path.join(
-        current_app.config['TEMPORARY_CSV_FOLDER'], "{}.csv".format(request.form.get('upload_code'))
+        current_app.config['TEMPORARY_CSV_FOLDER'], f"{request.form.get('upload_code')}.csv"
     )
     csv_file = open(csv_path, 'r')
     interpreter = services.company.get_datasource_interpreter(g.user.company.current_configuration)
@@ -310,9 +308,7 @@ def datasource_confirm():
         os.remove(temporary_csv)
     except OSError as e:
         logging.warning(
-            "Trying to remove the original file {}.csv which doesn't exists while confirming the datasource".format(
-                upload_code,
-            )
+            f"Trying to remove the original file {upload_code}.csv which doesn't exists while confirming the datasource"
         )
 
     response = ApiResponse(
@@ -329,16 +325,14 @@ def datasource_confirm():
 @requires_access_token
 def datasource_discard(upload_code):
 
-    temporary_csv = os.path.join(current_app.config['TEMPORARY_CSV_FOLDER'], '{}.csv'.format(upload_code))
+    temporary_csv = os.path.join(current_app.config['TEMPORARY_CSV_FOLDER'], f'{upload_code}.csv')
 
     try:
         os.remove(temporary_csv)
     except OSError:
-        logging.warning("trying to remove a non existent csv source {} user_id {} company_id {}".format(
-            upload_code,
-            g.user.id,
-            g.user.company_id
-        ))
+        logging.warning(
+            f"trying to remove a non existent csv source {upload_code} user_id {g.user.id} company_id {g.user.company_id}"
+        )
 
     return redirect(url_for('customer.list_datasources'))
 
