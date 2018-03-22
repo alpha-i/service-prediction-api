@@ -226,10 +226,14 @@ def datasource_upload():
         current_datasource_dataframe = data_source._model.get_file()
 
     uploaded_dataframe.to_csv(saved_path)
+    upload_strategy_class = company_configuration.configuration.upload_strategy
+    upload_strategy = services.strategies.get_upload_strategy(upload_strategy_class)
+
     context = {
         'current_datasource_dataframe': current_datasource_dataframe.sort_index(ascending=True),
         'uploaded_dataframe': uploaded_dataframe.sort_index(ascending=True),
-        'upload_code': upload_code
+        'upload_code': upload_code,
+        'autorun': upload_strategy.does_autorun
     }
 
     return render_template('datasource/confirm.html', **context)
@@ -239,6 +243,8 @@ def datasource_upload():
 @requires_access_token
 def datasource_confirm():
     user = g.user
+    company = user.company
+    company_configuration = company.current_configuration
 
     try:
         upload_code = request.form['upload_code']
@@ -251,7 +257,7 @@ def datasource_confirm():
         current_app.config['TEMPORARY_CSV_FOLDER'], f"{request.form.get('upload_code')}.csv"
     )
     csv_file = open(csv_path, 'r')
-    interpreter = services.company.get_datasource_interpreter(g.user.company.current_configuration)
+    interpreter = services.company.get_datasource_interpreter(company_configuration)
     uploaded_dataframe, errors = interpreter.from_csv_to_dataframe(csv_file)
 
     features = list(uploaded_dataframe.columns)
@@ -270,7 +276,7 @@ def datasource_confirm():
 
     cumulative_dataframe = cumulative_dataframe.sort_index(ascending=True)
 
-    target_feature = g.user.company.current_configuration.configuration.target_feature
+    target_feature = company_configuration.configuration.target_feature
     upload = DataSource(
         user_id=user.id,
         company_id=user.company_id,
@@ -295,10 +301,16 @@ def datasource_confirm():
             f"Trying to remove the original file {upload_code}.csv which doesn't exists while confirming the datasource"
         )
 
+    upload_strategy_class = company_configuration.configuration.upload_strategy
+    upload_strategy = services.strategies.get_upload_strategy(upload_strategy_class)
+    upload_strategy.run(datasource=datasource, company_configuration=company_configuration)
+
+    next_url =  'customer.dashboard' if upload_strategy.does_autorun else 'customer.list_datasources'
+
     response = ApiResponse(
         content_type=request.accept_mimetypes.best,
         context=datasource,
-        next=url_for('customer.list_datasources'),
+        next=url_for(next_url),
         status_code=201
     )
 

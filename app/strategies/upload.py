@@ -21,6 +21,10 @@ class AbstractUploadStrategy(metaclass=abc.ABCMeta):
     def run(self, datasource: DataSource, company_configuration: CompanyConfiguration):
         raise NotImplementedError
 
+    @property
+    def does_autorun(self):
+        return False
+
 
 class OnDemandPredictionStrategy(AbstractUploadStrategy):
     """
@@ -68,3 +72,7 @@ class TrainAndPredictOnUploadStrategy(AbstractUploadStrategy):
         logging.debug(
             f"Automatically triggered train task for company id {company_id}, with code {task_code}"
         )
+
+    @property
+    def does_autorun(self):
+        return True

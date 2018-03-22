@@ -63,6 +63,14 @@ class CompanyEntity(BaseEntity):
             return None
         return company
 
+    @staticmethod
+    def get_by_id(company_id):
+        try:
+            company = CompanyEntity.query.filter(CompanyEntity.id == company_id).one()
+        except NoResultFound:
+            return None
+        return company
+
     @property
     def current_configuration(self):
         if len(self.configuration):

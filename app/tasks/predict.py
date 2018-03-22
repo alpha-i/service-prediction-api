@@ -36,7 +36,8 @@ def training_and_prediction_task(self, task_code, company_id, upload_code, predi
     set_task_status(prediction_task, TaskStatusTypes.started, message='Task started!')
 
     data_frame_content = uploaded_file.get_file()
-    company_configuration = services.company.get_configuration_for_company_id(company_id)
+    company = services.company.get_by_id(company_id)
+    company_configuration = company.current_configuration
 
     interpreter = services.company.get_datasource_interpreter(company_configuration)
     data_dict = interpreter.from_dataframe_to_data_dict(data_frame_content)

@@ -43,7 +43,9 @@
                             <p>
                                 <a href="{{ url_for('customer.datasource_discard', upload_code=upload_code) }}"
                                    class="btn btn-danger">Discard</a>
-                                <input type="submit" class="btn btn-success" value="Confirm and Run Prediction"
+
+                                {% set confirm_button_text =  'Confirm and run prediction' if autorun else 'Confirm'  %}
+                                <input type="submit" class="btn btn-success" value="{{ confirm_button_text }}"
                                        id="datasource_confirm_button">
                             </p>
                         </div>

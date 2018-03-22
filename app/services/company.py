@@ -12,6 +12,11 @@ def get_for_domain(domain):
     return Company.from_model(company)
 
 
+def get_by_id(company_id):
+    company = CompanyEntity.get_by_id(company_id)
+    return Company.from_model(company)
+
+
 def insert(company):
     model = company.to_model()
     model.save()
