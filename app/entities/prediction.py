@@ -64,7 +64,7 @@ class PredictionTaskStatusEntity(BaseEntity):
     prediction_task_id = db.Column(db.Integer, db.ForeignKey('prediction_task.id'), nullable=False)
     prediction_task = relationship('PredictionTaskEntity', back_populates='statuses')
     state = db.Column(db.String(10), index=True)
-    message = db.Column(db.JSON, nullable=True)
+    message = db.Column(db.String(), nullable=True)
 
 
 class PredictionResultEntity(BaseEntity):

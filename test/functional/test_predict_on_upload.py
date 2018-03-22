@@ -72,7 +72,7 @@ class TestTriggerTaskOnUpload(BaseTestClass):
                 'cost_type': 'bayes',
                 'n_train_passes': 30,
                 'n_eval_passes': 100,
-                'resume_training': False,
+                'resume_training': True,
                 'classify_per_series': False,
                 'normalise_per_series': False,
                 'use_gpu': False,

@@ -86,7 +86,7 @@ class TestDataSourceUpload(BaseTestClass):
                 'cost_type': 'bayes',
                 'n_train_passes': 32,
                 'n_eval_passes': 32,
-                'resume_training': False,
+                'resume_training': True,
                 'use_gpu': False,  # my macbook doesn't have a GPU :(((
 
                 # Topology

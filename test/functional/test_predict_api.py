@@ -97,7 +97,7 @@ class TestPredictionAPI(BaseTestClass):
             url_for('prediction.get_single_task', task_code=task_code),
         )
 
-        assert len(resp.json['statuses']) == 3  # must have queued, started and succesfull
+        assert len(resp.json['statuses']) == 5  # must have queued, started, 2 in progress, and successful
 
         # check the result
         resp = self.client.get(
@@ -159,14 +159,26 @@ class TestPredictionAPI(BaseTestClass):
 
         data_dict = interpreters.datasource.StockDataSourceInterpreter().from_dataframe_to_data_dict(dataframe)
 
-        prediction = services.oracle.train_and_predict(
+        oracle = services.oracle.get_oracle_for_configuration(company_configuration)
+
+        services.oracle.train(
+            oracle=oracle,
             prediction_request={
-                "name": "TESTPREDICTION",
+                "name": "TEST_PREDICTION",
                 "start_time": datetime.datetime(2017, 9, 29, 0, 0),
                 "end_time": datetime.datetime(2017, 10, 29, 0, 0)  # is ignored anyway, so...
             },
-            data_dict=data_dict,
-            company_configuration=company_configuration
+            data_dict=data_dict
+        )
+
+        prediction = services.oracle.predict(
+            oracle=oracle,
+            prediction_request={
+                "name": "TEST_PREDICTION",
+                "start_time": datetime.datetime(2017, 9, 29, 0, 0),
+                "end_time": datetime.datetime(2017, 10, 29, 0, 0)  # is ignored anyway, so...
+            },
+            data_dict=data_dict
         )
 
         interpreted_prediction = metacrocubot_prediction_interpreter(prediction)
