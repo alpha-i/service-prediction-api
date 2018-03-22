@@ -46,11 +46,12 @@ def insert_status(status):
     return PredictionTaskStatus.from_model(model)
 
 
-def set_task_status(task, status):
+def set_task_status(task, status, message=None):
     task_status = services.prediction.insert_status(
         PredictionTaskStatus(
             prediction_task_id=task.id,
-            state=status.value
+            state=status.value,
+            message=message,
         )
     )
     return task_status

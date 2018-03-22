@@ -33,7 +33,7 @@ def training_and_prediction_task(self, task_code, company_id, upload_code, predi
         prediction_task, json_reload(prediction_request))
 
     logging.info("*** TASK STARTED! %s", prediction_task.task_code)
-    set_task_status(prediction_task, TaskStatusTypes.started)
+    set_task_status(prediction_task, TaskStatusTypes.started, message='Task started!')
 
     data_frame_content = uploaded_file.get_file()
     company_configuration = services.company.get_configuration_for_company_id(company_id)
@@ -41,10 +41,26 @@ def training_and_prediction_task(self, task_code, company_id, upload_code, predi
     interpreter = services.company.get_datasource_interpreter(company_configuration)
     data_dict = interpreter.from_dataframe_to_data_dict(data_frame_content)
 
-    oracle_prediction_result = services.oracle.train_and_predict(
+    set_task_status(
+        prediction_task, TaskStatusTypes.in_progress,
+        message='Training machine learning model'
+    )
+
+    oracle = services.oracle.get_oracle_for_configuration(company_configuration)
+    services.oracle.train(
+        oracle=oracle,
         prediction_request=prediction_request,
-        data_dict=data_dict,
-        company_configuration=company_configuration
+        data_dict=data_dict
+    )
+
+    set_task_status(
+        prediction_task, TaskStatusTypes.in_progress,
+        message='Prediction in progress'
+    )
+    oracle_prediction_result = services.oracle.predict(
+        oracle=oracle,
+        prediction_request=prediction_request,
+        data_dict=data_dict
     )
 
     prediction_result_interpreter = interpreters.prediction.get_prediction_interpreter(company_configuration)
