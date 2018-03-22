@@ -50,6 +50,7 @@ def update_user_action(mapper, connection, self):
     )
     session.add(action)
     session.commit()
+    session.flush()
 
 
 event.listen(TrainingTaskEntity, 'after_insert', update_user_action)

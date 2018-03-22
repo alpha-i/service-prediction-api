@@ -70,6 +70,7 @@ def update_user_action(mapper, connection, self):
     )
     session.add(action)
     session.commit()
+    session.flush()
 
 
 event.listen(DataSourceEntity, 'after_insert', update_user_action)

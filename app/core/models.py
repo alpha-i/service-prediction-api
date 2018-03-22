@@ -56,6 +56,11 @@ class BaseModel(metaclass=abc.ABCMeta):
                 setattr(model, key, value)
         return model
 
+    def refresh(self):
+        for key, value in self._model.to_dict().items():
+            if not getattr(self, key, None):
+                setattr(self, key, value)
+
     def load(self, **kwargs):
         return self.SCHEMA().load(kwargs)
 
