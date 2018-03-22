@@ -16,29 +16,34 @@
     <div class="row">
         <div class="col-xs-12">
             <div class="box box-primary">
-                <div class="box box-success">
-                    <h3 class="box-header with-border">Overview</h3>
+                    <h3 class="box-header with-border">Current Datasource</h3>
                     <div class="box-body">
                         <div>
-                            <h2>Current Datasource</h2>
-                            <p class="info">Last 5 lines of your current datasouce. (ascending order)</p>
-                            {{ current_datasource_dataframe.sort_index(ascending=True).tail(5).to_html()|safe }}
+                            <p>Last 5 lines of your current datasouce. (ascending order)</p>
+                            {{ dataframe_to_clean_html(current_datasource_dataframe.tail(5)) }}
                         </div>
-                        <div>
-                            <h2>Your uploaded data</h2>
-                            <p class="info">First 5 lines of your current datasouce</p>
-                            {{ uploaded_dataframe.sort_index(ascending=True).head(5).to_html()|safe }}
-
-                           <p class="info">Last 5 lines of your current datasouce</p>
-                            {{ uploaded_dataframe.sort_index(ascending=True).tail(5).to_html()|safe }}
-                        </div>
-                        Do you want to confirm the datasource: {{ upload_code }}
-                        <form action="{{ url_for('customer.datasource_confirm') }}" method="post">
-                            <input type="hidden" name="upload_code" value="{{ upload_code }}">
-                            <br/>
-                            <input type="submit" class="btn btn-primary" value="Confirm" id="datasource_confirm_button">
-                        </form>
                     </div>
+            </div>
+            <div class="box box-success">
+                <h3 class="box-header with-border">Your upload</h3>
+                <div class="box-body">
+                    <div>
+                        <p>First 5 lines of your current datasouce</p>
+                        {{ dataframe_to_clean_html(uploaded_dataframe.head(5)) }}
+                       <p>Last 5 lines of your current datasouce</p>
+                        {{ dataframe_to_clean_html(uploaded_dataframe.tail(5)) }}
+                    </div>
+                    <form action="{{ url_for('customer.datasource_confirm') }}" method="post">
+                        <input type="hidden" name="upload_code" value="{{ upload_code }}">
+                        <div class="text-center">
+                            <p>Please confirm or discard the uploaded data</p>
+                            <p>
+                                <a href="{{ url_for('customer.list_datasources') }}" class="btn btn-danger">Discard</a>
+                                &nbsp;&nbsp;&nbsp;&nbsp;
+                                <input type="submit" class="btn btn-success" value="Confirm and Run Prediction" id="datasource_confirm_button">
+                            </p>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -49,3 +54,9 @@
 {% block footer_js %}
     {{ super() }}
 {% endblock %}
+
+{% macro dataframe_to_clean_html(dataframe) %}
+     <div class="datasource-table-container table-responsive no-padding">
+        {{ dataframe.to_html(classes='table table-hover datasource-table', index_names=False, border=0)|safe }}
+     </div>
+{% endmacro %}

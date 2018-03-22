@@ -5,3 +5,17 @@ body {
 .dl-horizontal dt {
     text-align: left!important;
 }
+
+.datasource-table-container {
+    overflow-x: scroll;
+    padding: 0px 10px 10px;
+    margin-bottom: 20px;
+}
+.datasource-table {
+    margin: 0px auto 10px;
+}
+.datasource-table th,
+.datasource-table td {
+    min-width: 100px;
+    padding: 2px;
+}

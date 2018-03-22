@@ -245,8 +245,8 @@ def datasource_upload():
 
     uploaded_dataframe.to_csv(saved_path)
     context = {
-        'current_datasource_dataframe': current_datasource_dataframe,
-        'uploaded_dataframe': uploaded_dataframe,
+        'current_datasource_dataframe': current_datasource_dataframe.sort_index(ascending=True),
+        'uploaded_dataframe': uploaded_dataframe.sort_index(ascending=True),
         'upload_code': upload_code
     }
 
