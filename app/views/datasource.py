@@ -57,20 +57,23 @@ def get(datasource_id):
 @requires_access_token
 def upload():
     user = g.user
-    company_configuration = g.user.company.current_configuration
+    company = user.company
+    company_configuration = company.current_configuration
+
+    if not company_configuration:
+        return handle_error(400, f"{company.name} cannot upload historical data yet, please contact support.")
     if not len(request.files):
         logging.debug("No file was uploaded")
-        handle_error(request, 400, "No file Provided!")
+        return handle_error(400, "No file Provided!")
 
     uploaded_file = request.files['upload']
 
     if not allowed_extension(uploaded_file.filename):
         logging.debug(f"Invalid extension for upload {uploaded_file.filename}")
-        return handle_error(request, 400, f'File extension for {uploaded_file.filename} not allowed!')
+        return handle_error(400, f'File extension for {uploaded_file.filename} not allowed!')
 
     upload_code = generate_upload_code()
-    filename = services.datasource.generate_filename(upload_code,
-                                                     secure_filename(uploaded_file.filename))
+    filename = services.datasource.generate_filename(upload_code, secure_filename(uploaded_file.filename))
 
     interpreter = services.company.get_datasource_interpreter(company_configuration)
     target_feature = company_configuration.configuration.target_feature
@@ -78,10 +81,10 @@ def upload():
 
     if errors:
         logging.debug(f"Invalid file uploaded: {', '.join(errors)}")
-        return handle_error(request, 400, ', '.join(errors))
+        return handle_error(400, ', '.join(errors))
 
     if not target_feature in list(data_frame.columns):
-        return handle_error(request, 400, f"Required feature {target_feature} not in {uploaded_file.filename}")
+        return handle_error(400, f"Required feature {target_feature} not in {uploaded_file.filename}")
 
     features = list(data_frame.columns)
 
@@ -91,13 +94,14 @@ def upload():
         data_frame = pd.concat([existing_data_frame, data_frame])
 
     saved_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename + '.hdf5')
+    data_frame = data_frame.sort_index(ascending=True)
     data_frame.to_hdf(saved_path, key=current_app.config['HDF5_STORE_INDEX'])
 
-    original = True if len(user.company.data_sources) == 0 else False
+    original = True if len(company.data_sources) == 0 else False
 
     upload = DataSource(
         user_id=user.id,
-        company_id=user.company_id,
+        company_id=company.id,
         upload_code=upload_code,
         type=UploadTypes.FILESYSTEM,
         location=saved_path,
@@ -132,7 +136,7 @@ def delete(datasource_id):
     if datasource.is_original:
         message = f"Tried to delete original ingestion datasource: {datasource_id}"
         logging.debug(message)
-        return handle_error(request, 400, message)
+        return handle_error(400, message)
 
     services.datasource.delete(datasource)
 

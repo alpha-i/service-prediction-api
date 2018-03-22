@@ -15,22 +15,25 @@
 {% block content %}
     <div class="row">
         <div class="col-xs-12">
-            <div class="box box-primary">
+            {% if not current_datasource_dataframe.empty %}
+                <div class="box box-primary">
                     <h3 class="box-header with-border">Current historical data preview</h3>
                     <div class="box-body">
                         <div>
-                            <p>Last 5 lines of your current datasouce. (ascending order)</p>
+                            <p>Last 5 lines of your current historical data. (ascending order)</p>
+
                             {{ dataframe_to_clean_html(current_datasource_dataframe.tail(5)) }}
                         </div>
                     </div>
-            </div>
+                </div>
+            {% endif %}
             <div class="box box-success">
                 <h3 class="box-header with-border">Your upload</h3>
                 <div class="box-body">
                     <div>
-                        <p>First 5 lines of your current datasouce</p>
+                        <p>First 5 lines of your current historical data</p>
                         {{ dataframe_to_clean_html(uploaded_dataframe.head(5)) }}
-                       <p>Last 5 lines of your current datasouce</p>
+                        <p>Last 5 lines of your current historical data</p>
                         {{ dataframe_to_clean_html(uploaded_dataframe.tail(5)) }}
                     </div>
                     <form action="{{ url_for('customer.datasource_confirm') }}" method="post">
@@ -38,9 +41,10 @@
                         <div class="text-center">
                             <p>Please confirm or discard the uploaded data</p>
                             <p>
-                                <a href="{{ url_for('customer.datasource_discard', upload_code=upload_code) }}" class="btn btn-danger">Discard</a>
-                                &nbsp;&nbsp;&nbsp;&nbsp;
-                                <input type="submit" class="btn btn-success" value="Confirm and Run Prediction" id="datasource_confirm_button">
+                                <a href="{{ url_for('customer.datasource_discard', upload_code=upload_code) }}"
+                                   class="btn btn-danger">Discard</a>
+                                <input type="submit" class="btn btn-success" value="Confirm and Run Prediction"
+                                       id="datasource_confirm_button">
                             </p>
                         </div>
                     </form>
@@ -56,7 +60,7 @@
 {% endblock %}
 
 {% macro dataframe_to_clean_html(dataframe) %}
-     <div class="datasource-table-container table-responsive no-padding">
+    <div class="datasource-table-container table-responsive no-padding">
         {{ dataframe.to_html(classes='table table-hover datasource-table', index_names=False, border=0)|safe }}
-     </div>
+    </div>
 {% endmacro %}
