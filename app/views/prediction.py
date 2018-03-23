@@ -20,7 +20,7 @@ def submit():
     company_id = g.user.company.id
 
     # the user can only predict against the _latest_ datasource
-    datasource_id = g.user.current_data_source.id
+    datasource_id = g.user.company.current_datasource.id
     prediction_request, errors = PredictionRequestSchema().load(g.json)
     if errors:
         return jsonify(errors=errors), 400
@@ -36,7 +36,7 @@ def submit():
     )
 
     services.prediction.set_task_status(prediction_task, TaskStatusTypes.queued)
-    upload_code = g.user.current_data_source.upload_code
+    upload_code = g.user.company.current_datasource.upload_code
     training_and_prediction_task.apply_async(
         (task_code, company_id, upload_code, prediction_request),
         link_error=prediction_failure.s()
@@ -57,7 +57,6 @@ def submit():
 
 @predict_blueprint.route('/', methods=['GET'])
 @requires_access_token
-@parse_request_data
 def get_tasks():
     return jsonify(g.user.company.prediction_tasks)
 
@@ -69,7 +68,9 @@ def get_single_task(task_code):
     prediction_task = services.prediction.get_task_by_code(task_code)
     if not prediction_task:
         logging.debug(f"No task found for code {task_code}")
-        return abort(404, 'No task found!')
+        abort(404, 'No task found!')
+    if not prediction_task.company_id == g.user.company_id:
+        abort(403)
 
     response = ApiResponse(
         content_type=request.accept_mimetypes.best,

@@ -29,8 +29,8 @@ class UserPermissions(Enum):
 class CompanyEntity(BaseEntity):
     __tablename__ = 'company'
 
-    INCLUDE_ATTRIBUTES = ('current_configuration', 'data_sources', 'prediction_tasks', 'training_tasks',
-                          'prediction_results')
+    INCLUDE_ATTRIBUTES = ('current_configuration', 'current_datasource',
+                          'prediction_results', 'data_sources', 'prediction_tasks')
 
     name = db.Column(db.String, nullable=False)
     logo = db.Column(db.String)
@@ -77,7 +77,7 @@ class CompanyEntity(BaseEntity):
             return self.configuration[-1]
 
     @property
-    def current_data_source(self):
+    def current_datasource(self):
         if len(self.data_sources):
             return self.data_sources[-1]
 
@@ -85,7 +85,7 @@ class CompanyEntity(BaseEntity):
 class UserEntity(BaseEntity):
     __tablename__ = 'user'
 
-    INCLUDE_ATTRIBUTES = ('data_sources', 'current_data_source', 'actions', 'company')
+    INCLUDE_ATTRIBUTES = ('actions', 'company')
     EXCLUDE_ATTRIBUTES = ('password_hash',)
 
     email = db.Column(db.String(32), index=True)
@@ -111,12 +111,6 @@ class UserEntity(BaseEntity):
         s = Serializer(SECRET_KEY, expires_in=expiration)
         return s.dumps({'id': self.id})
 
-    @property
-    def current_data_source(self):
-        if len(self.company.data_sources):
-            return self.company.data_sources[-1]
-        return None
-
     @staticmethod
     def verify_auth_token(token):
         s = Serializer(SECRET_KEY)
@@ -130,6 +124,7 @@ class UserEntity(BaseEntity):
         session = db.session()
         user = session.query(UserEntity).get(data['id'])
         session.refresh(user)
+        session.commit()
         return user
 
     @staticmethod
