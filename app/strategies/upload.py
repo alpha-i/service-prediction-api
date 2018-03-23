@@ -46,7 +46,7 @@ class TrainAndPredictOnUploadStrategy(AbstractUploadStrategy):
 
         # Make up a prediction request
         prediction_request = {
-            'name': f'TRAIN-AUTO-{now}',
+            'name': f'ON-UPLOAD-PREDICTION-{now}',
             'start_time': datasource.end_date,
             'end_time': now,
         }

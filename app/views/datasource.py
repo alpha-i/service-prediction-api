@@ -2,7 +2,7 @@ import logging
 import os
 
 import pandas as pd
-from flask import Blueprint, request, abort, current_app, url_for, g
+from flask import Blueprint, request, abort, current_app, url_for, g, flash
 from werkzeug.utils import secure_filename
 
 from app import services
@@ -145,5 +145,5 @@ def delete(datasource_id):
         next=url_for('customer.list_datasources'),
         status_code=200
     )
-
+    flash(f"Historical data version {datasource_id} has been deleted", category='success')
     return response()
