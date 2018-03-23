@@ -305,12 +305,10 @@ def datasource_confirm():
     upload_strategy = services.strategies.get_upload_strategy(upload_strategy_class)
     upload_strategy.run(datasource=datasource, company_configuration=company_configuration)
 
-    next_url =  'customer.dashboard' if upload_strategy.does_autorun else 'customer.list_datasources'
-
     response = ApiResponse(
         content_type=request.accept_mimetypes.best,
         context=datasource,
-        next=url_for(next_url),
+        next=url_for('customer.list_datasources'),
         status_code=201
     )
 
