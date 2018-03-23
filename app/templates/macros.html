@@ -36,17 +36,19 @@
 
 {% macro print_datasource_task_list(task_list) %}
      {% if task_list|length > 0 %}
-        <table class="table table-bordered">
-            <tbody>
-            <tr>
-                <th>name</th>
-                <th>code</th>
-                <th>created</th>
-                <th>status</th>
-                <th></th>
-            </tr>
-            {% for task in task_list %}
+        <table class="table table-bordered" id="datasource-task-list">
+            <thead>
                 <tr>
+                    <th>name</th>
+                    <th>code</th>
+                    <th>created</th>
+                    <th>status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for task in task_list %}
+                <tr class='task-row' id="{{ task.task_code }}" data-status="{{ task.statuses[-1].state }}">
                     <td scope="row">{{ task.name }}</td>
                     <td scope="row">{{ task.task_code }}</td>
                     <td>{{ format_datetime(task.created_at) }}</td>

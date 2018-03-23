@@ -24,6 +24,7 @@
                         {{ macros.print_datasource_info(current_datasource) }}
                         <h4>Task associated to this version of the Historical Data</h4>
                         {{ macros.print_datasource_task_list(prediction_task_list) }}
+                        <div id="debug-div"></div>
                     {% else %}
                         <p>Your Historical Data is empty</p>
                     {% endif %}
@@ -126,5 +127,45 @@
         $('#file_path').click(function () {
             $('#file_browser').click();
         });
+
+        function refreshTaskCode(){
+            $debugDiv = $("#debug-div");
+            $debugDiv.html('');
+            $('#datasource-task-list tr.task-row').each(function(i, el){
+                task_code = $(el).attr('id');
+                url = '/prediction/' + task_code;
+
+                $.ajax({
+                    url: url,
+                    success: function(data){
+                        $(el).remove()
+                        last_status_index = data.statuses.length -1;
+                        last_status = data.statuses[last_status_index].state;
+
+                        if (data.is_completed) {
+                            view_task = '<a href="/customer/prediction/' + data.task_code + '"><i class="fa fa-list"></i></a>'
+                        } else {
+                            view_task = '<i class="fa fa-hourglass"></i>';
+                        }
+
+                        new_row = '<tr class="task-row" id="' +  data.task_code + '" data-status="' +  last_status + '">';
+                        new_row += '<td scope="row">' +  data.name + '</td>';
+                        new_row += '<td scope="row">' +  data.task_code + '</td>';
+                        new_row += '<td>' +  data.created_at + '</td>';
+                        new_row += '<td>' +  last_status + '</td>';
+                        new_row += '<td>' + view_task + '</td>';
+                        new_row += '</tr>';
+
+                        $('#datasource-task-list > tbody').append(new_row);
+                    }
+                });
+            });
+        };
+
+        $(document).ready(function($){
+            setInterval(refreshTaskCode, 1000)
+        });
+
+
     </script>
 {% endblock %}
