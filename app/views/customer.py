@@ -38,11 +38,15 @@ def dashboard():
 @customer_blueprint.route('/datasource')
 @requires_access_token
 def list_datasources():
+
+    current_datasource = g.user.current_data_source
+
     context = {
         'user_id': g.user.id,
         'profile': {'email': g.user.email},
-        'current_datasource': g.user.current_data_source,
-        'datasource_history': g.user.data_sources
+        'current_datasource': current_datasource,
+        'datasource_history': g.user.data_sources,
+        'prediction_task_list': services.prediction.get_task_for_datasource_id(current_datasource.id)
     }
 
     return render_template('datasource/list.html', **context)
@@ -65,22 +69,10 @@ def get_company_datasource_template():
 @requires_access_token
 def view_datasource(datasource_id):
     datasource = services.datasource.get_by_upload_code(upload_code=datasource_id)
-    result_dataframe = services.datasource.get_dataframe(datasource)
-
-    target_feature = g.user.company.current_configuration.configuration.target_feature
-    data_source = {
-        'content': repr(result_dataframe[target_feature].to_csv(header=False)),
-        'header': ['timestamp', target_feature],
-        'timestamp_range': [
-            result_dataframe.index[0].strftime(DATETIME_FORMAT),
-            result_dataframe.index[-1].strftime(DATETIME_FORMAT)
-        ],
-        'target_feature': target_feature,
-    }
     context = {
         'current_datasource': datasource,
         'profile': {'email': g.user.email},
-        'data': data_source
+        'prediction_task_list': services.prediction.get_task_for_datasource_id(datasource.id)
     }
 
     return render_template('datasource/detail.html', **context)
@@ -226,14 +218,12 @@ def datasource_upload():
         current_datasource_dataframe = data_source._model.get_file()
 
     uploaded_dataframe.to_csv(saved_path)
-    upload_strategy_class = company_configuration.configuration.upload_strategy
-    upload_strategy = services.strategies.get_upload_strategy(upload_strategy_class)
 
     context = {
         'current_datasource_dataframe': current_datasource_dataframe.sort_index(ascending=True),
         'uploaded_dataframe': uploaded_dataframe.sort_index(ascending=True),
         'upload_code': upload_code,
-        'autorun': upload_strategy.does_autorun
+        'company_configuration': company_configuration.configuration
     }
 
     return render_template('datasource/confirm.html', **context)

@@ -21,29 +21,10 @@
                     <h3 class="box-header with-border">Overview</h3>
                     <div class="box-body">
                         {{ macros.print_datasource_info(current_datasource) }}
+                        <h4>Task associated to this version of the Historical Data</h4>
+                        {{ macros.print_datasource_task_list(prediction_task_list) }}
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-md-12">
-            <div class="box box-primary">
-                <div id="prediction_graph" style="width:100%"></div>
-                <script type="text/javascript">
-                    g = new Dygraph(
-                        document.getElementById("prediction_graph"),
-                        "{{ data.content|safe }}",
-                        {
-                            labels: {{ data.header|safe }},
-                            includeZero: true,
-                            title: 'Historical data for {{ data.target_feature }}',
-                            xlabel: 'Time',
-                            ylabel: '{{ data.target_feature }}'
-
-                        }
-                    );
-                </script>
             </div>
         </div>
     </div>

@@ -44,6 +44,12 @@ class PredictionTaskEntity(BaseEntity):
             return None
 
     @staticmethod
+    def get_by_datasource_id(datasource_id, ):
+        return PredictionTaskEntity.query.filter(
+            PredictionTaskEntity.datasource_id == datasource_id
+        ).order_by(PredictionTaskEntity.last_update.desc()).all()
+
+    @staticmethod
     def get_by_user_id(user_id):
         return PredictionTaskEntity.query.filter(PredictionTaskEntity.user_id == user_id).all()
 

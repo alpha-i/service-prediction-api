@@ -30,23 +30,25 @@
             <div class="box box-success">
                 <h3 class="box-header with-border">Your upload</h3>
                 <div class="box-body">
+                    {%  set preview_lines = 3 %}
                     <div>
-                        <p>First 5 lines of your current historical data</p>
-                        {{ dataframe_to_clean_html(uploaded_dataframe.head(5)) }}
-                        <p>Last 5 lines of your current historical data</p>
-                        {{ dataframe_to_clean_html(uploaded_dataframe.tail(5)) }}
+                        <h4>First {{ preview_lines }} rows</h4>
+                        {{ dataframe_to_clean_html(uploaded_dataframe.head(preview_lines)) }}
+                        <h4>Last {{ preview_lines }} rows</h4>
+                        {{ dataframe_to_clean_html(uploaded_dataframe.tail(preview_lines)) }}
                     </div>
                     <form action="{{ url_for('customer.datasource_confirm') }}" method="post">
                         <input type="hidden" name="upload_code" value="{{ upload_code }}">
                         <div class="text-center">
-                            <p>Please confirm or discard the uploaded data</p>
+                            <p>Please confirm or discard the uploaded data.</p>
+                            {% if company_configuration.upload_strategy == 'TrainAndPredictOnUploadStrategy' %}
+                                <p>If you confirm the upload, a Prediction task will be automatically triggered</p>
+                            {% endif %}
                             <p>
                                 <a href="{{ url_for('customer.datasource_discard', upload_code=upload_code) }}"
                                    class="btn btn-danger">Discard</a>
-
-                                {% set confirm_button_text =  'Confirm and run prediction' if autorun else 'Confirm'  %}
-                                <input type="submit" class="btn btn-success" value="{{ confirm_button_text }}"
-                                       id="datasource_confirm_button">
+                                &nbsp;&nbsp;&nbsp;
+                                <input type="submit" class="btn btn-success" value="Confirm" id="datasource_confirm_button">
                             </p>
                         </div>
                     </form>
