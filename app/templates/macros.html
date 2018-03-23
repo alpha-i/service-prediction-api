@@ -48,7 +48,7 @@
             </thead>
             <tbody>
             {% for task in task_list %}
-                <tr class='task-row' id="{{ task.task_code }}" data-status="{{ task.statuses[-1].state }}">
+                <tr class='task-row' id="{{ task.task_code }}" data-completed="{{ task.is_completed }}">
                     <td scope="row">{{ task.name }}</td>
                     <td scope="row">{{ task.task_code }}</td>
                     <td>{{ format_datetime(task.created_at) }}</td>
@@ -59,7 +59,7 @@
                                 <i class="fa fa-list"></i>
                             </a>
                         {% else %}
-                            <i class="fa fa-hourglass"></i>
+                            <i class="fa fa-refresh fa-spin"></i>
                         {% endif %}
                     </td>
                 </tr>
