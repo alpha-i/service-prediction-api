@@ -38,11 +38,15 @@ def dashboard():
 @customer_blueprint.route('/datasource')
 @requires_access_token
 def list_datasources():
+
+    current_datasource = g.user.current_data_source
+
     context = {
         'user_id': g.user.id,
         'profile': {'email': g.user.email},
-        'current_datasource': g.user.current_data_source,
-        'datasource_history': g.user.data_sources
+        'current_datasource': current_datasource,
+        'datasource_history': g.user.data_sources,
+        'prediction_task_list': services.prediction.get_task_for_datasource_id(current_datasource.id)
     }
 
     return render_template('datasource/list.html', **context)
@@ -65,22 +69,10 @@ def get_company_datasource_template():
 @requires_access_token
 def view_datasource(datasource_id):
     datasource = services.datasource.get_by_upload_code(upload_code=datasource_id)
-    result_dataframe = services.datasource.get_dataframe(datasource)
-
-    target_feature = g.user.company.current_configuration.configuration.target_feature
-    data_source = {
-        'content': repr(result_dataframe[target_feature].to_csv(header=False)),
-        'header': ['timestamp', target_feature],
-        'timestamp_range': [
-            result_dataframe.index[0].strftime(DATETIME_FORMAT),
-            result_dataframe.index[-1].strftime(DATETIME_FORMAT)
-        ],
-        'target_feature': target_feature,
-    }
     context = {
         'current_datasource': datasource,
         'profile': {'email': g.user.email},
-        'data': data_source
+        'prediction_task_list': services.prediction.get_task_for_datasource_id(datasource.id)
     }
 
     return render_template('datasource/detail.html', **context)
@@ -226,10 +218,12 @@ def datasource_upload():
         current_datasource_dataframe = data_source._model.get_file()
 
     uploaded_dataframe.to_csv(saved_path)
+
     context = {
         'current_datasource_dataframe': current_datasource_dataframe.sort_index(ascending=True),
         'uploaded_dataframe': uploaded_dataframe.sort_index(ascending=True),
-        'upload_code': upload_code
+        'upload_code': upload_code,
+        'company_configuration': company_configuration.configuration
     }
 
     return render_template('datasource/confirm.html', **context)
@@ -239,6 +233,8 @@ def datasource_upload():
 @requires_access_token
 def datasource_confirm():
     user = g.user
+    company = user.company
+    company_configuration = company.current_configuration
 
     try:
         upload_code = request.form['upload_code']
@@ -251,7 +247,7 @@ def datasource_confirm():
         current_app.config['TEMPORARY_CSV_FOLDER'], f"{request.form.get('upload_code')}.csv"
     )
     csv_file = open(csv_path, 'r')
-    interpreter = services.company.get_datasource_interpreter(g.user.company.current_configuration)
+    interpreter = services.company.get_datasource_interpreter(company_configuration)
     uploaded_dataframe, errors = interpreter.from_csv_to_dataframe(csv_file)
 
     features = list(uploaded_dataframe.columns)
@@ -270,7 +266,7 @@ def datasource_confirm():
 
     cumulative_dataframe = cumulative_dataframe.sort_index(ascending=True)
 
-    target_feature = g.user.company.current_configuration.configuration.target_feature
+    target_feature = company_configuration.configuration.target_feature
     upload = DataSource(
         user_id=user.id,
         company_id=user.company_id,
@@ -294,6 +290,10 @@ def datasource_confirm():
         logging.warning(
             f"Trying to remove the original file {upload_code}.csv which doesn't exists while confirming the datasource"
         )
+
+    upload_strategy_class = company_configuration.configuration.upload_strategy
+    upload_strategy = services.strategies.get_upload_strategy(upload_strategy_class)
+    upload_strategy.run(datasource=datasource, company_configuration=company_configuration)
 
     response = ApiResponse(
         content_type=request.accept_mimetypes.best,

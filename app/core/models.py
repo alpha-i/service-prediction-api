@@ -46,7 +46,7 @@ class BaseModel(metaclass=abc.ABCMeta):
 
     @classmethod
     def from_models(cls, *models):
-        return [BaseModel.from_model(model) for model in models]
+        return [cls.from_model(model) for model in models]
 
     def to_model(self):
         model = self.MODEL()

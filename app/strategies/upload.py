@@ -68,3 +68,4 @@ class TrainAndPredictOnUploadStrategy(AbstractUploadStrategy):
         logging.debug(
             f"Automatically triggered train task for company id {company_id}, with code {task_code}"
         )
+

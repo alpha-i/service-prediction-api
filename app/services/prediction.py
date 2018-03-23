@@ -11,6 +11,11 @@ def get_task_by_code(task_code):
     return PredictionTask.from_model(model)
 
 
+def get_task_for_datasource_id(datasource_id):
+    models = PredictionTaskEntity.get_by_datasource_id(datasource_id)
+    return PredictionTask.from_models(*models)
+
+
 def get_result_by_code(task_code):
     model = PredictionResultEntity.get_for_task(task_code)
     return PredictionResult.from_model(model)
