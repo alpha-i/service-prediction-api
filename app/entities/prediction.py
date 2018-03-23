@@ -27,7 +27,7 @@ class PredictionTaskEntity(BaseEntity):
     company = relationship('CompanyEntity', foreign_keys=company_id)
 
     task_code = db.Column(db.String(60), unique=True, nullable=False)
-    statuses = relationship('PredictionTaskStatusEntity')
+    statuses = relationship('PredictionTaskStatusEntity', cascade='all, delete-orphan')
 
     datasource_id = db.Column(db.Integer, db.ForeignKey('data_source.id'), nullable=False)
     datasource = relationship('DataSourceEntity', back_populates='prediction_task_list')
