@@ -13,6 +13,16 @@ class HashableAttribDict(AttribDict):
         return hash(repr(dict(self)))
 
 
+class BaseModelSchema(Schema):
+    id = fields.Integer(allow_none=True)
+    created_at = fields.DateTime(allow_none=True)
+    last_update = fields.DateTime(allow_none=True)
+
+    @property
+    def dict_class(self):
+        return HashableAttribDict
+
+
 class DataPointSchema(Schema):
     symbol = fields.String()
     value = fields.Float(allow_none=True)
@@ -43,14 +53,28 @@ class PredictionResultSchema(Schema):
     result = fields.Nested(PredictionResultResultSchema)
 
 
-class BaseModelSchema(Schema):
-    id = fields.Integer(allow_none=True)
-    created_at = fields.DateTime(allow_none=True)
-    last_update = fields.DateTime(allow_none=True)
+class PredictionTaskStatusSchema(BaseModelSchema):
+    state = fields.String()
+    message = fields.String(allow_none=True)
 
-    @property
-    def dict_class(self):
-        return HashableAttribDict
+
+class PredictionTaskSchema(BaseModelSchema):
+    name = fields.String()
+    company_id = fields.Integer()
+    task_code = fields.String()
+    datasource_upload_code = fields.String()
+    status = fields.String(allow_none=True)
+    is_completed = fields.Boolean()
+    statuses = fields.Nested(PredictionTaskStatusSchema, many=True, default=[])
+    prediction_request = fields.Nested(PredictionRequestSchema, allow_none=True)
+
+
+class TrainingTaskSchema(BaseModelSchema):
+    task_code = fields.String()
+    company_id = fields.Integer()
+    datasource_id = fields.Integer()
+    status = fields.String(allow_none=True)
+    statuses = fields.Nested(PredictionTaskStatusSchema, many=True)
 
 
 class DataSourceSchema(BaseModelSchema):
@@ -65,10 +89,16 @@ class DataSourceSchema(BaseModelSchema):
     is_original = fields.Boolean(allow_none=True)
     features = fields.List(fields.String)
     target_feature = fields.String()
+    prediction_task_list = fields.Nested(PredictionTaskSchema, many=True)
+    training_task_list = fields.Nested(TrainingTaskSchema, many=True)
 
     @pre_load
     def process_list_of_features(self, data):
         features_string_list = data.get('features')
+        if isinstance(features_string_list, list):
+            # if we have a nested structure, load runs several times
+            # and it might try to re-load an already parsed list
+            return data
         if not features_string_list:
             return
         data['features'] = features_string_list.split(', ')
@@ -94,27 +124,13 @@ class CustomerActionSchema(BaseModelSchema):
     action = fields.String()
 
 
-class PredictionTaskStatusSchema(BaseModelSchema):
-    state = fields.String()
-    message = fields.String(allow_none=True)
-
-
-class PredictionTaskSchema(BaseModelSchema):
-    name = fields.String()
-    company_id = fields.Integer()
-    task_code = fields.String()
-    status = fields.String(allow_none=True)
-    is_completed = fields.Boolean()
-    statuses = fields.Nested(PredictionTaskStatusSchema, many=True, default=[])
-    datasource = fields.Nested(DataSourceSchema)
-    prediction_request = fields.Nested(PredictionRequestSchema, allow_none=True)
-
-
 class CompanySchema(BaseModelSchema):
     name = fields.String()
     domain = fields.String()
     data_sources = fields.Nested(DataSourceSchema, many=True, default=[])
     current_configuration = fields.Nested(CompanyConfigurationSchema, default=None, allow_none=True)
+    datasources = fields.Nested(DataSourceSchema, many=True, default=[], load_from='data_sources', dump_to='data_sources')
+    current_datasource = fields.Nested(DataSourceSchema, allow_none=True)
     actions = fields.Nested(CustomerActionSchema, many=True, default=[])
     prediction_tasks = fields.Nested(PredictionTaskSchema, many=True, default=[])
     prediction_results = fields.Nested(PredictionResultSchema, many=True, default=[])
@@ -134,15 +150,4 @@ class UserSchema(BaseModelSchema):
     confirmed = fields.Boolean(allow_none=True)
     company_id = fields.Integer()
     company = fields.Nested(CompanySchema, many=False)
-    current_data_source = fields.Nested(DataSourceSchema, allow_none=True)
-    data_sources = fields.Nested(DataSourceSchema, many=True, default=[])
     permissions = EnumField(UserPermissions)
-
-
-class TrainingTaskSchema(BaseModelSchema):
-    task_code = fields.String()
-    company_id = fields.Integer()
-    datasource_id = fields.Integer()
-    datasource = fields.Nested(DataSourceSchema)
-    status = fields.String(allow_none=True)
-    statuses = fields.Nested(PredictionTaskStatusSchema, many=True)

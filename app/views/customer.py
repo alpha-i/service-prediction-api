@@ -24,29 +24,29 @@ customer_blueprint = Blueprint('customer', __name__)
 @customer_blueprint.route('/dashboard')
 @requires_access_token
 def dashboard():
-    prediction_tasks = g.user.company.prediction_tasks if g.user.company.prediction_tasks else []
+    company = g.user.company
+    prediction_tasks = company.prediction_tasks
     context = {
         'user_id': g.user.id,
         'profile': {'email': g.user.email},
-        'datasource': g.user.current_data_source,
+        'datasource': company.current_datasource,
         'prediction_task_list': list(reversed(prediction_tasks))[:5],
     }
 
     return render_template('dashboard.html', **context)
 
 
-@customer_blueprint.route('/datasource')
+@customer_blueprint.route('/datasource', methods=['GET'])
 @requires_access_token
 def list_datasources():
-
-    current_datasource = g.user.current_data_source
+    company = g.user.company
 
     context = {
         'user_id': g.user.id,
         'profile': {'email': g.user.email},
-        'current_datasource': current_datasource,
-        'datasource_history': g.user.data_sources,
-        'prediction_task_list': services.prediction.get_task_for_datasource_id(current_datasource.id)
+        'current_datasource': company.current_datasource,
+        'datasource_history': company.data_sources,
+        'prediction_task_list': company.current_datasource.prediction_task_list
     }
 
     return render_template('datasource/list.html', **context)
@@ -65,10 +65,14 @@ def get_company_datasource_template():
     )
 
 
-@customer_blueprint.route('/datasource/view/<string:datasource_id>', methods=['GET'])
+@customer_blueprint.route('/datasource/<string:datasource_id>', methods=['GET'])
 @requires_access_token
 def view_datasource(datasource_id):
     datasource = services.datasource.get_by_upload_code(upload_code=datasource_id)
+    if not datasource:
+        return handle_error(404, "No such datasource!")
+    if not datasource.company_id == g.user.company_id:
+        return handle_error(403, "Unauthorised")
     context = {
         'current_datasource': datasource,
         'profile': {'email': g.user.email},
@@ -78,24 +82,26 @@ def view_datasource(datasource_id):
     return render_template('datasource/detail.html', **context)
 
 
-@customer_blueprint.route('/new-prediction')
+@customer_blueprint.route('/prediction', methods=['POST'])
 @requires_access_token
 def new_prediction():
-    if not g.user.current_data_source:
+    company = g.user.company
+    current_datasource = company.current_data_source
+    if not current_datasource:
         logging.debug(
             f"Asked to create a prediction when no data source was available for company {g.user.company.name}")
         message = f"No data source available. <a href='{url_for('customer.list_datasources')}'>Upload one</a> first!"
         return handle_error(400, message)
 
-    datasource_min_date = g.user.current_data_source.end_date
+    datasource_min_date = current_datasource.end_date
     max_date = datasource_min_date + timedelta(days=MAXIMUM_DAYS_FORECAST)
 
     context = {
         'user_id': g.user.id,
         'profile': {'email': g.user.email},
-        'datasource': g.user.current_data_source,
+        'datasource': current_datasource,
         'datasource_end_date': datasource_min_date,
-        'target_feature': g.user.company.current_configuration.configuration.target_feature,
+        'target_feature': company.current_configuration.configuration.target_feature,
         'min_date': datasource_min_date + timedelta(days=1),
         'max_date': max_date
     }
@@ -106,11 +112,16 @@ def new_prediction():
 @customer_blueprint.route('/prediction/<string:task_code>')
 @requires_access_token
 def view_prediction(task_code):
-    prediction = PredictionTaskEntity.get_by_task_code(task_code)
+    prediction = services.prediction.get_task_by_code(task_code)
+    if not prediction:
+        return handle_error(404, "No prediction found!")
+    if not prediction.company_id == g.user.company_id:
+        return handle_error(403, "Unauthorised")
+
     context = {
         'user_id': g.user.id,
         'profile': {'email': g.user.email},
-        'datasource': g.user.current_data_source,
+        'datasource': g.user.company.current_datasource,
         'prediction': prediction
     }
 
@@ -119,14 +130,14 @@ def view_prediction(task_code):
         logging.debug(f"No result for task code {task_code}")
         abort(404, f'Task {task_code} has no result')
 
-    latest_date_in_datasource = g.user.current_data_source.end_date.date()
+    latest_date_in_datasource = g.user.company.current_datasource.end_date.date()
     latest_date_in_results = result_dataframe.index[-1].date()
 
     headers = list(result_dataframe.columns)
     target_feature = g.user.company.current_configuration.configuration.target_feature
 
     if latest_date_in_datasource > latest_date_in_results:
-        actuals_dataframe = services.datasource.get_dataframe(g.user.current_data_source)
+        actuals_dataframe = services.datasource.get_dataframe(g.user.company.current_datasource)
         actuals_dataframe.index = actuals_dataframe.index.tz_localize('UTC')
         actuals_dataframe = actuals_dataframe.resample(DEFAULT_TIME_RESOLUTION).sum()
         result_dataframe['actuals'] = actuals_dataframe[target_feature]
@@ -153,6 +164,12 @@ def view_prediction(task_code):
 @requires_access_token
 def download_prediction_csv(task_code):
     prediction = PredictionTaskEntity.get_by_task_code(task_code)
+    if not prediction:
+        return handle_error(404, "No prediction found!")
+
+    if not prediction.company_id == g.user.company_id:
+        return handle_error(403, "Unauthorised")
+
     result_dataframe = prediction_result_to_dataframe(prediction)
 
     return Response(
@@ -163,7 +180,7 @@ def download_prediction_csv(task_code):
         )})
 
 
-@customer_blueprint.route('/prediction')
+@customer_blueprint.route('/prediction', methods=['GET'])
 @requires_access_token
 def list_predictions():
     prediction_tasks = g.user.company.prediction_tasks if g.user.company.prediction_tasks else []
@@ -171,14 +188,14 @@ def list_predictions():
     context = {
         'user_id': g.user.id,
         'profile': {'email': g.user.email},
-        'datasource': g.user.current_data_source,
+        'datasource': g.user.company.current_datasource,
         'prediction_task_list': list(reversed(prediction_tasks))
     }
 
     return render_template("prediction/list.html", **context)
 
 
-@customer_blueprint.route('/datasource/upload', methods=['POST'])
+@customer_blueprint.route('/datasource', methods=['POST'])
 @requires_access_token
 def datasource_upload():
     user = g.user
@@ -213,8 +230,8 @@ def datasource_upload():
     saved_path = os.path.join(current_app.config['TEMPORARY_CSV_FOLDER'], f"{upload_code}.csv")
 
     current_datasource_dataframe = pd.DataFrame()
-    if user.current_data_source:
-        data_source = services.datasource.get_by_upload_code(user.current_data_source.upload_code)
+    if user.company.current_datasource:
+        data_source = services.datasource.get_by_upload_code(user.company.current_datasource.upload_code)
         current_datasource_dataframe = data_source._model.get_file()
 
     uploaded_dataframe.to_csv(saved_path)
@@ -252,8 +269,8 @@ def datasource_confirm():
 
     features = list(uploaded_dataframe.columns)
 
-    if user.current_data_source:
-        data_source = services.datasource.get_by_upload_code(user.current_data_source.upload_code)
+    if user.company.current_datasource:
+        data_source = services.datasource.get_by_upload_code(user.company.current_datasource.upload_code)
         existing_data_frame = data_source._model.get_file()
         cumulative_dataframe = pd.concat([existing_data_frame, uploaded_dataframe])
     else:

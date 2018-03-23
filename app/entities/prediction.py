@@ -11,7 +11,7 @@ from app.entities import BaseEntity, CustomerActionEntity, Actions
 class TaskStatusTypes(Enum):
     queued = 'QUEUED'
     started = 'STARTED'
-    in_progress = 'INPROGRESS'
+    in_progress = 'IN PROGRESS'
     successful = 'SUCCESSFUL'
     failed = 'FAILED'
 
@@ -19,7 +19,7 @@ class TaskStatusTypes(Enum):
 class PredictionTaskEntity(BaseEntity):
     __tablename__ = 'prediction_task'
 
-    INCLUDE_ATTRIBUTES = ('status', 'statuses', 'result', 'datasource', 'is_completed', 'prediction_request')
+    INCLUDE_ATTRIBUTES = ('status', 'statuses', 'result', 'is_completed', 'prediction_request', 'datasource_upload_code')
 
     name = db.Column(db.String(60), nullable=False)
 
@@ -39,7 +39,11 @@ class PredictionTaskEntity(BaseEntity):
     @staticmethod
     def get_by_task_code(task_code):
         try:
-            return PredictionTaskEntity.query.filter(PredictionTaskEntity.task_code == task_code).one()
+            session = db.session()
+            prediction_task_entity = session.query(PredictionTaskEntity).filter(
+                PredictionTaskEntity.task_code == task_code).one()
+            session.refresh(prediction_task_entity)
+            return prediction_task_entity
         except NoResultFound:
             return None
 
@@ -63,18 +67,21 @@ class PredictionTaskEntity(BaseEntity):
     def is_completed(self):
         return self.status in [TaskStatusTypes.successful.value, TaskStatusTypes.failed.value]
 
+    @property
+    def datasource_upload_code(self):
+        return self.datasource.upload_code
+
 
 class PredictionTaskStatusEntity(BaseEntity):
     __tablename__ = 'prediction_task_status'
 
     prediction_task_id = db.Column(db.Integer, db.ForeignKey('prediction_task.id'), nullable=False)
     prediction_task = relationship('PredictionTaskEntity', back_populates='statuses')
-    state = db.Column(db.String(10), index=True)
+    state = db.Column(db.String(), index=True)
     message = db.Column(db.String(), nullable=True)
 
 
 class PredictionResultEntity(BaseEntity):
-    INCLUDE_ATTRIBUTES = ('prediction_task',)
     __tablename__ = 'prediction_result'
 
     company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=False)

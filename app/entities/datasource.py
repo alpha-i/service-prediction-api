@@ -16,7 +16,7 @@ class UploadTypes(Enum):
 
 
 class DataSourceEntity(BaseEntity):
-    INCLUDE_ATTRIBUTES = ('type',)
+    INCLUDE_ATTRIBUTES = ('type', 'prediction_task_list')
 
     __tablename__ = 'data_source'
 

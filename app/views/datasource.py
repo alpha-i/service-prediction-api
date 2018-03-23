@@ -15,10 +15,10 @@ from app.entities.datasource import UploadTypes
 datasource_blueprint = Blueprint('datasource', __name__)
 
 
-@datasource_blueprint.route('/')
+@datasource_blueprint.route('/', methods=['GET'])
 @requires_access_token
 def list_datasources():
-    datasources = g.user.data_sources
+    datasources = g.user.company.data_sources
     response = ApiResponse(
         content_type=request.accept_mimetypes.best,
         context=datasources
@@ -29,7 +29,7 @@ def list_datasources():
 @datasource_blueprint.route('/current')
 @requires_access_token
 def current():
-    current_datasource = g.user.current_data_source
+    current_datasource = g.user.company.current_datasource
     response = ApiResponse(
         content_type=request.accept_mimetypes.best,
         context=current_datasource,
@@ -53,7 +53,7 @@ def get(datasource_id):
     return response()
 
 
-@datasource_blueprint.route('/upload', methods=['POST'])
+@datasource_blueprint.route('/', methods=['POST'])
 @requires_access_token
 def upload():
     user = g.user
@@ -88,8 +88,8 @@ def upload():
 
     features = list(data_frame.columns)
 
-    if user.current_data_source:
-        data_source = services.datasource.get_by_upload_code(user.current_data_source.upload_code)
+    if user.company.current_datasource:
+        data_source = services.datasource.get_by_upload_code(user.company.current_datasource.upload_code)
         existing_data_frame = data_source._model.get_file()
         data_frame = pd.concat([existing_data_frame, data_frame])
 

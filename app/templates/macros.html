@@ -88,8 +88,8 @@
                     <td scope="row">{{ task.task_code }}</td>
                     <td>{{ format_datetime(task.created_at) }}</td>
                     <td>
-                        <a href="{{ url_for('customer.view_datasource', datasource_id=task.datasource.upload_code) }}">
-                            {{ task.datasource.upload_code }}
+                        <a href="{{ url_for('customer.view_datasource', datasource_id=task.datasource_upload_code) }}">
+                            {{ task.datasource_upload_code }}
                         </a>
                     </td>
                     <td>{{ task.statuses[-1].state }}</td>
