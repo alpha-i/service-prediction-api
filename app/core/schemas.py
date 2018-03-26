@@ -67,6 +67,7 @@ class PredictionTaskSchema(BaseModelSchema):
     is_completed = fields.Boolean()
     statuses = fields.Nested(PredictionTaskStatusSchema, many=True, default=[])
     prediction_request = fields.Nested(PredictionRequestSchema, allow_none=True)
+    prediction_result = fields.Nested(PredictionResultSchema, allow_none=True)
 
 
 class TrainingTaskSchema(BaseModelSchema):
