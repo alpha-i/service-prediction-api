@@ -37,7 +37,8 @@
             <div class="box">
                 <h3 class="box-header with-border">Update your historical data</h3>
                 <div class="box-body">
-                    <form action="{{ url_for('customer.datasource_upload') }}" method="post" enctype="multipart/form-data" class="form-inline">
+                    <form action="{{ url_for('customer.datasource_upload') }}" method="post"
+                          enctype="multipart/form-data" class="form-inline">
                         <div class="form-group row">
                             <div class="col-xs-10">
                                 <div class="input-group">
@@ -51,25 +52,27 @@
                                 <input type="file" class="hidden" name="upload" id="upload">
                             </div>
                             <div class="col-xs-2">
-                                <input class="btn btn-primary" type="submit" value="Upload file" id="datasource_submit_button" name="submit" disabled>
+                                <input class="btn btn-primary" type="submit" value="Upload file"
+                                       id="datasource_submit_button" name="submit" disabled>
                             </div>
                         </div>
                     </form>
                     <p class="mt-4">
-                        <a href="{{ url_for('customer.get_company_datasource_template') }}" target="_blank"><i class="fa fa-download"></i> &nbsp;Download file template</a>
+                        <a href="{{ url_for('customer.get_company_datasource_template') }}" target="_blank"><i
+                                class="fa fa-download"></i> &nbsp;Download file template</a>
                     </p>
                 </div>
             </div>
         </div>
     </div>
-     <div class="row">
-        <div class="col-xs-12">
-            <div class="box">
-                <h3 class="box-header with-border">Upload log</h3>
-                <div class="box-body">
-
-                    <table class="table table-bordered">
-                        <tbody>
+    {% if datasource_history %}
+        <div class="row">
+            <div class="col-xs-12">
+                <div class="box">
+                    <h3 class="box-header with-border">Upload log</h3>
+                    <div class="box-body">
+                        <table class="table table-bordered">
+                            <tbody>
                             <tr>
                                 <th>filename</th>
                                 <th>type</th>
@@ -78,24 +81,26 @@
                                 <th>last updated</th>
                                 <th></th>
                             </tr>
-                          {%  for datasource in datasource_history %}
-                            <tr>
-                                <td>{{ datasource.filename }}</td>
-                                <td>{{ datasource.type.value }}</td>
-                                <td>{{ datasource.start_date }}</td>
-                                <td>{{ datasource.end_date }}</td>
-                                <td>{{ macros.format_datetime(datasource.last_update) }}</td>
-                                <td><a href="{{ url_for('customer.view_datasource', datasource_id=datasource.upload_code) }}">
-                                    <i class="fa fa-list"></i></a>
-                                </td>
-                            </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
+                            {% for datasource in datasource_history %}
+                                <tr>
+                                    <td>{{ datasource.filename }}</td>
+                                    <td>{{ datasource.type.value }}</td>
+                                    <td>{{ datasource.start_date }}</td>
+                                    <td>{{ datasource.end_date }}</td>
+                                    <td>{{ macros.format_datetime(datasource.last_update) }}</td>
+                                    <td>
+                                        <a href="{{ url_for('customer.view_datasource', datasource_id=datasource.upload_code) }}"><i class="fa fa-list"></i></a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+
+    {% endif %}
 {% endblock %}
 
 
@@ -111,7 +116,7 @@
         $('#upload').change(function () {
             file_path = $(this).val();
             $('#file_path').val($(this).val());
-            if(file_path){
+            if (file_path) {
                 $('#datasource_submit_button').attr('disabled', false)
             } else {
                 $('#datasource_submit_button').attr('disabled', true)
