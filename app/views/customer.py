@@ -127,40 +127,39 @@ def view_prediction(task_code):
         'user_id': g.user.id,
         'profile': {'email': g.user.email},
         'datasource': g.user.company.current_datasource,
-        'prediction': prediction
+        'prediction': prediction,
+        'result': None
     }
 
     result_dataframe = prediction_result_to_dataframe(prediction)
-    if result_dataframe is None:
-        logging.debug(f"No result for task code {task_code}")
-        abort(404, f'Task {task_code} has no result')
+    if result_dataframe is not None:
 
-    latest_date_in_datasource = g.user.company.current_datasource.end_date.date()
-    latest_date_in_results = result_dataframe.index[-1].date()
+        latest_date_in_datasource = g.user.company.current_datasource.end_date.date()
+        latest_date_in_results = result_dataframe.index[-1].date()
 
-    headers = list(result_dataframe.columns)
-    target_feature = g.user.company.current_configuration.configuration.target_feature
+        headers = list(result_dataframe.columns)
+        target_feature = g.user.company.current_configuration.configuration.target_feature
 
-    if latest_date_in_datasource > latest_date_in_results:
-        actuals_dataframe = services.datasource.get_dataframe(g.user.company.current_datasource)
-        actuals_dataframe.index = actuals_dataframe.index.tz_localize('UTC')
-        actuals_dataframe = actuals_dataframe.resample(DEFAULT_TIME_RESOLUTION).sum()
-        result_dataframe['actuals'] = actuals_dataframe[target_feature]
-        result_dataframe['actuals'] = result_dataframe['actuals'].transform(
-            lambda x: "{:.2f};{:.2f};{:.2f}".format(x, x, x)
-        )
-        headers.append('actuals')
+        if latest_date_in_datasource > latest_date_in_results:
+            actuals_dataframe = services.datasource.get_dataframe(g.user.company.current_datasource)
+            actuals_dataframe.index = actuals_dataframe.index.tz_localize('UTC')
+            actuals_dataframe = actuals_dataframe.resample(DEFAULT_TIME_RESOLUTION).sum()
+            result_dataframe['actuals'] = actuals_dataframe[target_feature]
+            result_dataframe['actuals'] = result_dataframe['actuals'].transform(
+                lambda x: "{:.2f};{:.2f};{:.2f}".format(x, x, x)
+            )
+            headers.append('actuals')
 
-    context['result'] = {
-        'data': repr(result_dataframe.to_csv(header=False)),
-        'header': ['timestamp'] + headers,
-        'target_feature': target_feature,
-        'timestamp_range': [
-            result_dataframe.index[0].strftime(DATETIME_FORMAT),
-            result_dataframe.index[-1].strftime(DATETIME_FORMAT)
-        ],
-        'status': prediction.statuses[-1].state
-    }
+        context['result'] = {
+            'data': repr(result_dataframe.to_csv(header=False)),
+            'header': ['timestamp'] + headers,
+            'target_feature': target_feature,
+            'timestamp_range': [
+                result_dataframe.index[0].strftime(DATETIME_FORMAT),
+                result_dataframe.index[-1].strftime(DATETIME_FORMAT)
+            ],
+            'status': prediction.statuses[-1].state
+        }
 
     return render_template('prediction/view.html', **context)
 

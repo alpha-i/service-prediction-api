@@ -68,7 +68,8 @@
             </div>
         </div>
     </div>
-    <div class="row">
+    {% if result %}
+        <div class="row">
         <div class="col-md-12">
             <div class="box">
                 <h3 class="box-header with-border">Result</h3>
@@ -140,4 +141,5 @@
             </div>
         </div>
     </div>
+    {% endif %}
 {% endblock %}

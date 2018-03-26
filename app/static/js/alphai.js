@@ -23,10 +23,23 @@ var DatasourceRefresh = {
         last_status_index = task.statuses.length - 1;
         last_status = task.statuses[last_status_index].state;
 
-        view_task = '<i class="fa fa-refresh fa-spin"></i>';
-        if (task.is_completed) {
-            view_task = '<a href="/customer/prediction/' + task.task_code + '"><i class="fa fa-list"></i></a>'
+        var status_icon = '';
+
+        switch(last_status) {
+            case 'SUCCESSFUL' : {
+                status_icon = 'fa-check-circle text-green'
+            }
+            break;
+            case 'FAILED': {
+                status_icon = 'fa-warning text-yellow'
+            }
+            break;
+            default: {
+                status_icon = 'fa-refresh fa-spin'
+            }
         }
+
+        status = '<i class="fa ' + status_icon + '" alt="' + last_status + '"></i>';
 
         $row = $('<tr>');
         $row.attr("id", task.task_code).addClass("task-row");
@@ -34,8 +47,8 @@ var DatasourceRefresh = {
         $row.append('<td scope="row">' + task.name + '</td>');
         $row.append('<td scope="row">' + task.task_code + '</td>')
         $row.append('<td>' + task.created_at + '</td>');
-        $row.append('<td>' + last_status + '</td>');
-        $row.append('<td>' + view_task + '</td>');
+        $row.append('<td>' + status + '</td>');
+        $row.append('<td><a href="/customer/prediction/' + task.task_code + '"><i class="fa fa-list"></i></a></td>');
 
         var $oldRow = $('#' + task.task_code);
         $($oldRow).remove();
