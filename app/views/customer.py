@@ -84,7 +84,7 @@ def view_datasource(datasource_id):
     return render_template('datasource/detail.html', **context)
 
 
-@customer_blueprint.route('/prediction', methods=['POST'])
+@customer_blueprint.route('/prediction/new', methods=['GET'])
 @requires_access_token
 def new_prediction():
     company = g.user.company
