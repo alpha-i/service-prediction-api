@@ -19,7 +19,8 @@ class TaskStatusTypes(Enum):
 class PredictionTaskEntity(BaseEntity):
     __tablename__ = 'prediction_task'
 
-    INCLUDE_ATTRIBUTES = ('status', 'statuses', 'result', 'is_completed', 'prediction_request', 'datasource_upload_code')
+    INCLUDE_ATTRIBUTES = ('status', 'statuses', 'prediction_result',
+                          'is_completed', 'prediction_request', 'datasource_upload_code')
 
     name = db.Column(db.String(60), nullable=False)
 

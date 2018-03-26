@@ -40,13 +40,15 @@ def dashboard():
 @requires_access_token
 def list_datasources():
     company = g.user.company
+    current_datasource = company.current_datasource
+    prediction_task_list = getattr(current_datasource, 'prediction_task_list', [])
 
     context = {
         'user_id': g.user.id,
         'profile': {'email': g.user.email},
-        'current_datasource': company.current_datasource,
+        'current_datasource': current_datasource,
         'datasource_history': company.data_sources,
-        'prediction_task_list': company.current_datasource.prediction_task_list
+        'prediction_task_list': prediction_task_list
     }
 
     return render_template('datasource/list.html', **context)
@@ -82,11 +84,11 @@ def view_datasource(datasource_id):
     return render_template('datasource/detail.html', **context)
 
 
-@customer_blueprint.route('/prediction', methods=['POST'])
+@customer_blueprint.route('/prediction/new', methods=['GET'])
 @requires_access_token
 def new_prediction():
     company = g.user.company
-    current_datasource = company.current_data_source
+    current_datasource = company.current_datasource
     if not current_datasource:
         logging.debug(
             f"Asked to create a prediction when no data source was available for company {g.user.company.name}")
@@ -117,6 +119,9 @@ def view_prediction(task_code):
         return handle_error(404, "No prediction found!")
     if not prediction.company_id == g.user.company_id:
         return handle_error(403, "Unauthorised")
+
+    datasource = services.datasource.get_by_upload_code(prediction.datasource_upload_code)
+    prediction.datasource = datasource
 
     context = {
         'user_id': g.user.id,

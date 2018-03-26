@@ -46,7 +46,7 @@ class PredictionRequestSchema(Schema):
     end_time = fields.Date(required=True)
 
 
-class PredictionResultSchema(Schema):
+class PredictionResultSchema(BaseModelSchema):
     company_id = fields.Integer(required=True)
     prediction_task_id = fields.Integer(required=True)
     task_code = fields.UUID(required=True)
@@ -67,6 +67,7 @@ class PredictionTaskSchema(BaseModelSchema):
     is_completed = fields.Boolean()
     statuses = fields.Nested(PredictionTaskStatusSchema, many=True, default=[])
     prediction_request = fields.Nested(PredictionRequestSchema, allow_none=True)
+    prediction_result = fields.Nested(PredictionResultSchema, allow_none=True)
 
 
 class TrainingTaskSchema(BaseModelSchema):
