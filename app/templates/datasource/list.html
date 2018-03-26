@@ -128,47 +128,9 @@
             $('#file_browser').click();
         });
 
-        function isInProgress(element) {
-            status = $(element).data("completed");
-            return  (status.toLowerCase() == "false");
-        }
-
-        function refreshTaskCode(){
-
-            $('#datasource-task-list tr.task-row').filter(isInProgress).each(function(i, el){
-                task_code = $(el).attr('id');
-                url = '/prediction/' + task_code;
-                    $.ajax({
-                    url: url,
-                    success: function(data){
-                        $(el).remove();
-                        var last_status_index, last_status, view_task, new_row;
-
-                        last_status_index = data.statuses.length -1;
-                        last_status = data.statuses[last_status_index].state;
-
-                        view_task = '<i class="fa fa-refresh fa-spin"></i>';
-                        if (data.is_completed) {
-                            view_task = '<a href="/customer/prediction/' + data.task_code + '"><i class="fa fa-list"></i></a>'
-                        }
-
-                        new_row = '<tr class="task-row" id="' +  data.task_code + '" data-completed="' +  data.is_completed + '">';
-                        new_row += '<td scope="row">' +  data.name + '</td>';
-                        new_row += '<td scope="row">' +  data.task_code + '</td>';
-                        new_row += '<td>' +  data.created_at + '</td>';
-                        new_row += '<td>' +  last_status + '</td>';
-                        new_row += '<td>' + view_task + '</td>';
-                        new_row += '</tr>';
-
-                        $('#datasource-task-list > tbody').append(new_row);
-                    }
-                });
-            });
-        };
-
         $(document).ready(function($){
-            setInterval(refreshTaskCode, 2000)
-        });
+            setInterval(DatasourceRefresh.refreshTaskCode, 2000)
+        })
 
 
     </script>
