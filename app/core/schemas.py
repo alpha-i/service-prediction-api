@@ -46,7 +46,7 @@ class PredictionRequestSchema(Schema):
     end_time = fields.Date(required=True)
 
 
-class PredictionResultSchema(Schema):
+class PredictionResultSchema(BaseModelSchema):
     company_id = fields.Integer(required=True)
     prediction_task_id = fields.Integer(required=True)
     task_code = fields.UUID(required=True)
