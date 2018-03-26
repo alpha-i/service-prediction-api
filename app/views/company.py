@@ -29,7 +29,7 @@ def register():
     company_name = g.json.get('name')
     domain = g.json.get('domain')
 
-    if not company_name and domain:
+    if not (company_name and domain):
         logging.debug("Company name and/or domain weren't supplied")
         abort(400, 'Request error: please specify company name and company domain.')
 
