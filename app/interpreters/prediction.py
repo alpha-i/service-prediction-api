@@ -71,7 +71,7 @@ def prediction_result_to_dataframe(prediction):
     result = []
     if prediction.prediction_result:
         for prediction_element in prediction.prediction_result.result['datapoints']:
-            result_timestamp = parser.parse(prediction_element['timestamp'])
+            result_timestamp = prediction_element['timestamp']
 
             result_row = {
                 'timestamp': result_timestamp

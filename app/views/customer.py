@@ -120,6 +120,9 @@ def view_prediction(task_code):
     if not prediction.company_id == g.user.company_id:
         return handle_error(403, "Unauthorised")
 
+    datasource = services.datasource.get_by_upload_code(prediction.datasource_upload_code)
+    prediction.datasource = datasource
+
     context = {
         'user_id': g.user.id,
         'profile': {'email': g.user.email},
