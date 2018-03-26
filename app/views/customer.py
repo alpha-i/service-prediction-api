@@ -123,11 +123,16 @@ def view_prediction(task_code):
     datasource = services.datasource.get_by_upload_code(prediction.datasource_upload_code)
     prediction.datasource = datasource
 
+    elapsed = prediction.statuses[-1].last_update - prediction.created_at
+
+    minutes, seconds = divmod(elapsed.seconds + elapsed.days * 86400, 60)
+    hours, minutes = divmod(minutes, 60)
     context = {
         'user_id': g.user.id,
         'profile': {'email': g.user.email},
         'datasource': g.user.company.current_datasource,
         'prediction': prediction,
+        'elapsed': f"{hours:02d}:{minutes:02d}:{seconds:02d}",
         'result': None
     }
 

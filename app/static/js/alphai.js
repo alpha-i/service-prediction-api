@@ -1,3 +1,7 @@
+$(document).ready(function(){
+    moment.tz.setDefault('UTC');
+})
+
 var DatasourceRefresh = {
     refreshTaskCode: function () {
 
@@ -18,7 +22,7 @@ var DatasourceRefresh = {
         });
     },
     refreshRow: function (task) {
-        var last_status_index, last_status, view_task, $row;
+        var last_status_index, last_status, $row;
 
         last_status_index = task.statuses.length - 1;
         last_status = task.statuses[last_status_index].state;
@@ -47,8 +51,8 @@ var DatasourceRefresh = {
         $row.append('<td scope="row">' + task.name + '</td>');
         $row.append('<td scope="row">' + task.task_code + '</td>')
 
-        varcreated_at = moment(task.created_at)
-        $row.append('<td>' + created_at.format("YYYY/MM/DD HH:mm:ss") + '</td>');
+        var created_at = moment(task.created_at)
+        $row.append('<td>' + created_at.format("YYYY-MM-DD HH:mm:ss") + '</td>');
         $row.append('<td>' + status + '</td>');
         $row.append('<td><a href="/customer/prediction/' + task.task_code + '"><i class="fa fa-list"></i></a></td>');
 
@@ -63,10 +67,10 @@ var PredictionStatusRefresh = {
     refreshStatuses: function () {
 
         var $prediction_table = $('table.prediction-log');
-        var $is_completed = ($('table.prediction-log').data("completed").toLowerCase() == 'true')
+        var $is_completed = ($('table.prediction-log').data("completed").toLowerCase() == 'true');
         var $task_code = $prediction_table.attr("id")
-        url = '/prediction/' + $task_code;
 
+        url = '/prediction/' + $task_code;
         if (!$is_completed) {
             $.ajax({
                 url: url,
@@ -77,7 +81,7 @@ var PredictionStatusRefresh = {
     },
     OnResultLoad: function (prediction) {
 
-        var task_code = prediction.task_code
+        var task_code = prediction.task_code;
 
         var $prediction_table = $('table#' + task_code);
         $prediction_table.attr("data-completed", prediction.is_completed)
@@ -85,21 +89,36 @@ var PredictionStatusRefresh = {
         $tr.remove();
         $(prediction.statuses).each(function(i, status) {
             $row = PredictionStatusRefresh.buildRow(status)
-
             $prediction_table.find('tbody').append($row)
-        })
+        });
+
+        PredictionStatusRefresh.manageElapsedTime(prediction)
     },
     buildRow: function(status){
         $row = $('<tr>');
-        created_at = moment(status.created_at)
-        var cell = $('<td>').html(created_at.format("YYYY/MM/DD HH:mm:ss"));
+
+        var created_at = moment(status.created_at);
+        var cell = $('<td>').html(created_at.format("YYYY-MM-DD HH:mm:ss"));
         $row.append(cell);
+
         var cell = $('<td>').html(status.state);
         $row.append(cell);
+
         var message = status.message || "None";
         var cell = $('<td>').html(message);
         $row.append(cell);
-        return $row
-    }
 
-}
+        return $row
+    },
+    manageElapsedTime: function(prediction) {
+
+        if (prediction.is_completed) {
+            $('#status-spinner').hide();
+             location.reload();
+        } else {
+            $duration =  moment.duration(moment() - moment(prediction.created_at))
+            $duration_string = $duration.format('hh') + ":" + $duration.format('mm') + ":" + $duration.format('ss')
+            $elapsed_time = $("#elapsed-prediction-time").html($duration_string);
+        }
+    }
+};

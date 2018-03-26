@@ -46,7 +46,7 @@
         <div class="col-md-12">
             <div class="box">
                 <h3 class="box-header with-border">Status log</h3>
-                <div class="box-body">
+               <div class="box-body">
                     <table class="table table-bordered prediction-log" id="{{ prediction.task_code }}" data-completed="{{ prediction.is_completed }}">
                     <thead>
                             <tr>
@@ -57,12 +57,28 @@
                         </thead>
                         <tbody>
                             {% for status in prediction.statuses %}
+
                                 <tr>
                                     <td>{{ macros.format_datetime(status.created_at) }}</td>
                                     <td>{{ status.state }}</td>
                                     <td>{{ status.message }}</td>
                                 </tr>
                             {% endfor %}
+                            <tfoot>
+                                <tr>
+                                    <td colspan="4" class="text-right text-green text-bold">
+                                    {% if not prediction.is_completed %}
+                                        <i id="status-spinner" class="fa fa-refresh fa-spin"></i>&nsbp;
+                                    {% endif %}
+                                        Elapsed time: <span id="elapsed-prediction-time">
+                                           {{ elapsed }}
+                                        </span>
+                                    </td>
+                                </tr>
+
+                                </tr>
+                            </tfoot>
+
                         </tbody>
                     </table>
                 </div>
@@ -131,10 +147,10 @@
 {% block footer_js %}
     {{ super() }}
     <script>
+     {% if not prediction.is_completed %}
         $(document).ready(function($){
-            setInterval(PredictionStatusRefresh.refreshStatuses, 2000)
-        })
-
-
+            setInterval(PredictionStatusRefresh.refreshStatuses, 1000)
+        });
+     {% endif %}
     </script>
 {% endblock %}
