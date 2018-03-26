@@ -117,7 +117,7 @@ var PredictionStatusRefresh = {
              location.reload();
         } else {
             $duration =  moment.duration(moment() - moment(prediction.created_at))
-            $duration_string = $duration.format('hh') + ":" + $duration.format('mm') + ":" + $duration.format('ss')
+            $duration_string = $duration.format('hh:mm:ss');
             $elapsed_time = $("#elapsed-prediction-time").html($duration_string);
         }
     }
