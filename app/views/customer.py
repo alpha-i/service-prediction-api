@@ -88,7 +88,7 @@ def view_datasource(datasource_id):
 @requires_access_token
 def new_prediction():
     company = g.user.company
-    current_datasource = company.current_data_source
+    current_datasource = company.current_datasource
     if not current_datasource:
         logging.debug(
             f"Asked to create a prediction when no data source was available for company {g.user.company.name}")
