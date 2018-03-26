@@ -7,7 +7,7 @@ from app.core.auth import requires_access_token, requires_admin_permissions
 from app.core.content import ApiResponse
 from app.core.models import Company, CompanyConfiguration
 from app.core.schemas import OracleConfigurationSchema
-from app.core.utils import parse_request_data, json_reload
+from app.core.utils import parse_request_data, json_reload, handle_error
 
 company_blueprint = Blueprint('company', __name__)
 
@@ -29,7 +29,7 @@ def register():
     company_name = g.json.get('name')
     domain = g.json.get('domain')
 
-    if not company_name and domain:
+    if not (company_name and domain):
         logging.debug("Company name and/or domain weren't supplied")
         abort(400, 'Request error: please specify company name and company domain.')
 
@@ -78,6 +78,9 @@ def configuration_detail(company_id):
 @requires_admin_permissions
 @parse_request_data
 def configuration_update(company_id):
+    company = services.company.get_by_id(company_id)
+    if not company:
+        return handle_error(404, "No company could be found!")
     configuration_request = g.json
     data, errors = OracleConfigurationSchema().load(configuration_request)
 
