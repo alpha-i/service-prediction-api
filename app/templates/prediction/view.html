@@ -46,22 +46,39 @@
         <div class="col-md-12">
             <div class="box">
                 <h3 class="box-header with-border">Status log</h3>
-                <div class="box-body">
-                    <table class="table table-bordered">
-                        <tbody>
-                        <tr>
-                            <th>created</th>
-                            <th>status</th>
-                            <th>message</th>
-                        </tr>
-
-                        {% for status in prediction.statuses %}
+               <div class="box-body">
+                    <table class="table table-bordered prediction-log" id="{{ prediction.task_code }}" data-completed="{{ prediction.is_completed }}">
+                    <thead>
                             <tr>
-                                <td>{{ macros.format_datetime(status.created_at) }}</td>
-                                <td>{{ status.state }}</td>
-                                <td>{{ status.message }}</td>
+                                <th>created</th>
+                                <th>status</th>
+                                <th>message</th>
                             </tr>
-                        {% endfor %}
+                        </thead>
+                        <tbody>
+                            {% for status in prediction.statuses %}
+
+                                <tr>
+                                    <td>{{ macros.format_datetime(status.created_at) }}</td>
+                                    <td>{{ status.state }}</td>
+                                    <td>{{ status.message }}</td>
+                                </tr>
+                            {% endfor %}
+                            <tfoot>
+                                <tr>
+                                    <td colspan="4" class="text-right text-green text-bold">
+                                    {% if not prediction.is_completed %}
+                                        <i id="status-spinner" class="fa fa-refresh fa-spin"></i>&nsbp;
+                                    {% endif %}
+                                        Elapsed time: <span id="elapsed-prediction-time">
+                                           {{ elapsed }}
+                                        </span>
+                                    </td>
+                                </tr>
+
+                                </tr>
+                            </tfoot>
+
                         </tbody>
                     </table>
                 </div>
@@ -96,24 +113,6 @@
                                 </div>
                             </div>
                         </div>
-{#                        <div class="col-md-12">#}
-{#                            <div id="prediction_graph" style="width:100%"></div>#}
-{#                            <script type="text/javascript">#}
-{#                                g = new Dygraph(#}
-{#                                    document.getElementById("prediction_graph"),#}
-{#                                    "{{ result.data|safe }}",#}
-{#                                    {#}
-{#                                        labels: {{ result.header|safe }},#}
-{#                                        customBars: true,#}
-{#                                        includeZero: true,#}
-{#                                        title: 'Forecasts for {{ prediction.name }}',#}
-{#                                        xlabel: 'Time',#}
-{#                                        ylabel: 'number of people',#}
-{#                                        stepPlot: true#}
-{#                                    }#}
-{#                                );#}
-{#                            </script>#}
-{#                        </div>#}
                     </div>
                         {% else %}
                     <div class="row">
@@ -142,4 +141,16 @@
         </div>
     </div>
     {% endif %}
+{% endblock %}
+
+
+{% block footer_js %}
+    {{ super() }}
+    <script>
+     {% if not prediction.is_completed %}
+        $(document).ready(function($){
+            setInterval(PredictionStatusRefresh.refreshStatuses, 1000)
+        });
+     {% endif %}
+    </script>
 {% endblock %}
