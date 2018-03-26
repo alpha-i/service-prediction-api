@@ -24,6 +24,7 @@
                         {{ macros.print_datasource_info(current_datasource) }}
                         <h4>Task associated to this version of the Historical Data</h4>
                         {{ macros.print_datasource_task_list(prediction_task_list) }}
+                        <div id="debug-div"></div>
                     {% else %}
                         <p>Your Historical Data is empty</p>
                     {% endif %}
@@ -126,5 +127,11 @@
         $('#file_path').click(function () {
             $('#file_browser').click();
         });
+
+        $(document).ready(function($){
+            setInterval(DatasourceRefresh.refreshTaskCode, 2000)
+        })
+
+
     </script>
 {% endblock %}
