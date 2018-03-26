@@ -40,13 +40,15 @@ def dashboard():
 @requires_access_token
 def list_datasources():
     company = g.user.company
+    current_datasource = company.current_datasource
+    prediction_task_list = getattr(current_datasource, 'prediction_task_list', [])
 
     context = {
         'user_id': g.user.id,
         'profile': {'email': g.user.email},
-        'current_datasource': company.current_datasource,
+        'current_datasource': current_datasource,
         'datasource_history': company.data_sources,
-        'prediction_task_list': company.current_datasource.prediction_task_list
+        'prediction_task_list': prediction_task_list
     }
 
     return render_template('datasource/list.html', **context)
