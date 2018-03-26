@@ -1,6 +1,6 @@
 import logging
 import os
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 import pandas as pd
 from flask import (
@@ -123,10 +123,14 @@ def view_prediction(task_code):
     datasource = services.datasource.get_by_upload_code(prediction.datasource_upload_code)
     prediction.datasource = datasource
 
-    elapsed = prediction.statuses[-1].last_update - prediction.created_at
+    if prediction.is_completed:
+        elapsed = prediction.statuses[-1].last_update - prediction.created_at
+    else:
+        elapsed = datetime.utcnow() - prediction.created_at
 
     minutes, seconds = divmod(elapsed.seconds + elapsed.days * 86400, 60)
     hours, minutes = divmod(minutes, 60)
+
     context = {
         'user_id': g.user.id,
         'profile': {'email': g.user.email},
