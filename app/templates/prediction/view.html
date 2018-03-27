@@ -119,13 +119,16 @@
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col-xs-12">
+                                <div class="col-xs-6">
                                     <h3>Factors</h3>
                                     <table class="table">
-                                    {%  for key, value in result.factors %}
-                                        <tr><th>{{ key }}</th><td>{{ value }}%</td></tr>
-                                    {% endfor %}
+                                        {%  for key, value in result.factors %}
+                                            <tr><th>{{ key }}</th><td>{{ value }}%</td></tr>
+                                        {% endfor %}
                                     </table>
+                                </div>
+                                <div class="col-xs-6">
+                                    <canvas id="factors-pie"></canvas>
                                 </div>
                             </div>
                         </div>
@@ -163,10 +166,37 @@
 {% block footer_js %}
     {{ super() }}
     <script>
-     {% if not prediction.is_completed %}
         $(document).ready(function($){
-            setInterval(PredictionStatusRefresh.refreshStatuses, 1000)
+            {% if not prediction.is_completed %}
+                setInterval(PredictionStatusRefresh.refreshStatuses, 1000);
+            {% else %}
+                var data = {
+                    datasets: [{
+                        data: [{% for key, value in result.factors  %}{{ value }}{% if not loop.last %},{% endif %}{% endfor %}],
+                        backgroundColor: [{% for key, value in result.factors  %}ChartColors[{{ loop.index }}] {% if not loop.last %},{% endif %}{% endfor %}]
+                        }],
+                    labels: [{% for key, value in result.factors  %}'{{ key }}'{% if not loop.last %},{% endif %}{% endfor %}],
+                };
+                var ctx = document.getElementById('factors-pie');
+                var myPieChart = new Chart(ctx,{
+                    type: 'doughnut',
+                    data: data,
+                    options: {
+                        legend: {
+                            position: 'left',
+                            labels: {
+                                fontSize : 14
+                            }
+                        },
+                        title: {
+                            text : 'Factor sensitivity',
+                            display: true,
+                            fontSize: 16,
+                            padding: 20
+                        }
+                    }
+                });
+            {% endif %}
         });
-     {% endif %}
     </script>
 {% endblock %}
