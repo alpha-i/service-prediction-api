@@ -1,7 +1,5 @@
 import logging
 
-from celery.result import AsyncResult, allow_join_result
-
 from app import celery
 from app import interpreters
 from app import services
@@ -82,13 +80,8 @@ def training_and_prediction_task(self, task_code, company_id, upload_code, predi
 
 
 @celery.task
-def prediction_failure(uuid):
-    result = AsyncResult(uuid)
-    with allow_join_result():
-        exc = result.get(propagate=False)
-        print(exc)
-
-    prediction_task = services.prediction.get_task_by_code(uuid)
+def prediction_failure(context, exc, traceback, task_code, *args, **kwargs):
+    prediction_task = services.prediction.get_task_by_code(task_code)
     logging.warning(f"Exception was: {exc}")
     set_task_status(prediction_task, TaskStatusTypes.failed)
-    print('Task {0} raised exception: {1!r}\n{2!r}'.format(uuid, exc, result.traceback))
+    print('Task {0} raised exception: {1!r}\n{2!r}'.format(context, exc, traceback))
