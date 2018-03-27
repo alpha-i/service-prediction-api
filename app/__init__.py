@@ -1,10 +1,14 @@
+import os
+from pathlib import Path
+
+import errno
 from celery import Celery
 from flask import Flask, request, render_template
-from flask_migrate import Migrate
 from flask_bootstrap import Bootstrap
+from flask_migrate import Migrate
 
 from app.core.content import ApiResponse
-from app.core.utils import CustomJSONEncoder
+from app.core.jsonencoder import CustomJSONEncoder
 from config import CELERY_BROKER_URL, CELERY_RESULT_BACKEND
 
 celery = Celery(__name__, broker=CELERY_BROKER_URL, backend=CELERY_RESULT_BACKEND)
@@ -28,7 +32,7 @@ def create_app(config_filename, register_blueprints=True):
         from app.views.main import home_blueprint
         from app.views.user import user_blueprint
         from app.views.company import company_blueprint
-        from app.views.predict import predict_blueprint
+        from app.views.prediction import predict_blueprint
         from app.views.customer import customer_blueprint
         from app.views.datasource import datasource_blueprint
         from app.views.authentication import authentication_blueprint
@@ -72,7 +76,7 @@ def create_app(config_filename, register_blueprints=True):
             response = ApiResponse(
                 content_type=request.accept_mimetypes.best,
                 context={'message': e.description},
-                template='404.html',
+                template='400.html',
                 status_code=400
             )
             return response()
@@ -82,9 +86,13 @@ def create_app(config_filename, register_blueprints=True):
             # We don't want to show internal exception messages...
             return render_template('500.html'), 500
 
-
-
     app.json_encoder = CustomJSONEncoder
+
+    for folder in ['UPLOAD_FOLDER', 'TEMPORARY_CSV_FOLDER']:
+
+        path = Path(app.config[folder])
+        path.mkdir(parents=True, exist_ok=True)
+
     return app
 
 
@@ -105,5 +113,3 @@ def make_celery(app):
 
     celery.Task = ContextTask
     return celery
-
-

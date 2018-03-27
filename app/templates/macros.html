@@ -20,6 +20,12 @@
         <dt>File</dt>
         <dd>{{ datasource.filename }}</dd>
 
+        <dt>Available features</dt>
+        <dd>{{ datasource.features }}</dd>
+
+        <dt>Target feature</dt>
+        <dd>{{ datasource.target_feature }}</dd>
+
         <dt>Start Date</dt>
         <dd>{{ datasource.start_date }}</dd>
 
@@ -28,6 +34,51 @@
     </dl>
 {%- endmacro %}
 
+{% macro print_datasource_task_list(task_list) %}
+     {% if task_list|length > 0 %}
+        <table class="table table-bordered" id="datasource-task-list">
+            <thead>
+                <tr>
+                    <th>name</th>
+                    <th>code</th>
+                    <th>created</th>
+                    <th>status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for task in task_list %}
+                <tr class='task-row' id="{{ task.task_code }}" data-completed="{{ task.is_completed }}">
+                    <td scope="row">
+                        <a href="{{ url_for('customer.view_prediction', task_code=task.task_code) }}">{{ task.name }}</a>
+                    </td>
+                    <td scope="row">{{ task.task_code }}</td>
+                    <td>{{ format_datetime(task.created_at) }}</td>
+                    <td>
+                        <i class="fa {{ get_task_status_icon(task.statuses[-1].state) }}" alt="{{ task.statuses[-1].state }}"/>
+                    </td>
+                    <td>
+                        <a href="{{ url_for('customer.view_prediction', task_code=task.task_code) }}"><i class="fa fa-list"></i></a>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+            <p>No tasks found.</p>
+    {% endif %}
+{% endmacro %}
+
+
+{% macro get_task_status_icon(status) -%}
+    {%- set icon_class = 'fa-refresh fa-spin' -%}
+    {% if status == 'SUCCESSFUL' %}
+        {%- set icon_class = 'fa-check-circle text-green' -%}
+    {%- elif status == 'FAILED' -%}
+        {%- set icon_class = 'fa-warning text-yellow' -%}
+    {%- endif -%}
+    {{ icon_class }}
+{%- endmacro -%}
 
 {% macro print_task_list(task_list) %}
     {% if task_list|length > 0 %}
@@ -43,29 +94,34 @@
             </tr>
             {% for task in task_list %}
                 <tr>
-                    <td scope="row">{{ task.name }}</td>
+                    <td scope="row"><a href="{{ url_for('customer.view_prediction', task_code=task.task_code) }}">{{ task.name }}</a></td>
                     <td scope="row">{{ task.task_code }}</td>
                     <td>{{ format_datetime(task.created_at) }}</td>
-                    <td>{{ task.datasource.upload_code }}</td>
-                    <td>{{ task.statuses[-1].state }}</td>
                     <td>
-                        {% if task.is_completed %}
-                            <a href="{{ url_for('customer.view_prediction', task_code=task.task_code) }}">
-                                <i class="fa fa-list"></i>
-                            </a>
-                        {% else %}
-                            <i class="fa fa-hourglass"></i>
-                        {% endif %}
+                        <a href="{{ url_for('customer.view_datasource', datasource_id=task.datasource_upload_code) }}">
+                            {{ task.datasource_upload_code }}
+                        </a>
                     </td>
+                    <td><i class="fa {{ get_task_status_icon(task.statuses[-1].state) }}" alt="{{ task.statuses[-1].state }}"/></td>
+                    <td><a href="{{ url_for('customer.view_prediction', task_code=task.task_code) }}"><i class="fa fa-list"></i></a></td>
                 </tr>
             {% endfor %}
             </tbody>
         </table>
     {% else %}
-        <div class="callout callout-warning">
-            <h4>No task yet</h4>
-            <p>As soon as you'll create some tasks you will be able to access them to visualize the
-                result</p>
-        </div>
+            <p>No tasks found.</p>
     {% endif %}
 {% endmacro %}
+
+{% macro print_flash_messages(dismissible=True) %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+     <div class="alert alert-{{ category|default('info') }} {% if dismissible %}alert-dismissible{% endif %}">
+         {%  if dismissible %}<button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>{% endif %}
+         <p>{{ message|safe }}</p>
+     </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+{%  endmacro %}

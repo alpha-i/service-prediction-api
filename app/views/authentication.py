@@ -6,7 +6,7 @@ from app import services
 
 from app.core.auth import requires_access_token
 from app.core.content import ApiResponse
-from app.core.utils import parse_request_data
+from app.core.utils import parse_request_data, handle_error
 
 from config import TOKEN_EXPIRATION
 
@@ -21,16 +21,16 @@ def login():
 
     user = services.user.get_by_email(email)
     if not user:
-        logging.warning("No user found for %s", email)
-        abort(401, 'Incorrect user or password')
+        logging.debug(f"No user found for {email}")
+        return handle_error(401, 'Incorrect user or password')
 
     if not services.user.verify_password(user, password):
-        logging.warning("Incorrect password for %s", email)
-        abort(401, 'Incorrect user or password')
+        logging.warning(f"Incorrect password for {email}")
+        return handle_error(401, 'Incorrect user or password')
 
     if not user.confirmed:
-        logging.warning("User %s hasn't been confirmed!", user.email)
-        abort(401, f'Please confirm user {user.email} first')
+        logging.warning(f"User {user.email} hasn't been confirmed!")
+        return handle_error(401, f'Please confirm user {user.email} first')
 
     token = services.user.generate_auth_token(user, expiration=TOKEN_EXPIRATION)
     ascii_token = token.decode('ascii')

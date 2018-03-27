@@ -1,202 +1,87 @@
 import logging
-import time
-
-from alphai_cromulon_oracle.oracle import CromulonOracle
-from alphai_delphi.oracle.oracle_configuration import OracleConfiguration
-from celery.result import AsyncResult, allow_join_result
 
 from app import celery
+from app import interpreters
 from app import services
-from app.core.interpreters import datasource_interpreter, prediction_interpreter
-from app.core.models import Task, Result, TaskStatus
-from app.core.schemas import prediction_request_schema
+from app.core.models import PredictionResult
+from app.core.schemas import PredictionRequestSchema
 from app.core.utils import json_reload
 from app.entities import TaskStatusTypes
-from config import MAXIMUM_DAYS_FORECAST
+from app.services.prediction import set_task_status
 
 logging.basicConfig(level=logging.DEBUG)
 
-oracle_config = OracleConfiguration({
-    "scheduling": {
-        "prediction_horizon": 24,
-        "prediction_frequency":
-            {
-                "frequency_type": "DAILY",
-                "days_offset": 0,
-                "minutes_offset": 15
-            },
-        "prediction_delta": 10,
-
-        "training_frequency":
-            {
-                "frequency_type": "WEEKLY",
-                "days_offset": 0,
-                "minutes_offset": 15
-            },
-        "training_delta": 20,
-    },
-    "oracle": {
-        'nassets': 1,
-        'data_transformation': {
-            'fill_limit': 5,
-            'holiday_calendar': 'NYSE',
-            'feature_config_list': [
-                {
-                    'name': 'number_people',
-                    'normalization': 'standard',
-                    'length': 50,
-                    'is_target': True
-                },
-                {
-                    'name': 'temperature',
-                    'normalization': 'standard',
-                    'length': 50
-                },
-            ],
-            'target_config_list': [
-                {
-                    'name': 'number_people',
-                    'length': 5
-                },
-            ],
-            'data_name': 'GYM',
-            'features_ndays': 10,
-            'features_resample_minutes': 15,
-            'target_delta_ndays': 1,
-        },
-        'train_path': '/tmp/cromulon/',
-        'model_save_path': '/tmp/cromulon/',
-        'tensorboard_log_path': '/tmp/cromulon/',
-        'd_type': 'float32',
-        'tf_type': 32,
-        'random_seed': 0,
-        'predict_single_shares': False,
-        'classify_per_series': True,
-        'normalise_per_series': True,
-
-        # Training specific
-        'n_epochs': 1,
-        'n_retrain_epochs': 1,
-        'learning_rate': 2e-3,
-        'batch_size': 100,
-        'cost_type': 'bayes',
-        'n_train_passes': 32,
-        'n_eval_passes': 32,
-        'resume_training': False,
-        'use_gpu': False,  # my macbook doesn't have a GPU :(((
-
-        # Topology
-        'n_series': 1,
-        'do_kernel_regularisation': True,
-        'do_batch_norm': False,
-        'n_res_blocks': 6,
-        'n_features_per_series': 271,
-        'n_forecasts': 5,  # WE HAVE TO CHANGE THIS
-        'n_classification_bins': 12,
-        'layer_heights': [400, 400, 400, 400],
-        'layer_widths': [1, 1, 1, 1],
-        'layer_types': ['conv', 'res', 'full', 'full'],
-        'activation_functions': ['relu', 'relu', 'relu', 'relu'],
-
-        # Initial conditions
-        'INITIAL_WEIGHT_UNCERTAINTY': 0.02,
-        'INITIAL_BIAS_UNCERTAINTY': 0.02,
-        'INITIAL_WEIGHT_DISPLACEMENT': 0.1,
-        'INITIAL_BIAS_DISPLACEMENT': 0.1,
-        'USE_PERFECT_NOISE': False,
-
-        # Priors
-        'double_gaussian_weights_prior': True,
-        'wide_prior_std': 1.0,
-        'narrow_prior_std': 0.001,
-        'spike_slab_weighting': 0.6
-    }
-})
-
 
 @celery.task(bind=True)
-def predict_task(self, user_id, upload_code, prediction_request):
+def training_and_prediction_task(self, task_code, company_id, upload_code, prediction_request):
     uploaded_file = services.datasource.get_by_upload_code(upload_code)
+    prediction_task = services.prediction.get_task_by_code(task_code)
     if not uploaded_file:
         logging.warning("No upload could be found for code %s", upload_code)
         return
 
-    prediction_task = create_task(self.request.id, user_id, uploaded_file.id, prediction_request['name'])
-    set_task_status(prediction_task, TaskStatusTypes.queued)
-    prediction_request, errors = prediction_request_schema.load(prediction_request)
-
+    prediction_request, errors = PredictionRequestSchema().load(prediction_request)
+    logging.info("Prediction request %s received: %s", upload_code, prediction_request)
     if errors:
         logging.warning(errors)
+        set_task_status(prediction_task, TaskStatusTypes.failed)
         raise Exception(errors)
 
-    prediction_task.prediction_request = json_reload(prediction_request)
-    prediction_task = services.prediction.update_task(prediction_task)
+    prediction_task = services.prediction.add_prediction_request(
+        prediction_task, json_reload(prediction_request))
 
-    logging.info("Prediction request %s received: %s", upload_code, prediction_request)
-
-    time.sleep(1)
     logging.info("*** TASK STARTED! %s", prediction_task.task_code)
-    set_task_status(prediction_task, TaskStatusTypes.started)
+    set_task_status(prediction_task, TaskStatusTypes.started, message='Task started!')
 
-    start_time = prediction_request['start_time']
-    end_time = prediction_request['end_time']
-
-    oracle_config.oracle['n_forecasts'] = MAXIMUM_DAYS_FORECAST + 2
-
-    # *** TASK ACTION START ***
     data_frame_content = uploaded_file.get_file()
-    data_dict = datasource_interpreter(data_frame_content)
-    oracle = CromulonOracle(oracle_config)
+    company = services.company.get_by_id(company_id)
+    company_configuration = company.current_configuration
 
-    oracle.train(data_dict, start_time)
-    oracle_prediction_result = oracle.predict(
-        data=data_dict,
-        current_timestamp=start_time,
-        number_of_iterations=1
+    interpreter = services.company.get_datasource_interpreter(company_configuration)
+    data_dict = interpreter.from_dataframe_to_data_dict(data_frame_content)
+
+    set_task_status(
+        prediction_task, TaskStatusTypes.in_progress,
+        message='Training machine learning model'
     )
 
-    prediction_result = prediction_interpreter(oracle_prediction_result)
-    # *** TASK ACTION END *****
+    oracle = services.oracle.get_oracle_for_configuration(company_configuration)
+    services.oracle.train(
+        oracle=oracle,
+        prediction_request=prediction_request,
+        data_dict=data_dict
+    )
+
+    set_task_status(
+        prediction_task, TaskStatusTypes.in_progress,
+        message='Prediction in progress'
+    )
+    oracle_prediction_result = services.oracle.predict(
+        oracle=oracle,
+        prediction_request=prediction_request,
+        data_dict=data_dict
+    )
+
+    prediction_result_interpreter = interpreters.prediction.get_prediction_interpreter(company_configuration)
+    interpreted_prediction_result = prediction_result_interpreter(oracle_prediction_result)
 
     logging.info("*** TASK FINISHED! %s", prediction_task.task_code)
     set_task_status(prediction_task, TaskStatusTypes.successful)
 
-    prediction_result = Result(
-        user_id=user_id,
+    prediction_result_model = PredictionResult(
+        company_id=company_id,
         task_code=prediction_task.task_code,
-        result=json_reload(prediction_result),
+        result=json_reload(interpreted_prediction_result),
         prediction_task_id=prediction_task.id
     )
 
-    services.prediction.insert_result(prediction_result)
+    services.prediction.insert_result(prediction_result_model)
     return
 
 
 @celery.task
-def prediction_failure(uuid):
-    result = AsyncResult(uuid)
-    with allow_join_result():
-        exc = result.get(propagate=False)
-        print(exc)
-
-    prediction_task = services.prediction.get_task_by_code(uuid)
+def prediction_failure(context, exc, traceback, task_code, *args, **kwargs):
+    prediction_task = services.prediction.get_task_by_code(task_code)
+    logging.warning(f"Exception was: {exc}")
     set_task_status(prediction_task, TaskStatusTypes.failed)
-    print('Task {0} raised exception: {1!r}\n{2!r}'.format(uuid, exc, result.traceback))
-
-
-def create_task(task_code, user_id, upload_code, name):
-    return services.prediction.insert_task(
-        Task(task_code=task_code,
-             user_id=user_id,
-             datasource_id=upload_code,
-             name=name)
-    )
-
-
-def set_task_status(task, status):
-    services.prediction.insert_status(
-        TaskStatus(
-            prediction_task_id=task.id,
-            state=status.value
-        )
-    )
+    print('Task {0} raised exception: {1!r}\n{2!r}'.format(context, exc, traceback))

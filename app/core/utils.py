@@ -1,32 +1,11 @@
+import importlib
+import string
 import uuid
-from datetime import datetime, date
-from enum import Enum
 from functools import wraps
 
-import numpy
-from flask import request, g, json, current_app
-from flask.json import JSONEncoder
-from sqlalchemy.ext.declarative import DeclarativeMeta
-from app.core.models import BaseModel
+from flask import request, g, json, current_app, url_for, redirect, abort, flash
 
-
-class CustomJSONEncoder(JSONEncoder):
-
-    def default(self, obj):
-        if issubclass(obj.__class__, BaseModel):
-            data, _ = obj.SCHEMA().dump(obj)
-            return data
-        if isinstance(obj.__class__, DeclarativeMeta):
-            return obj.to_dict()
-        if issubclass(obj.__class__, Enum):
-            return obj.value
-        if isinstance(obj, datetime):
-            return obj.strftime('%Y-%m-%dT%H:%M:%S%z')
-        if isinstance(obj, date):
-            return obj.strftime('%Y-%m-%d')
-        if isinstance(obj, numpy.float32):
-            return obj.tolist()
-        return super(CustomJSONEncoder, self).default(obj)
+from app.core.auth import is_user_logged
 
 
 def parse_request_data(fn):
@@ -55,3 +34,57 @@ def allowed_extension(filename):
 
 def generate_upload_code():
     return str(uuid.uuid4())
+
+
+def import_class(name):
+    components = name.split('.')
+    mod = importlib.import_module(".".join(components[:-1]))
+    return getattr(mod, components[-1])
+
+
+def calculate_referrer_url():
+    """
+    Returns the referer. if not specified, it will fallback to the login page
+    if the user is not logged in, otherwise it will go to the dashboard home.
+
+    :return:
+    """
+    default_route = 'customer.dashboard' if is_user_logged() else 'main.login'
+    return request.referrer or url_for(default_route)
+
+
+def handle_error(code, message, *args, **kwargs):
+    """
+    Helper function around the abort functionality of flask.
+    It returns a redirect response with a flash message if the request is json, * or not specified.
+
+    :param int code: the error code
+    :param str message: the error message
+    :param list args: argument to pass to the abort function
+    :param {} kwargs: kwargs to pass to the abort function
+
+    :return HttpException or RedirectResponse :
+    """
+    if request.accept_mimetypes.best in ['application/json', '*/*', None]:
+        abort(code, message, args, *kwargs)
+
+    flash(message, category='warning')
+    return redirect(calculate_referrer_url())
+
+
+class MissingFieldsStringFormatter(string.Formatter):
+    def __init__(self, missing='~'):
+        self.missing = missing
+
+    def get_field(self, field_name, args, kwargs):
+        # Handle missing fields
+        try:
+            return super().get_field(field_name, args, kwargs)
+        except (KeyError, AttributeError):
+            return None, field_name
+
+    def format_field(self, value, spec):
+        if value is None:
+            return self.missing
+        else:
+            return super().format_field(value, spec)

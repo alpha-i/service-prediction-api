@@ -5,6 +5,7 @@ from itsdangerous import (
     TimedJSONWebSignatureSerializer as Serializer, BadSignature, SignatureExpired
 )
 from passlib.apps import custom_app_context as pwd_context
+from sqlalchemy import event
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -12,21 +13,34 @@ from app.db import db
 from app.entities import BaseEntity
 from config import SECRET_KEY
 
+
 class Actions(Enum):
     FILE_UPLOAD = 'FILE_UPLOAD'
     PREDICTION_STARTED = 'PREDICTION_STARTED'
     CONFIGURATION_UPDATE = 'CONFIGURATION_UPDATE'
+    TRAINING_STARTED = 'TRAINING_STARTED'
+
+
+class UserPermissions(Enum):
+    USER = 'USER'
+    ADMIN = 'ADMIN'
 
 
 class CompanyEntity(BaseEntity):
     __tablename__ = 'company'
 
-    INCLUDE_ATTRIBUTES = ('current_configuration', 'data_sources')
+    INCLUDE_ATTRIBUTES = ('current_configuration', 'current_datasource',
+                          'prediction_results', 'data_sources', 'prediction_tasks')
 
     name = db.Column(db.String, nullable=False)
     logo = db.Column(db.String)
     domain = db.Column(db.String, nullable=False)
     profile = db.Column(db.JSON)
+
+    prediction_tasks = relationship('PredictionTaskEntity', back_populates='company')
+    training_tasks = relationship('TrainingTaskEntity', back_populates='company')
+    prediction_results = relationship('PredictionResultEntity', back_populates='company')
+    actions = relationship('CustomerActionEntity', back_populates='company')
     configuration = relationship('CompanyConfigurationEntity', back_populates='company')
     data_sources = relationship('DataSourceEntity', back_populates='company')
     users = relationship('UserEntity', back_populates='company')
@@ -49,13 +63,21 @@ class CompanyEntity(BaseEntity):
             return None
         return company
 
+    @staticmethod
+    def get_by_id(company_id):
+        try:
+            company = CompanyEntity.query.filter(CompanyEntity.id == company_id).one()
+        except NoResultFound:
+            return None
+        return company
+
     @property
     def current_configuration(self):
         if len(self.configuration):
             return self.configuration[-1]
 
     @property
-    def current_data_source(self):
+    def current_datasource(self):
         if len(self.data_sources):
             return self.data_sources[-1]
 
@@ -63,18 +85,19 @@ class CompanyEntity(BaseEntity):
 class UserEntity(BaseEntity):
     __tablename__ = 'user'
 
-    INCLUDE_ATTRIBUTES = ('data_sources', 'current_data_source', 'actions', 'company')
+    INCLUDE_ATTRIBUTES = ('actions', 'company')
     EXCLUDE_ATTRIBUTES = ('password_hash',)
 
     email = db.Column(db.String(32), index=True)
     password_hash = db.Column(db.String(128))
-    tasks = relationship('PredictionTaskEntity', back_populates='user')
-    results = relationship('PredictionResultEntity', back_populates='user')
+
     data_sources = relationship('DataSourceEntity', back_populates='user')
-    actions = relationship('CustomerActionEntity', back_populates='user')
+
     company_id = db.Column(db.ForeignKey('company.id'), nullable=False)
     company = relationship('CompanyEntity', foreign_keys=company_id)
+
     profile = relationship('UserProfileEntity', uselist=False)
+    permissions = db.Column(db.Enum(UserPermissions), default=UserPermissions.USER)
 
     confirmed = db.Column(db.Boolean, default=False)
 
@@ -88,12 +111,6 @@ class UserEntity(BaseEntity):
         s = Serializer(SECRET_KEY, expires_in=expiration)
         return s.dumps({'id': self.id})
 
-    @property
-    def current_data_source(self):
-        if len(self.company.data_sources):
-            return self.company.data_sources[-1]
-        return None
-
     @staticmethod
     def verify_auth_token(token):
         s = Serializer(SECRET_KEY)
@@ -104,8 +121,10 @@ class UserEntity(BaseEntity):
         except BadSignature:
             return None
 
-
-        user = UserEntity.query.get(data['id'])
+        session = db.session()
+        user = session.query(UserEntity).get(data['id'])
+        session.refresh(user)
+        session.commit()
         return user
 
     @staticmethod
@@ -115,11 +134,12 @@ class UserEntity(BaseEntity):
         except NoResultFound:
             return None
 
+
 class CustomerActionEntity(BaseEntity):
     __tablename__ = 'customer_action'
 
-    user_id = db.Column(db.ForeignKey('user.id'), nullable=False)
-    user = relationship('UserEntity', foreign_keys=user_id)
+    company_id = db.Column(db.ForeignKey('company.id'), nullable=False)
+    company = relationship('CompanyEntity', foreign_keys=company_id)
     action = db.Column(db.Enum(Actions))
 
 
@@ -144,3 +164,26 @@ class CompanyConfigurationEntity(BaseEntity):
         except NoResultFound:
             return None
         return configuration
+
+    @staticmethod
+    def get_by_company_id(company_id):
+        try:
+            configuration = CompanyConfigurationEntity.query.filter(
+                CompanyConfigurationEntity.company_id == company_id).one()
+        except NoResultFound:
+            return None
+        return configuration
+
+
+def update_user_action(mapper, connection, self):
+    session = db.create_scoped_session()
+    action = CustomerActionEntity(
+        company_id=self.company_id,
+        action=Actions.CONFIGURATION_UPDATE
+    )
+    session.add(action)
+    session.commit()
+    session.flush()
+
+
+event.listen(CompanyConfigurationEntity, 'after_insert', update_user_action)

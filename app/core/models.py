@@ -4,15 +4,14 @@ import pandas as pd
 from flask import json
 
 from app.core.schemas import (
-    UserSchema, CompanySchema, TaskSchema, ResultSchema, DataSourceSchema, CompanyConfigurationSchema,
-    TaskStatusSchema
-)
+    UserSchema, CompanySchema, PredictionTaskSchema, DataSourceSchema,
+    CompanyConfigurationSchema, PredictionTaskStatusSchema, TrainingTaskSchema,
+    PredictionResultSchema)
 from app.entities import (
     UserEntity, CompanyEntity, PredictionTaskEntity, PredictionResultEntity, DataSourceEntity,
-    CompanyConfigurationEntity, TaskStatusEntity
+    CompanyConfigurationEntity, PredictionTaskStatusEntity, TrainingTaskEntity
 )
-
-
+from app.entities.training import TrainingTaskStatusEntity
 from config import HDF5_STORE_INDEX
 
 
@@ -47,14 +46,20 @@ class BaseModel(metaclass=abc.ABCMeta):
 
     @classmethod
     def from_models(cls, *models):
-        return [BaseModel.from_model(model) for model in models]
+        return [cls.from_model(model) for model in models]
 
     def to_model(self):
         model = self.MODEL()
+
         for key, value in self.__dict__.items():
             if value:
                 setattr(model, key, value)
         return model
+
+    def refresh(self):
+        for key, value in self._model.to_dict().items():
+            if not getattr(self, key, None):
+                setattr(self, key, value)
 
     def load(self, **kwargs):
         return self.SCHEMA().load(kwargs)
@@ -76,14 +81,14 @@ class Company(BaseModel):
     MODEL = CompanyEntity
 
 
-class Task(BaseModel):
-    SCHEMA = TaskSchema
+class PredictionTask(BaseModel):
+    SCHEMA = PredictionTaskSchema
     MODEL = PredictionTaskEntity
 
 
-class TaskStatus(BaseModel):
-    SCHEMA = TaskStatusSchema
-    MODEL = TaskStatusEntity
+class PredictionTaskStatus(BaseModel):
+    SCHEMA = PredictionTaskStatusSchema
+    MODEL = PredictionTaskStatusEntity
 
 
 class DataSource(BaseModel):
@@ -96,11 +101,21 @@ class DataSource(BaseModel):
             return dataframe
 
 
-class Result(BaseModel):
-    SCHEMA = ResultSchema
+class PredictionResult(BaseModel):
+    SCHEMA = PredictionResultSchema
     MODEL = PredictionResultEntity
 
 
 class CompanyConfiguration(BaseModel):
     SCHEMA = CompanyConfigurationSchema
     MODEL = CompanyConfigurationEntity
+
+
+class TrainingTask(BaseModel):
+    SCHEMA = TrainingTaskSchema
+    MODEL = TrainingTaskEntity
+
+
+class TrainingTaskStatus(BaseModel):
+    SCHEMA = PredictionTaskStatusSchema
+    MODEL = TrainingTaskStatusEntity

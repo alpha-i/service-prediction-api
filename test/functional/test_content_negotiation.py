@@ -7,30 +7,37 @@ from test.functional.base_test_class import BaseTestClass
 
 
 class TestContentNegotiation(BaseTestClass):
+    def setUp(self):
+        super().setUp()
+        self.create_superuser()
 
     def test_login_can_deal_with_json_as_default(self):
+        self.login_superuser()
         self.register_company()
         self.register_user()
-        # json request
+        self.logout()
+
         resp = self.client.post(
             url_for('authentication.login'),
             content_type='application/json',
-            data=json.dumps({'email': self.USER_EMAIL, 'password': self.PASSWORD}),
+            data=json.dumps({'email': self.USER_EMAIL, 'password': self.USER_PASSWORD}),
             headers={'Accept': 'application/json'}
         )
 
+        assert resp.status_code == 200
         assert resp.content_type == 'application/json'
         assert not resp.headers.get('Location')
         assert 'token' in resp.json
-        assert resp.status_code == 200
 
     def test_login_can_negotiate(self):
+        self.login_superuser()
         self.register_company()
         self.register_user()
+        self.logout()
         resp = self.client.post(
             url_for('authentication.login'),
             content_type='application/json',
-            data=json.dumps({'email': self.USER_EMAIL, 'password': self.PASSWORD}),
+            data=json.dumps({'email': self.USER_EMAIL, 'password': self.USER_PASSWORD}),
             headers={'Accept': 'application/html'}
 
         )
@@ -46,8 +53,10 @@ class TestContentNegotiation(BaseTestClass):
         assert resp.headers.get('Location') == url_for('main.login', _external=True)
 
     def test_logout_can_negotiate(self):
+        self.login_superuser()
         self.register_company()
         self.register_user()
+        self.logout()
         self.login()
 
         resp = self.client.get(url_for('authentication.logout'))
@@ -63,6 +72,7 @@ class TestContentNegotiation(BaseTestClass):
         assert resp.headers.get('Location') == url_for('main.login', _external=True)
 
     def test_user_registration_can_render_json(self):
+        self.login_superuser()
         self.register_company()
 
         resp = self.client.post(
@@ -71,13 +81,14 @@ class TestContentNegotiation(BaseTestClass):
             headers={'Accept': 'application/json'},
             data=json.dumps({
                 'email': self.USER_EMAIL,
-                'password': self.PASSWORD
+                'password': self.USER_PASSWORD
             })
         )
 
         assert resp.status_code == 201
 
     def test_user_registration_can_redirect(self):
+        self.login_superuser()
         self.register_company()
 
         resp = self.client.post(
@@ -86,13 +97,14 @@ class TestContentNegotiation(BaseTestClass):
             headers={'Accept': 'application/html'},
             data=json.dumps({
                 'email': self.USER_EMAIL,
-                'password': self.PASSWORD
+                'password': self.USER_PASSWORD
             })
         )
 
         assert resp.status_code == 302
 
     def test_company_registration_can_negotiate(self):
+        self.login_superuser()
         resp = self.client.post(
             url_for('company.register'),
             content_type='application/json',
@@ -116,6 +128,7 @@ class TestContentNegotiation(BaseTestClass):
         assert resp.status_code == 201
 
     def test_user_confirmation(self):
+        self.login_superuser()
         self.register_company()
 
         # first register a user
@@ -124,7 +137,7 @@ class TestContentNegotiation(BaseTestClass):
             content_type='application/json',
             data=json.dumps({
                 'email': self.USER_EMAIL,
-                'password': self.PASSWORD
+                'password': self.USER_PASSWORD
             })
         )
         assert resp.status_code == 201
@@ -134,5 +147,5 @@ class TestContentNegotiation(BaseTestClass):
             url_for('user.confirm', token=confirmation_token),
             headers={'Accept': 'application/html'}
         )
-        assert resp.status_code == 302
+        assert resp.status_code == 200
         assert resp.headers.get('Location') == url_for('main.login', _external=True)

@@ -3,7 +3,9 @@ from functools import wraps
 
 from flask import request, g, abort, redirect, url_for
 
+from app.core.models import User
 from app.entities import UserEntity
+from app.entities.customer import UserPermissions
 
 
 def requires_access_token(fn):
@@ -11,9 +13,10 @@ def requires_access_token(fn):
     def wrapper(*args, **kwargs):
         user = is_user_logged()
         if isinstance(user, UserEntity):
-            g.user = user
+            g.user = User.from_model(user)
             return fn(*args, **kwargs)
         elif request.content_type == 'application/json':
+            logging.debug("No authorisation supplied")
             abort(401, "Unauthorised")
         else:
             return redirect(url_for('main.login'))
@@ -21,12 +24,21 @@ def requires_access_token(fn):
     return wrapper
 
 
-def is_user_logged():
-    """
-    Check if user is logged if the token exists and is valid
+def requires_admin_permissions(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        user = is_user_logged()
+        if not user:
+            abort(403)
+        if not user.permissions == UserPermissions.ADMIN:
+            logging.debug(f"User {user.email} was not allowed an admin action")
+            abort(403, 'Only admins can do that!')
+        return fn(*args, **kwargs)
 
-    :return customer|False:
-    """
+    return wrapper
+
+
+def is_user_logged():
     if 'X-Token' in request.headers:
         token = request.headers['X-Token']
     elif 'token' in request.cookies:
@@ -34,9 +46,10 @@ def is_user_logged():
     elif request.content_type == 'application/json':
         token = request.json.get('token')
     else:
-        logging.info("No token provided!")
+        logging.debug("No token provided!")
         return None
     if not token:
+        logging.debug("No authentication was supplied")
         abort(401, 'Please supply authentication')
 
     user = UserEntity.verify_auth_token(token)

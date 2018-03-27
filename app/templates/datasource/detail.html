@@ -4,13 +4,13 @@
 
 {% block page_header %}
     <h1>
-        Data Detail
+        Data Details
         <small>{{ current_datasource.upload_code }}</small>
     </h1>
 {% endblock %}
 {% block breadcrumb_items %}
     {{ super() }}
-    <li><a class="active"><i class="fa fa-database"></i> Datasource detail</a></li>
+    <li><a class="active"><i class="fa fa-database"></i> Historical Data Details</a></li>
 {% endblock %}
 
 {% block content %}
@@ -21,29 +21,10 @@
                     <h3 class="box-header with-border">Overview</h3>
                     <div class="box-body">
                         {{ macros.print_datasource_info(current_datasource) }}
+                        <h4>Predictions associated with this Historical Data Upload</h4>
+                        {{ macros.print_datasource_task_list(prediction_task_list) }}
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-md-12">
-            <div class="box box-primary">
-                <div id="prediction_graph" style="width:100%"></div>
-                <script type="text/javascript">
-                    g = new Dygraph(
-                        document.getElementById("prediction_graph"),
-                        "{{ data.content|safe }}",
-                        {
-                            labels: {{ data.header|safe }},
-                            includeZero: true,
-                            title: 'Historical data for {{ data.target_feature }}',
-                            xlabel: 'Time',
-                            ylabel: '{{ data.target_feature }}'
-
-                        }
-                    );
-                </script>
             </div>
         </div>
     </div>
@@ -51,20 +32,43 @@
         <div class="row">
             <div class="col-xs-12">
                 <div class="box box-danger">
-                    <h3 class="box-header with-border">Delete datasource</h3>
+                    <h3 class="box-header with-border">Delete this Historical Data Update</h3>
                     <div class="box-body">
-                        <form action="{{ url_for('datasource.delete', datasource_id=current_datasource.upload_code) }}"
-                              method="POST">
-                            <div class="form-group row">
-                                {# Ugly to watch, plz halp #}
-                                <input class="btn btn-primary" type="submit" value="DELETE!" name="submit">
-                            </div>
-                        </form>
+                        <a class="btn btn-primary" data-toggle="modal" data-target="#modal-delete-form">Delete</a>
                     </div>
                 </div>
             </div>
         </div>
+        <div class="modal modal-warning fade" id="modal-delete-form">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title">Confirm deletion of {{ current_datasource.upload_code }}</h4>
+                    </div>
+                    <div class="modal-body">
+                        <h4><i class="fa fa-warning"></i> Warning</h4>
+                        <p>By deleting this Historical Data Upload, all the associated predictions will be deleted.</p>
+                        <p>THIS OPERATION IS IRREVERSIBLE!</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                        <form action="{{ url_for('datasource.delete', datasource_id=current_datasource.upload_code) }}"
+                              method="POST" id="datasource-delete">
+                            <div class="form-group">
+                                <input type="submit" value="Confirm deletion" class="btn btn-outline"/>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <!-- /.modal-content -->
+            </div>
+            <!-- /.modal-dialog -->
+        </div>
+        <!-- /.modal -->
     {% endif %}
+
 
 {% endblock %}
 

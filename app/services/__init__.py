@@ -1,1 +1,3 @@
-from app.services import user, company, prediction, datasource
+from app.services import (
+    user, company, prediction, datasource, oracle, email, superuser, training, strategies
+)
