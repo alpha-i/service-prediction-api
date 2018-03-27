@@ -189,7 +189,7 @@
                         {
                             data: [{%  for value in prediction_result %}{{ value }}{% if not loop.last %},{% endif %}{% endfor %}],
                             backgroundColor: ChartDecorator.getChartColors({{ prediction_result|length }}),
-                            label: 'Symbols'
+                            label: 'Returns'
                         }
                     ],
                     labels: [{%  for value in prediction_labels %}'{{ value }}'{% if not loop.last %},{% endif %}{% endfor %}]
