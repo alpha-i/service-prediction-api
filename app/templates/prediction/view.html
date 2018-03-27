@@ -100,6 +100,12 @@
                             </dl>
                             <div class="row">
                                 <div class="col-xs-12">
+                                    <canvas id="prediction-bars"></canvas>
+                                    {{ header }}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-xs-12">
                                     <strong>
                                         <a href="{{ url_for('customer.download_prediction_csv', task_code=prediction.task_code) }}" target="_blank">
                                             <i class="fa fa-download"></i>
@@ -170,17 +176,17 @@
             {% if not prediction.is_completed %}
                 setInterval(PredictionStatusRefresh.refreshStatuses, 1000);
             {% else %}
-                var data = {
+                var factors_data = {
                     datasets: [{
                         data: [{% for key, value in result.factors  %}{{ value }}{% if not loop.last %},{% endif %}{% endfor %}],
-                        backgroundColor: [{% for key, value in result.factors  %}ChartColors[{{ loop.index }}] {% if not loop.last %},{% endif %}{% endfor %}]
+                        backgroundColor: ChartDecorator.getChartColors({{ result.factors|length }})
                         }],
                     labels: [{% for key, value in result.factors  %}'{{ key }}'{% if not loop.last %},{% endif %}{% endfor %}],
                 };
-                var ctx = document.getElementById('factors-pie');
-                var myPieChart = new Chart(ctx,{
+                var factor_canvas = document.getElementById('factors-pie');
+                new Chart(factor_canvas,{
                     type: 'doughnut',
-                    data: data,
+                    data: factors_data,
                     options: {
                         legend: {
                             position: 'left',
@@ -190,6 +196,44 @@
                         },
                         title: {
                             text : 'Factor sensitivity',
+                            display: true,
+                            fontSize: 16,
+                            padding: 20
+                        }
+                    }
+                });
+                {%  set prediction_result = [] %}
+                {%  set prediction_labels = [] %}
+                {%- for value in result.data -%}
+                    {%- if value.value -%}
+                        {%- do prediction_result.append(value.value) -%}
+                        {%- do prediction_labels.append(value.symbol) -%}
+                    {%- endif -%}
+                {%- endfor -%}
+                var prediction_data = {
+                    datasets: [
+                        {
+                            data: [{%  for value in prediction_result %}{{ value }}{% if not loop.last %},{% endif %}{% endfor %}],
+                            backgroundColor: ChartDecorator.getChartColors({{ prediction_result|length }}),
+                            label: 'Symbols'
+                        }
+                    ],
+                    labels: [{%  for value in prediction_labels %}'{{ value }}'{% if not loop.last %},{% endif %}{% endfor %}]
+                }
+
+                var bar_canvas = document.getElementById('prediction-bars');
+                new Chart(bar_canvas,{
+                    type: 'bar',
+                    data: prediction_data,
+                    options: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                fontSize : 14
+                            }
+                        },
+                        title: {
+                            text : '{{ result.target_feature|capitalize }}',
                             display: true,
                             fontSize: 16,
                             padding: 20

@@ -163,8 +163,8 @@ def view_prediction(task_code):
         percent_factors = calculate_factor_percentage(factors)
 
         context['result'] = {
-            'data': repr(result_dataframe.to_csv(header=False)),
-            'header': ['timestamp'] + headers,
+            'data': prediction.prediction_result.result['datapoints'][0]['prediction'],
+            'header': headers,
             'target_feature': target_feature,
             'timestamp_range': [
                 result_dataframe.index[0].strftime(DATETIME_FORMAT),
