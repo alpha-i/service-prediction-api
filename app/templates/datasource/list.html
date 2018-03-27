@@ -22,8 +22,10 @@
 
                     {% if current_datasource %}
                         {{ macros.print_datasource_info(current_datasource) }}
-                        <h4>Predictions associated with this Historical Data Upload</h4>
-                        {{ macros.print_datasource_task_list(prediction_task_list) }}
+                        {% if prediction_task_list %}
+                            <h4>Predictions associated with this Historical Data Upload</h4>
+                            {{ macros.print_datasource_task_list(prediction_task_list) }}
+                        {% endif %}
                         <div id="debug-div"></div>
                     {% else %}
                         <p>Your Historical Data is empty</p>
@@ -84,7 +86,9 @@
                             </tr>
                             {% for datasource in datasource_history %}
                                 <tr>
-                                    <td>{{ datasource.filename }}</td>
+                                    <td>
+                                        <a href="{{ url_for('customer.view_datasource', datasource_id=datasource.upload_code) }}">{{ datasource.filename }}</a>
+                                    </td>
                                     <td>{{ datasource.type.value }}</td>
                                     <td>{{ datasource.start_date }}</td>
                                     <td>{{ datasource.end_date }}</td>
