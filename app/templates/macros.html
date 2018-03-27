@@ -92,7 +92,7 @@
             </tr>
             {% for task in task_list %}
                 <tr>
-                    <td scope="row">{{ task.name }}</td>
+                    <td scope="row"><a href="{{ url_for('customer.view_prediction', task_code=task.task_code) }}">{{ task.name }}</a></td>
                     <td scope="row">{{ task.task_code }}</td>
                     <td>{{ format_datetime(task.created_at) }}</td>
                     <td>
