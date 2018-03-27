@@ -217,7 +217,7 @@ def download_prediction_factors(task_code):
     return Response(
         csv_string,
         mimetype='text/csv',
-        headers={"Content-disposition": "attachment; filename={}_factors.csv".format(
+        headers={"Content-disposition": "attachment; filename={}_sensitivities.csv".format(
             prediction.task_code
         )})
 

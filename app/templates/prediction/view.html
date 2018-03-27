@@ -109,7 +109,7 @@
                                     <strong>
                                         <a href="{{ url_for('customer.download_prediction_csv', task_code=prediction.task_code) }}" target="_blank">
                                             <i class="fa fa-download"></i>
-                                            Download the forecasts
+                                            Download the AI factors
                                         </a>
                                     </strong>
                                 </div>
@@ -119,14 +119,14 @@
                                     <strong>
                                         <a href="{{ url_for('customer.download_prediction_factors', task_code=prediction.task_code) }}" target="_blank">
                                             <i class="fa fa-download"></i>
-                                            Download the factors
+                                            Download the sensitivities
                                         </a>
                                     </strong>
                                 </div>
                             </div>
                             <div class="row">
                                 <div class="col-xs-6">
-                                    <h3>Factors</h3>
+                                    <h3>Sensitivities</h3>
                                     <table class="table">
                                         {%  for key, value in result.factors %}
                                             <tr><th>{{ key }}</th><td>{{ value }}%</td></tr>
@@ -134,7 +134,7 @@
                                     </table>
                                 </div>
                                 <div class="col-xs-6">
-                                    <canvas id="factors-pie"></canvas>
+                                    <canvas id="sensitivies-pie"></canvas>
                                 </div>
                             </div>
                         </div>
@@ -176,32 +176,6 @@
             {% if not prediction.is_completed %}
                 setInterval(PredictionStatusRefresh.refreshStatuses, 1000);
             {% else %}
-                var factors_data = {
-                    datasets: [{
-                        data: [{% for key, value in result.factors  %}{{ value }}{% if not loop.last %},{% endif %}{% endfor %}],
-                        backgroundColor: ChartDecorator.getChartColors({{ result.factors|length }})
-                        }],
-                    labels: [{% for key, value in result.factors  %}'{{ key }}'{% if not loop.last %},{% endif %}{% endfor %}],
-                };
-                var factor_canvas = document.getElementById('factors-pie');
-                new Chart(factor_canvas,{
-                    type: 'doughnut',
-                    data: factors_data,
-                    options: {
-                        legend: {
-                            position: 'left',
-                            labels: {
-                                fontSize : 14
-                            }
-                        },
-                        title: {
-                            text : 'Factor sensitivity',
-                            display: true,
-                            fontSize: 16,
-                            padding: 20
-                        }
-                    }
-                });
                 {%  set prediction_result = [] %}
                 {%  set prediction_labels = [] %}
                 {%- for value in result.data -%}
@@ -233,13 +207,41 @@
                             }
                         },
                         title: {
-                            text : '{{ result.target_feature|capitalize }}',
+                            text : 'AI Factors',
                             display: true,
                             fontSize: 16,
                             padding: 20
                         }
                     }
                 });
+
+                var sensitivities_data = {
+                    datasets: [{
+                        data: [{% for key, value in result.factors  %}{{ value }}{% if not loop.last %},{% endif %}{% endfor %}],
+                        backgroundColor: ChartDecorator.getChartColors({{ result.factors|length }})
+                        }],
+                    labels: [{% for key, value in result.factors  %}'{{ key }}'{% if not loop.last %},{% endif %}{% endfor %}],
+                };
+                var sensitivities_canvas = document.getElementById('sensitivies-pie');
+                new Chart(sensitivities_canvas,{
+                    type: 'doughnut',
+                    data: sensitivities_data,
+                    options: {
+                        legend: {
+                            position: 'left',
+                            labels: {
+                                fontSize : 14
+                            }
+                        },
+                        title: {
+                            text : 'Factor sensitivities',
+                            display: true,
+                            fontSize: 16,
+                            padding: 20
+                        }
+                    }
+                });
+
             {% endif %}
         });
     </script>
