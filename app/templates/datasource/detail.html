@@ -4,13 +4,13 @@
 
 {% block page_header %}
     <h1>
-        Data Detail
+        Data Details
         <small>{{ current_datasource.upload_code }}</small>
     </h1>
 {% endblock %}
 {% block breadcrumb_items %}
     {{ super() }}
-    <li><a class="active"><i class="fa fa-database"></i> Historical Data detail</a></li>
+    <li><a class="active"><i class="fa fa-database"></i> Historical Data Details</a></li>
 {% endblock %}
 
 {% block content %}
@@ -21,7 +21,7 @@
                     <h3 class="box-header with-border">Overview</h3>
                     <div class="box-body">
                         {{ macros.print_datasource_info(current_datasource) }}
-                        <h4>Task associated to this version of the Historical Data</h4>
+                        <h4>Predictions associated with this Historical Data Upload</h4>
                         {{ macros.print_datasource_task_list(prediction_task_list) }}
                     </div>
                 </div>
@@ -49,7 +49,7 @@
                     </div>
                     <div class="modal-body">
                         <h4><i class="fa fa-warning"></i> Warning</h4>
-                        <p>By deleting this version of the historical data all task associated will be deleted.</p>
+                        <p>By deleting this Historical Data Upload, all the associated predictions will be deleted.</p>
                         <p>THIS OPERATION IS IRREVERSIBLE!</p>
                     </div>
                     <div class="modal-footer">
