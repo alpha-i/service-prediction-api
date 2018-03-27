@@ -15,7 +15,7 @@ from app.core.utils import handle_error, allowed_extension, generate_upload_code
 from app.db import db
 from app.entities import CompanyConfigurationEntity, PredictionTaskEntity
 from app.entities.datasource import UploadTypes
-from app.interpreters.prediction import prediction_result_to_dataframe
+from app.interpreters.prediction import prediction_result_to_dataframe, calculate_factor_percentage
 from config import MAXIMUM_DAYS_FORECAST, DATETIME_FORMAT, DEFAULT_TIME_RESOLUTION
 
 customer_blueprint = Blueprint('customer', __name__)
@@ -160,8 +160,7 @@ def view_prediction(task_code):
             headers.append('actuals')
 
         factors = prediction.prediction_result.result['factors']
-        total = sum([value for value in factors.values()])
-        percent_factors = {key: round(value*100/total) for key, value in factors.items()}
+        percent_factors = calculate_factor_percentage(factors)
 
         context['result'] = {
             'data': repr(result_dataframe.to_csv(header=False)),
@@ -173,7 +172,7 @@ def view_prediction(task_code):
             ],
             'status': prediction.statuses[-1].state,
             'prediction_result': prediction.prediction_result,
-            "factors": sorted(percent_factors.items(), key=lambda x: x[1], reverse=True)
+            "factors": percent_factors
         }
 
     return render_template('prediction/view.html', **context)
@@ -195,6 +194,30 @@ def download_prediction_csv(task_code):
         result_dataframe.to_csv(),
         mimetype='text/csv',
         headers={"Content-disposition": "attachment; filename={}.csv".format(
+            prediction.task_code
+        )})
+
+
+@customer_blueprint.route('/prediction/<string:task_code>/factors')
+@requires_access_token
+def download_prediction_factors(task_code):
+    prediction = PredictionTaskEntity.get_by_task_code(task_code)
+    if not prediction:
+        return handle_error(404, "No prediction found!")
+
+    if not prediction.company_id == g.user.company_id:
+        return handle_error(403, "Unauthorised")
+
+    factors = prediction.prediction_result.result['factors']
+    percent_factors = calculate_factor_percentage(factors)
+
+    csv_string = 'factor,percentage\r'
+    for key, value in percent_factors:
+        csv_string += f"{key},{value}\r"
+    return Response(
+        csv_string,
+        mimetype='text/csv',
+        headers={"Content-disposition": "attachment; filename={}_factors.csv".format(
             prediction.task_code
         )})
 
