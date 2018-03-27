@@ -319,6 +319,9 @@ def datasource_confirm():
         cumulative_dataframe = uploaded_dataframe
 
     saved_path = os.path.join(current_app.config['UPLOAD_FOLDER'], upload_code + '.hdf5')
+    cumulative_dataframe = cumulative_dataframe.reset_index()
+    cumulative_dataframe = cumulative_dataframe.drop_duplicates()
+    cumulative_dataframe = cumulative_dataframe.set_index(interpreter.INDEX_COLUMN)
     cumulative_dataframe.to_hdf(saved_path, key=current_app.config['HDF5_STORE_INDEX'])
 
     original = True if len(user.company.data_sources) == 0 else False
