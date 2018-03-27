@@ -62,7 +62,7 @@ class TrainAndPredictOnUploadStrategy(AbstractUploadStrategy):
 
         training_and_prediction_task.apply_async(
             (task_code, company_id, datasource_upload_code, prediction_request),
-            link_error=prediction_failure.s()
+            link_error=prediction_failure.s(task_code)
         )
 
         logging.debug(

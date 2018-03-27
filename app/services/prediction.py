@@ -1,3 +1,4 @@
+import datetime
 import logging
 import uuid
 
@@ -57,6 +58,8 @@ def set_task_status(task, status, message=None):
             prediction_task_id=task.id,
             state=status.value,
             message=message,
+            created_at=datetime.datetime.utcnow(),
+            last_update=datetime.datetime.utcnow()
         )
     )
     return task_status

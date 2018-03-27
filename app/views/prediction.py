@@ -39,7 +39,7 @@ def submit():
     upload_code = g.user.company.current_datasource.upload_code
     training_and_prediction_task.apply_async(
         (task_code, company_id, upload_code, prediction_request),
-        link_error=prediction_failure.s()
+        link_error=prediction_failure.s(task_code)
     )
 
     response = ApiResponse(
