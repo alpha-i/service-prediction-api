@@ -173,7 +173,7 @@ class TestDataSourceUpload(BaseTestClass):
             resp = self.client.post(
                 url_for('datasource.upload'),
                 content_type='multipart/form-data',
-                data={'upload': (updated_data_file, 'test_data.csv')},
+                data={'upload': (updated_data_file, 'additional_test_data.csv')},
                 headers={'Accept': 'application/html'}
             )
             assert resp.status_code == 302  # in order to redirect to the dashboard

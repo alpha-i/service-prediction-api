@@ -94,6 +94,9 @@ def upload():
         data_frame = pd.concat([existing_data_frame, data_frame])
 
     saved_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename + '.hdf5')
+    data_frame = data_frame.reset_index()
+    data_frame = data_frame.drop_duplicates()
+    data_frame = data_frame.set_index(interpreter.INDEX_COLUMN)
     data_frame = data_frame.sort_index(ascending=True)
     data_frame.to_hdf(saved_path, key=current_app.config['HDF5_STORE_INDEX'])
 
