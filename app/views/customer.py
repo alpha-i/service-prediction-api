@@ -159,6 +159,10 @@ def view_prediction(task_code):
             )
             headers.append('actuals')
 
+        factors = prediction.prediction_result.result['factors']
+        total = sum([value for value in factors.values()])
+        percent_factors = {key: round(value*100/total) for key, value in factors.items()}
+
         context['result'] = {
             'data': repr(result_dataframe.to_csv(header=False)),
             'header': ['timestamp'] + headers,
@@ -167,7 +171,9 @@ def view_prediction(task_code):
                 result_dataframe.index[0].strftime(DATETIME_FORMAT),
                 result_dataframe.index[-1].strftime(DATETIME_FORMAT)
             ],
-            'status': prediction.statuses[-1].state
+            'status': prediction.statuses[-1].state,
+            'prediction_result': prediction.prediction_result,
+            "factors": sorted(percent_factors.items(), key=lambda x: x[1], reverse=True)
         }
 
     return render_template('prediction/view.html', **context)
