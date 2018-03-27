@@ -6,7 +6,7 @@ from itsdangerous import (
 )
 from passlib.apps import custom_app_context as pwd_context
 from sqlalchemy import event
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, validates
 from sqlalchemy.orm.exc import NoResultFound
 
 from app.db import db
@@ -111,6 +111,10 @@ class UserEntity(BaseEntity):
         s = Serializer(SECRET_KEY, expires_in=expiration)
         return s.dumps({'id': self.id})
 
+    @validates('email')
+    def convert_email_to_lowercase(self, key, value):
+        return value.lower()
+
     @staticmethod
     def verify_auth_token(token):
         s = Serializer(SECRET_KEY)
@@ -129,6 +133,7 @@ class UserEntity(BaseEntity):
 
     @staticmethod
     def get_user_by_email(email):
+        email = email.lower()
         try:
             return UserEntity.query.filter(UserEntity.email == email).one()
         except NoResultFound:
