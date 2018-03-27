@@ -112,6 +112,16 @@
                             </div>
                             <div class="row">
                                 <div class="col-xs-12">
+                                    <strong>
+                                        <a href="{{ url_for('customer.download_prediction_factors', task_code=prediction.task_code) }}" target="_blank">
+                                            <i class="fa fa-download"></i>
+                                            Download the factors
+                                        </a>
+                                    </strong>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-xs-12">
                                     <h3>Factors</h3>
                                     <table class="table">
                                     {%  for key, value in result.factors %}

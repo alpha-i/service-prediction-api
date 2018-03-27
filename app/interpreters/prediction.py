@@ -155,3 +155,17 @@ def metacrocubot_prediction_interpreter(metacrocubot_prediction) -> dict:
         result['factors'][feature] = sensitivity
 
     return result
+
+
+def calculate_factor_percentage(factors):
+
+    def clean_feature_name(name):
+        splitted_feature_name = name.split("_")
+        return "".join(splitted_feature_name[:-1])
+
+    factors = {clean_feature_name(key):value for key, value in factors.items()}
+
+    total = sum([value for value in factors.values()])
+    percent_factors = {key: round(value * 100 / total) for key, value in factors.items()}
+
+    return sorted(percent_factors.items(), key=lambda x: x[1], reverse=True)
