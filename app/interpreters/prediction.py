@@ -66,7 +66,7 @@ def prediction_interpreter(prediction_result):
         raise ValueError("No interpreter available for %s", prediction_result.__class__)
 
 
-def prediction_result_to_dataframe(prediction):
+def prediction_result_to_dataframe_with_error(prediction):
     fmt = MissingFieldsStringFormatter(missing='N/A')
     result = []
     if prediction.prediction_result:
@@ -84,6 +84,30 @@ def prediction_result_to_dataframe(prediction):
                         prediction_data['value'],
                         prediction_data['upper'])
                 })
+            result.append(result_row)
+
+        return pd.DataFrame.from_dict(result).set_index('timestamp')
+
+    return None
+
+
+def prediction_result_to_dataframe(prediction):
+    fmt = MissingFieldsStringFormatter(missing='N/A')
+    result = []
+    if prediction.prediction_result:
+        for prediction_element in prediction.prediction_result.result['datapoints']:
+            result_timestamp = prediction_element['timestamp']
+
+            result_row = {
+                'timestamp': result_timestamp
+            }
+            for prediction_data in prediction_element['prediction']:
+                if prediction_data['value']:
+                    result_row.update({
+                        prediction_data['symbol']: fmt.format(
+                            '{:.3f}',
+                            prediction_data['value'])
+                    })
             result.append(result_row)
 
         return pd.DataFrame.from_dict(result).set_index('timestamp')
