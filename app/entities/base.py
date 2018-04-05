@@ -1,17 +1,44 @@
-from app.db import db
 import datetime
 
+from sqlalchemy import Column, Integer, DateTime
+from sqlalchemy.ext.declarative import declarative_base
 
-class BaseEntity(db.Model):
+from app.database import db_session
+
+
+class MyBase:
+
+    def save(self):
+        db_session.add(self)
+        db_session.flush()
+        db_session.commit()
+
+    def update(self, **kwargs):
+        for attr, value in kwargs.items():
+            setattr(self, attr, value)
+        return self.save()
+
+    def delete(self):
+        db_session.delete(self)
+        db_session.flush()
+        db_session.commit()
+
+
+EntityDeclarativeBase = declarative_base(cls=MyBase)
+EntityDeclarativeBase.query = db_session.query_property()
+
+
+class BaseEntity(EntityDeclarativeBase):
     __abstract__ = True
     __tablename__ = None
 
     INCLUDE_ATTRIBUTES = ()
     EXCLUDE_ATTRIBUTES = ()
 
-    id = db.Column(db.Integer, autoincrement=True, primary_key=True)
-    created_at = db.Column(db.DateTime(timezone=True), default=datetime.datetime.now, index=True)
-    last_update = db.Column(db.DateTime(timezone=True), default=datetime.datetime.now, onupdate=datetime.datetime.now, index=True)
+    id = Column(Integer, autoincrement=True, primary_key=True)
+    created_at = Column(DateTime(timezone=True), default=datetime.datetime.now, index=True)
+    last_update = Column(DateTime(timezone=True), default=datetime.datetime.now, onupdate=datetime.datetime.now,
+                         index=True)
 
     def serialize(self, format):
         if format == 'json':
@@ -33,17 +60,3 @@ class BaseEntity(db.Model):
 
     def __iter__(self):
         return self.to_dict().iteritems()
-
-    def save(self):
-        db.session.add(self)
-        db.session.commit()
-
-    def update(self):
-        db.session.merge(self)
-        db.session.commit()
-
-    def delete(self):
-        db.session.delete(self)
-        db.session.commit()
-
-

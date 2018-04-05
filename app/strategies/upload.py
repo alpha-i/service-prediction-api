@@ -37,7 +37,7 @@ class TrainAndPredictOnUploadStrategy(AbstractUploadStrategy):
     """
 
     def run(self, datasource: DataSource, company_configuration: CompanyConfiguration):
-        from app.tasks.predict import training_and_prediction_task, prediction_failure
+        from app.tasks.predict import training_and_prediction_task
 
         now = datetime.datetime.now().isoformat()
         datasource_id = datasource.id
@@ -61,8 +61,7 @@ class TrainAndPredictOnUploadStrategy(AbstractUploadStrategy):
         services.prediction.set_task_status(prediction_task, TaskStatusTypes.queued)
 
         training_and_prediction_task.apply_async(
-            (task_code, company_id, datasource_upload_code, prediction_request),
-            link_error=prediction_failure.s(task_code)
+            (task_code, company_id, datasource_upload_code, prediction_request)
         )
 
         logging.debug(

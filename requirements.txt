@@ -10,9 +10,8 @@ click==6.7
 decorator==4.2.1
 Flask==0.12.2
 Flask-Celery-Helper==1.1.0
-Flask-Migrate==2.1.1
-Flask-SQLAlchemy==2.3.2
 Flask-Bootstrap==3.3.7.1
+gunicorn
 itsdangerous==0.24
 jedi==0.11.1
 Jinja2==2.10
@@ -49,4 +48,3 @@ sklearn
 alphai_delphi==2.2.0
 tensorflow==1.4.0
 alphai_metacrocubot_oracle
-gunicorn

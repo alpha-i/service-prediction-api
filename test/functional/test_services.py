@@ -2,15 +2,16 @@ from app.entities import UserEntity, CompanyEntity
 from test.functional.base_test_class import BaseTestClass
 
 from app import services
+from app.database import db_session
 
 
 class TestEntities(BaseTestClass):
     def test_user_services(self):
         company = CompanyEntity(name='alese.it', domain='alese.it')
         user = UserEntity(email='gabriele@alese.it', company_id=1)
-        self.DB.session.add(company)
-        self.DB.session.add(user)
-        self.DB.session.commit()
+        db_session.add(company)
+        db_session.add(user)
+        db_session.commit()
 
         company = services.company.get_for_domain('alese.it')
 

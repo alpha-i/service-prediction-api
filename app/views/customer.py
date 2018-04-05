@@ -12,7 +12,7 @@ from app import services, ApiResponse
 from app.core.auth import requires_access_token
 from app.core.models import DataSource
 from app.core.utils import handle_error, allowed_extension, generate_upload_code
-from app.db import db
+from app.database import db_session
 from app.entities import CompanyConfigurationEntity, PredictionTaskEntity
 from app.entities.datasource import UploadTypes
 from app.interpreters.prediction import prediction_result_to_dataframe, calculate_factor_percentage
@@ -395,10 +395,7 @@ def update_customer_configuration():
         configuration_entity = CompanyConfigurationEntity(
             user_id=user.id
         )
-    configuration_entity.configuration = new_configuration
-    db.session.add(configuration_entity)
-    db.session.add(user)  # TODO: needs to be decoupled!
-    db.session.commit()  # maybe follow implement a repository/entity pattern
+    configuration_entity.update(configuration=new_configuration)
     return jsonify(user.configuration), 201
 
 

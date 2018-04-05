@@ -1,10 +1,10 @@
 from enum import Enum
 
-from sqlalchemy import event
+from sqlalchemy import event, Column, String, ForeignKey, Integer, JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm.exc import NoResultFound
 
-from app.db import db
+from app.database import db_session, local_session_scope
 from app.entities import BaseEntity, CustomerActionEntity, Actions
 
 
@@ -22,28 +22,27 @@ class PredictionTaskEntity(BaseEntity):
     INCLUDE_ATTRIBUTES = ('status', 'statuses', 'prediction_result',
                           'is_completed', 'prediction_request', 'datasource_upload_code')
 
-    name = db.Column(db.String(60), nullable=False)
+    name = Column(String(60), nullable=False)
 
-    company_id = db.Column(db.ForeignKey('company.id'), nullable=False)
+    company_id = Column(ForeignKey('company.id'), nullable=False)
     company = relationship('CompanyEntity', foreign_keys=company_id)
 
-    task_code = db.Column(db.String(60), unique=True, nullable=False)
+    task_code = Column(String(60), unique=True, nullable=False)
     statuses = relationship('PredictionTaskStatusEntity', cascade='all, delete-orphan')
 
-    datasource_id = db.Column(db.Integer, db.ForeignKey('data_source.id'), nullable=False)
+    datasource_id = Column(Integer, ForeignKey('data_source.id'), nullable=False)
     datasource = relationship('DataSourceEntity', back_populates='prediction_task_list')
 
     prediction_result = relationship('PredictionResultEntity', uselist=False, back_populates='prediction_task',
                                      cascade='all, delete-orphan')
-    prediction_request = db.Column(db.JSON)
+    prediction_request = Column(JSON)
 
     @staticmethod
     def get_by_task_code(task_code):
         try:
-            session = db.session()
-            prediction_task_entity = session.query(PredictionTaskEntity).filter(
+            prediction_task_entity = PredictionTaskEntity.query.filter(
                 PredictionTaskEntity.task_code == task_code).one()
-            session.refresh(prediction_task_entity)
+            db_session.refresh(prediction_task_entity)
             return prediction_task_entity
         except NoResultFound:
             return None
@@ -76,22 +75,22 @@ class PredictionTaskEntity(BaseEntity):
 class PredictionTaskStatusEntity(BaseEntity):
     __tablename__ = 'prediction_task_status'
 
-    prediction_task_id = db.Column(db.Integer, db.ForeignKey('prediction_task.id'), nullable=False)
+    prediction_task_id = Column(Integer, ForeignKey('prediction_task.id'), nullable=False)
     prediction_task = relationship('PredictionTaskEntity', back_populates='statuses')
-    state = db.Column(db.String(), index=True)
-    message = db.Column(db.String(), nullable=True)
+    state = Column(String(), index=True)
+    message = Column(String(), nullable=True)
 
 
 class PredictionResultEntity(BaseEntity):
     __tablename__ = 'prediction_result'
 
-    company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=False)
+    company_id = Column(Integer, ForeignKey('company.id'), nullable=False)
     company = relationship('CompanyEntity', back_populates='prediction_results')
 
-    task_code = db.Column(db.String(60), unique=True)
-    result = db.Column(db.JSON)
+    task_code = Column(String(60), unique=True)
+    result = Column(JSON)
 
-    prediction_task_id = db.Column(db.Integer, db.ForeignKey('prediction_task.id'), nullable=False)
+    prediction_task_id = Column(Integer, ForeignKey('prediction_task.id'), nullable=False)
     prediction_task = relationship('PredictionTaskEntity', back_populates='prediction_result')
 
     @staticmethod
@@ -103,14 +102,12 @@ class PredictionResultEntity(BaseEntity):
 
 
 def update_user_action(mapper, connection, self):
-    session = db.create_scoped_session()
     action = CustomerActionEntity(
         company_id=self.company_id,
         action=Actions.PREDICTION_STARTED
     )
-    session.add(action)
-    session.commit()
-    session.flush()
+    with local_session_scope() as session:
+        session.add(action)
 
 
 event.listen(PredictionTaskEntity, 'after_insert', update_user_action)
