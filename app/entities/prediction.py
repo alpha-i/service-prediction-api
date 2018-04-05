@@ -27,6 +27,9 @@ class PredictionTaskEntity(BaseEntity):
     company_id = Column(ForeignKey('company.id'), nullable=False)
     company = relationship('CompanyEntity', foreign_keys=company_id)
 
+    user_id = Column(ForeignKey('user.id'), nullable=False)
+    user = relationship('UserEntity', foreign_keys=user_id)
+
     task_code = Column(String(60), unique=True, nullable=False)
     statuses = relationship('PredictionTaskStatusEntity', cascade='all, delete-orphan')
 
@@ -104,6 +107,7 @@ class PredictionResultEntity(BaseEntity):
 def update_user_action(mapper, connection, self):
     action = CustomerActionEntity(
         company_id=self.company_id,
+        user_id=self.user_id,
         action=Actions.PREDICTION_STARTED
     )
     with local_session_scope() as session:

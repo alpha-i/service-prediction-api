@@ -26,6 +26,9 @@ class TrainingTaskEntity(BaseEntity):
     company_id = Column(ForeignKey('company.id'), nullable=False)
     company = relationship('CompanyEntity')
 
+    user_id = Column(ForeignKey('user.id'), nullable=False)
+    user = relationship('UserEntity', foreign_keys=user_id)
+
     datasource_id = Column(ForeignKey('data_source.id'), nullable=False)
     datasource = relationship('DataSourceEntity', back_populates='training_task_list')
 
@@ -45,6 +48,7 @@ class TrainingTaskEntity(BaseEntity):
 def update_user_action(mapper, connection, self):
     action = CustomerActionEntity(
         company_id=self.company_id,
+        user_id=self.user_id,
         action=Actions.TRAINING_STARTED
     )
     with local_session_scope() as session:

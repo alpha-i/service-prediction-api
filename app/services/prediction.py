@@ -56,19 +56,18 @@ def set_task_status(task, status, message=None):
         PredictionTaskStatus(
             prediction_task_id=task.id,
             state=status.value,
-            message=message,
-            created_at=datetime.datetime.utcnow(),
-            last_update=datetime.datetime.utcnow()
+            message=message
         )
     )
     return task_status
 
 
-def create_prediction_task(task_name, task_code, company_id, datasource_id):
+def create_prediction_task(task_name, task_code, company_id, user_id, datasource_id):
     task = services.prediction.insert_task(
         PredictionTask(name=task_name,
                        task_code=task_code,
                        company_id=company_id,
+                       user_id=user_id,
                        datasource_id=datasource_id)
     )
     return task

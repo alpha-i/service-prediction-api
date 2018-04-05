@@ -29,7 +29,7 @@ class UserPermissions(enum.Enum):
 class CompanyEntity(BaseEntity):
     __tablename__ = 'company'
 
-    INCLUDE_ATTRIBUTES = ('current_configuration', 'current_datasource',
+    INCLUDE_ATTRIBUTES = ('current_configuration', 'current_datasource', 'actions',
                           'prediction_results', 'data_sources', 'prediction_tasks')
 
     name = Column(String, nullable=False)
@@ -144,6 +144,8 @@ class CustomerActionEntity(BaseEntity):
 
     company_id = Column(ForeignKey('company.id'), nullable=False)
     company = relationship('CompanyEntity', foreign_keys=company_id)
+    user_id = Column(ForeignKey('user.id'), nullable=False)
+    user = relationship('UserEntity', foreign_keys=user_id)
     action = Column(Enum(Actions))
 
 
@@ -159,6 +161,8 @@ class CompanyConfigurationEntity(BaseEntity):
 
     company_id = Column(ForeignKey('company.id'), nullable=False)
     company = relationship('CompanyEntity', foreign_keys=company_id)
+    user_id = Column(ForeignKey('user.id'), nullable=False)
+    user = relationship('UserEntity', foreign_keys=user_id)
     configuration = Column(JSON)
 
     @staticmethod
@@ -182,6 +186,7 @@ class CompanyConfigurationEntity(BaseEntity):
 def update_user_action(mapper, connection, self):
     action = CustomerActionEntity(
         company_id=self.company_id,
+        user_id=self.user_id,
         action=Actions.CONFIGURATION_UPDATE
     )
     with local_session_scope() as session:

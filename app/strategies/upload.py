@@ -42,6 +42,7 @@ class TrainAndPredictOnUploadStrategy(AbstractUploadStrategy):
         now = datetime.datetime.now().isoformat()
         datasource_id = datasource.id
         datasource_upload_code = datasource.upload_code
+        user_id = datasource.user_id
         company_id = company_configuration.company_id
 
         # Make up a prediction request
@@ -56,6 +57,7 @@ class TrainAndPredictOnUploadStrategy(AbstractUploadStrategy):
             task_name=prediction_request['name'],
             task_code=task_code,
             company_id=company_id,
+            user_id=user_id,
             datasource_id=datasource_id,
         )
         services.prediction.set_task_status(prediction_task, TaskStatusTypes.queued)

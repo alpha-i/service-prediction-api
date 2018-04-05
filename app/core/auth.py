@@ -30,6 +30,7 @@ def requires_admin_permissions(fn):
         user = is_user_logged()
         if not user:
             abort(403)
+        g.user = user
         if not user.permissions == UserPermissions.ADMIN:
             logging.debug(f"User {user.email} was not allowed an admin action")
             abort(403, 'Only admins can do that!')

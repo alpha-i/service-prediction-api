@@ -122,6 +122,7 @@ class CompanyConfigurationSchema(BaseModelSchema):
 
 
 class CustomerActionSchema(BaseModelSchema):
+    user_id = fields.Integer()
     action = fields.String()
 
 
