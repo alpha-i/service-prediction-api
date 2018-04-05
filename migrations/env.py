@@ -39,11 +39,11 @@ def run_migrations_offline():
 
     sys.path.append(os.getcwd())
     from config import SQLALCHEMY_DATABASE_URI
-    from app.database import metadata
+    from app.entities.base import EntityDeclarativeBase
 
     alembic_config = config.get_section(config.config_ini_section)
     alembic_config['sqlalchemy.url'] = SQLALCHEMY_DATABASE_URI
-    target_metadata = metadata
+    target_metadata = EntityDeclarativeBase.metadata
 
     context.configure(
         url=SQLALCHEMY_DATABASE_URI,
@@ -67,11 +67,11 @@ def run_migrations_online():
 
     sys.path.append(os.getcwd())
     from config import SQLALCHEMY_DATABASE_URI
-    from app.database import metadata
+    from app.entities.base import EntityDeclarativeBase
 
     alembic_config = config.get_section(config.config_ini_section)
     alembic_config['sqlalchemy.url'] = SQLALCHEMY_DATABASE_URI
-    target_metadata = metadata
+    target_metadata = EntityDeclarativeBase.metadata
 
     connectable = engine_from_config(
         alembic_config,

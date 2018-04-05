@@ -22,6 +22,19 @@ def show_current_company_info():
     return response()
 
 
+@company_blueprint.route('/actions', methods=['GET'])
+@requires_access_token
+def list_customer_actions():
+    response = ApiResponse(
+        content_type=request.accept_mimetypes.best,
+        context=g.user.company.actions
+    )
+
+    return response()
+
+
+
+
 @company_blueprint.route('/register', methods=['POST'])
 @parse_request_data
 @requires_admin_permissions
@@ -90,6 +103,7 @@ def configuration_update(company_id):
 
     configuration = CompanyConfiguration(
         company_id=company_id,
+        user_id=g.user.id,
         configuration=json_reload(data)
     )
 

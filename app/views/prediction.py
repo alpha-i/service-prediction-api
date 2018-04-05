@@ -32,6 +32,7 @@ def submit():
         task_name=prediction_request['name'],
         task_code=task_code,
         company_id=company_id,
+        user_id=g.user.id,
         datasource_id=datasource_id,
     )
 

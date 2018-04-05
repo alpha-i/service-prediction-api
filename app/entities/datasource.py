@@ -66,6 +66,7 @@ class DataSourceEntity(BaseEntity):
 def update_user_action(mapper, connection, self):
     action = CustomerActionEntity(
         company_id=self.company_id,
+        user_id=self.user_id,
         action=Actions.FILE_UPLOAD
     )
     with local_session_scope() as session:

@@ -392,7 +392,8 @@ def update_customer_configuration():
     configuration_entity = user.configuration
     if not configuration_entity:
         configuration_entity = CompanyConfigurationEntity(
-            user_id=user.id
+            user_id=user.id,
+            company_id=g.user.company_id
         )
     configuration_entity.update(configuration=new_configuration)
     return jsonify(user.configuration), 201
