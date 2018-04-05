@@ -36,8 +36,8 @@ class BaseEntity(EntityDeclarativeBase):
     EXCLUDE_ATTRIBUTES = ()
 
     id = Column(Integer, autoincrement=True, primary_key=True)
-    created_at = Column(DateTime(timezone=True), default=datetime.datetime.now, index=True)
-    last_update = Column(DateTime(timezone=True), default=datetime.datetime.now, onupdate=datetime.datetime.now,
+    created_at = Column(DateTime(timezone=True), default=datetime.datetime.utcnow, index=True)
+    last_update = Column(DateTime(timezone=True), default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow,
                          index=True)
 
     def serialize(self, format):

@@ -9,7 +9,6 @@ engine = create_engine(SQLALCHEMY_DATABASE_URI, convert_unicode=True)
 metadata = MetaData()
 db_session = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=engine))
 
-
 @contextmanager
 def local_session_scope():
     session = scoped_session(sessionmaker(bind=engine))

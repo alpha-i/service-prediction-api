@@ -12,7 +12,6 @@ from app import services, ApiResponse
 from app.core.auth import requires_access_token
 from app.core.models import DataSource
 from app.core.utils import handle_error, allowed_extension, generate_upload_code
-from app.database import db_session
 from app.entities import CompanyConfigurationEntity, PredictionTaskEntity
 from app.entities.datasource import UploadTypes
 from app.interpreters.prediction import prediction_result_to_dataframe, calculate_factor_percentage
