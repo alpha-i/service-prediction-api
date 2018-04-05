@@ -3,6 +3,7 @@ import abc
 import pandas as pd
 from flask import json
 
+from app.core.jsonencoder import CustomJSONEncoder
 from app.core.schemas import (
     UserSchema, CompanySchema, PredictionTaskSchema, DataSourceSchema,
     CompanyConfigurationSchema, PredictionTaskStatusSchema, TrainingTaskSchema,
@@ -33,7 +34,7 @@ class BaseModel(metaclass=abc.ABCMeta):
             return None
 
         schema = cls.SCHEMA()
-        data, errors = schema.loads(json.dumps(model.to_dict()))
+        data, errors = schema.loads(json.dumps(model.to_dict(), cls=CustomJSONEncoder))
         if errors:
             raise EntityCreationException(errors)
 

@@ -1,11 +1,14 @@
 import logging
 
+from celery import Task
+
 from app import celery
 from app import interpreters
 from app import services
 from app.core.models import PredictionResult
 from app.core.schemas import PredictionRequestSchema
 from app.core.utils import json_reload
+from app.database import db_session
 from app.entities import TaskStatusTypes
 from app.services.prediction import set_task_status
 
@@ -76,6 +79,7 @@ def training_and_prediction_task(self, task_code, company_id, upload_code, predi
     )
 
     services.prediction.insert_result(prediction_result_model)
+    db_session.remove()
     return
 
 

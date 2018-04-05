@@ -30,7 +30,6 @@ def insert_task(prediction_task):
 
 def update_task(prediction_task):
     model = prediction_task._model
-    prediction_task.refresh()
     for k, v in prediction_task.__dict__.items():
         try:
             setattr(model, k, v)

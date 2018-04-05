@@ -4,7 +4,6 @@ import os
 import time
 from flask import url_for
 
-from app.db import db
 from app.entities import TaskStatusTypes
 from test.functional.base_test_class import BaseTestClass
 
@@ -13,7 +12,6 @@ HERE = os.path.join(os.path.dirname(__file__))
 
 class TestTriggerTaskOnUpload(BaseTestClass):
     TESTING = True
-    DB = db
 
     COMPANY_CONFIGURATION = {
         # 'oracle_class': 'test.mock_oracle.MockMetaCrocubot',
