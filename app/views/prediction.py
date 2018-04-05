@@ -8,7 +8,7 @@ from app.core.content import ApiResponse
 from app.core.schemas import PredictionRequestSchema
 from app.core.utils import parse_request_data
 from app.entities import TaskStatusTypes
-from app.tasks.predict import training_and_prediction_task, prediction_failure
+from app.tasks.predict import training_and_prediction_task
 
 predict_blueprint = Blueprint('prediction', __name__)
 
@@ -38,8 +38,7 @@ def submit():
     services.prediction.set_task_status(prediction_task, TaskStatusTypes.queued)
     upload_code = g.user.company.current_datasource.upload_code
     training_and_prediction_task.apply_async(
-        (task_code, company_id, upload_code, prediction_request),
-        link_error=prediction_failure.s(task_code)
+        (task_code, company_id, upload_code, prediction_request)
     )
 
     response = ApiResponse(
