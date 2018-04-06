@@ -1,7 +1,7 @@
 import abc
+from collections import defaultdict
 
 import pandas as pd
-from dateutil import parser
 
 from app.core.utils import import_class, MissingFieldsStringFormatter
 
@@ -125,7 +125,9 @@ def metacrocubot_prediction_interpreter(metacrocubot_prediction) -> dict:
     mean_vector_values = getattr(metacrocubot_prediction, 'mean_vector')
     upper_bounds = getattr(metacrocubot_prediction, 'upper_bound')
     lower_bounds = getattr(metacrocubot_prediction, 'lower_bound')
-    feature_sensitivity = getattr(metacrocubot_prediction, 'features_sensitivity')
+    feature_sensitivity_per_symbol = getattr(metacrocubot_prediction, 'features_per_symbol_sensitivity')
+    feature_sensitivity_average = getattr(metacrocubot_prediction, 'features_average_sensitivity')
+
     target_timestamp = getattr(metacrocubot_prediction, 'target_timestamp')
 
     result_list = []
@@ -154,21 +156,67 @@ def metacrocubot_prediction_interpreter(metacrocubot_prediction) -> dict:
     result['datapoints'] = result_list
     result['factors'] = {}
 
-    for feature, sensitivity in feature_sensitivity.items():
-        result['factors'][feature] = sensitivity
+    for feature, sensitivity in feature_sensitivity_per_symbol.items():
+        if not result['factors'].get(feature):
+            result['factors'][feature] = {}
+        result['factors'][feature]['symbols'] = sensitivity.dropna().to_dict()
+
+    for feature, sensitivity in feature_sensitivity_average.items():
+        if not result['factors'].get(feature):
+            result['factors'][feature] = {}
+        result['factors'][feature]['average'] = sensitivity
 
     return result
 
 
+def clean_feature_name(name):
+    splitted_feature_name = name.split("_")
+    return "".join(splitted_feature_name[:-1])
+
+
 def calculate_factor_percentage(factors):
-
-    def clean_feature_name(name):
-        splitted_feature_name = name.split("_")
-        return "".join(splitted_feature_name[:-1])
-
-    factors = {clean_feature_name(key):value for key, value in factors.items()}
-
     total = sum([value for value in factors.values()])
-    percent_factors = {key: round(value * 100 / total) for key, value in factors.items()}
-
+    percent_factors = {key: round(value * 100 / total, 2) for key, value in factors.items()}
     return sorted(percent_factors.items(), key=lambda x: x[1], reverse=True)
+
+
+def calculate_average_factors_percentage(factors):
+    factors = {clean_feature_name(key): value for key, value in factors.items()}
+    average_factors = {}
+    for feature, value in factors.items():
+        average_factors[feature] = factors[feature]['average']
+    return dict(calculate_factor_percentage(average_factors))
+
+
+def calculate_per_symbol_factors_percentage(factors):
+    factors = {clean_feature_name(key): value for key, value in factors.items()}
+
+    # first fetch all the symbols' values, discarding the average
+    symbols_factors_normalise = defaultdict(dict)
+    for feature, value in factors.items():
+        for symbol, value in factors[feature]['symbols'].items():
+            symbols_factors_normalise[symbol][feature] = value
+
+    # the normalise at % the values for every feature per stock
+    for symbol, value in symbols_factors_normalise.items():
+        total_for_symbol = sum([value for value in value.values()])
+        symbols_factors_normalise[symbol] = {key: round(value * 100 / total_for_symbol, 2)
+                                             for key, value in value.items()}
+
+    # restructure the output dict to be [feature][symbol]
+    final_symbols_factors = defaultdict(dict)
+    for symbol, values in symbols_factors_normalise.items():
+        for feature, value in values.items():
+            final_symbols_factors[feature][symbol] = symbols_factors_normalise[symbol][feature]
+
+    return final_symbols_factors
+
+
+def combine_average_and_symbols_sensitivities(factors):
+    average_percent_factors = calculate_average_factors_percentage(factors)
+    per_symbol_percent_factors = calculate_per_symbol_factors_percentage(factors)
+    prediction_factors = defaultdict(dict)
+    for feature, value in per_symbol_percent_factors.items():
+        prediction_factors[feature]['average'] = average_percent_factors[feature]
+        prediction_factors[feature].update(per_symbol_percent_factors[feature])
+    return prediction_factors
