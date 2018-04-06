@@ -14,7 +14,7 @@ from app.core.models import DataSource
 from app.core.utils import handle_error, allowed_extension, generate_upload_code
 from app.entities import CompanyConfigurationEntity, PredictionTaskEntity
 from app.entities.datasource import UploadTypes
-from app.interpreters.prediction import prediction_result_to_dataframe, calculate_factor_percentage
+from app.interpreters.prediction import prediction_result_to_dataframe_with_error, calculate_factor_percentage
 from config import MAXIMUM_DAYS_FORECAST, DATETIME_FORMAT, DEFAULT_TIME_RESOLUTION
 
 customer_blueprint = Blueprint('customer', __name__)
@@ -139,7 +139,7 @@ def view_prediction(task_code):
         'result': None
     }
 
-    result_dataframe = prediction_result_to_dataframe(prediction)
+    result_dataframe = prediction_result_to_dataframe_with_error(prediction)
     if result_dataframe is not None:
 
         latest_date_in_datasource = g.user.company.current_datasource.end_date.date()
@@ -187,7 +187,7 @@ def download_prediction_csv(task_code):
     if not prediction.company_id == g.user.company_id:
         return handle_error(403, "Unauthorised")
 
-    result_dataframe = prediction_result_to_dataframe(prediction)
+    result_dataframe = prediction_result_to_dataframe_with_error(prediction)
 
     return Response(
         result_dataframe.to_csv(),

@@ -77,9 +77,12 @@ def prediction_result_to_dataframe_with_error(prediction):
                 'timestamp': result_timestamp
             }
             for prediction_data in prediction_element['prediction']:
+                if not prediction_data['value']:
+                    # We won't show data where the value is none
+                    continue
                 result_row.update({
                     prediction_data['symbol']: fmt.format(
-                        '{:.2f};{:.2f};{:.2f}',
+                        '{:.3f};{:.3f};{:.3f}',
                         prediction_data['lower'],
                         prediction_data['value'],
                         prediction_data['upper'])
@@ -132,7 +135,7 @@ def metacrocubot_prediction_interpreter(metacrocubot_prediction) -> dict:
         datapoint['timestamp'] = str(timestamp)
         datapoint['prediction'] = []
 
-        # Drop NaNs from the results
+        # Change NaNs in None from the results
         # otherwise we can't save results to a DB...
         mean_vector_values = mean_vector_values.where(pd.notnull(mean_vector_values), None)
         upper_bounds = upper_bounds.where(pd.notnull(upper_bounds), None)
