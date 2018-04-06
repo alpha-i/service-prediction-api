@@ -45,6 +45,6 @@ tables
 numpy
 sklearn
 # Oracle-related dependencies
-alphai_delphi==2.2.0
+alphai_delphi>=3.0.0
 tensorflow==1.4.0
-alphai_metacrocubot_oracle
+alphai_metacrocubot_oracle>=1.0.0
