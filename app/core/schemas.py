@@ -8,11 +8,6 @@ from app.entities.customer import UserPermissions
 from app.entities.datasource import UploadTypes
 
 
-class HashableAttribDict(AttribDict):
-    def __hash__(self):
-        return hash(repr(dict(self)))
-
-
 class BaseModelSchema(Schema):
     id = fields.Integer(allow_none=True)
     created_at = fields.DateTime(allow_none=True)
@@ -20,7 +15,7 @@ class BaseModelSchema(Schema):
 
     @property
     def dict_class(self):
-        return HashableAttribDict
+        return AttribDict
 
 
 class DataPointSchema(Schema):
@@ -131,7 +126,8 @@ class CompanySchema(BaseModelSchema):
     domain = fields.String()
     data_sources = fields.Nested(DataSourceSchema, many=True, default=[])
     current_configuration = fields.Nested(CompanyConfigurationSchema, default=None, allow_none=True)
-    datasources = fields.Nested(DataSourceSchema, many=True, default=[], load_from='data_sources', dump_to='data_sources')
+    datasources = fields.Nested(DataSourceSchema, many=True, default=[], load_from='data_sources',
+                                dump_to='data_sources')
     current_datasource = fields.Nested(DataSourceSchema, allow_none=True)
     actions = fields.Nested(CustomerActionSchema, many=True, default=[])
     prediction_tasks = fields.Nested(PredictionTaskSchema, many=True, default=[])
