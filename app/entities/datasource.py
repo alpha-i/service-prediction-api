@@ -1,10 +1,10 @@
 import enum
 
 import pandas as pd
-from flask_sqlalchemy import event
 from sqlalchemy import Column, Integer, ForeignKey, String, DateTime, Boolean, Enum
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy import event
 
 from app.database import local_session_scope
 from app.entities import BaseEntity, CustomerActionEntity, Actions
