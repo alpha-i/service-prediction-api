@@ -164,7 +164,6 @@ def view_prediction(task_code):
         factors = prediction.prediction_result.result['factors']
 
         percent_factors = calculate_average_factors_percentage(factors)
-
         context['result'] = {
             'data': prediction.prediction_result.result['datapoints'][0]['prediction'],
             'header': headers,
@@ -175,7 +174,7 @@ def view_prediction(task_code):
             ],
             'status': prediction.statuses[-1].state,
             'prediction_result': prediction.prediction_result,
-            "factors": percent_factors
+            'factors': percent_factors
         }
 
     return render_template('prediction/view.html', **context)
