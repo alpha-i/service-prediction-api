@@ -4,16 +4,17 @@ import os
 from flask import url_for
 from flask_testing import TestCase
 
-from app.db import db
 from app.services.superuser import create_admin
 from app.services.user import generate_confirmation_token
 from config import SUPERUSER_EMAIL, SUPERUSER_PASSWORD
 from test.test_app import APP
 
+from app.database import db_session, engine
+from app.entities.base import EntityDeclarativeBase
+
 
 class BaseTestClass(TestCase):
     TESTING = True
-    DB = db
 
     SUPERUSER_EMAIL = SUPERUSER_EMAIL
     SUPERUSER_PASSWORD = SUPERUSER_PASSWORD
@@ -130,17 +131,16 @@ class BaseTestClass(TestCase):
         return APP
 
     def setUp(self):
-        self.DB.drop_all()
-        self.DB.create_all()
+        db_session.close()
+        db_session.remove()
+        EntityDeclarativeBase.metadata.drop_all(engine)
+        EntityDeclarativeBase.metadata.create_all(engine)
 
     def tearDown(self):
         from app.entities.datasource import DataSourceEntity
         uploads = [datasource.location for datasource in DataSourceEntity.query.all()]
         for upload in uploads:
             os.remove(upload)
-
-        self.DB.session.remove()
-        self.DB.drop_all()
 
     def create_superuser(self):
         create_admin(self.SUPERUSER_EMAIL, self.SUPERUSER_PASSWORD)

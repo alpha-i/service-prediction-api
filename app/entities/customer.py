@@ -1,27 +1,27 @@
+import enum
 import logging
-from enum import Enum
 
 from itsdangerous import (
     TimedJSONWebSignatureSerializer as Serializer, BadSignature, SignatureExpired
 )
 from passlib.apps import custom_app_context as pwd_context
-from sqlalchemy import event
+from sqlalchemy import (event, Column, String, JSON, ForeignKey, Boolean, Enum)
 from sqlalchemy.orm import relationship, validates
 from sqlalchemy.orm.exc import NoResultFound
 
-from app.db import db
+from app.database import db_session, local_session_scope
 from app.entities import BaseEntity
 from config import SECRET_KEY
 
 
-class Actions(Enum):
+class Actions(enum.Enum):
     FILE_UPLOAD = 'FILE_UPLOAD'
     PREDICTION_STARTED = 'PREDICTION_STARTED'
     CONFIGURATION_UPDATE = 'CONFIGURATION_UPDATE'
     TRAINING_STARTED = 'TRAINING_STARTED'
 
 
-class UserPermissions(Enum):
+class UserPermissions(enum.Enum):
     USER = 'USER'
     ADMIN = 'ADMIN'
 
@@ -29,13 +29,13 @@ class UserPermissions(Enum):
 class CompanyEntity(BaseEntity):
     __tablename__ = 'company'
 
-    INCLUDE_ATTRIBUTES = ('current_configuration', 'current_datasource',
+    INCLUDE_ATTRIBUTES = ('current_configuration', 'current_datasource', 'actions',
                           'prediction_results', 'data_sources', 'prediction_tasks')
 
-    name = db.Column(db.String, nullable=False)
-    logo = db.Column(db.String)
-    domain = db.Column(db.String, nullable=False)
-    profile = db.Column(db.JSON)
+    name = Column(String, nullable=False)
+    logo = Column(String)
+    domain = Column(String, nullable=False)
+    profile = Column(JSON)
 
     prediction_tasks = relationship('PredictionTaskEntity', back_populates='company')
     training_tasks = relationship('TrainingTaskEntity', back_populates='company')
@@ -88,18 +88,18 @@ class UserEntity(BaseEntity):
     INCLUDE_ATTRIBUTES = ('actions', 'company')
     EXCLUDE_ATTRIBUTES = ('password_hash',)
 
-    email = db.Column(db.String(32), index=True)
-    password_hash = db.Column(db.String(128))
+    email = Column(String(32), index=True)
+    password_hash = Column(String(128))
 
     data_sources = relationship('DataSourceEntity', back_populates='user')
 
-    company_id = db.Column(db.ForeignKey('company.id'), nullable=False)
+    company_id = Column(ForeignKey('company.id'), nullable=False)
     company = relationship('CompanyEntity', foreign_keys=company_id)
 
     profile = relationship('UserProfileEntity', uselist=False)
-    permissions = db.Column(db.Enum(UserPermissions), default=UserPermissions.USER)
+    permissions = Column(Enum(UserPermissions), default=UserPermissions.USER)
 
-    confirmed = db.Column(db.Boolean, default=False)
+    confirmed = Column(Boolean, default=False)
 
     def hash_password(self, password):
         self.password_hash = pwd_context.encrypt(password)
@@ -125,10 +125,9 @@ class UserEntity(BaseEntity):
         except BadSignature:
             return None
 
-        session = db.session()
-        user = session.query(UserEntity).get(data['id'])
-        session.refresh(user)
-        session.commit()
+        user = db_session.query(UserEntity).get(data['id'])
+        db_session.refresh(user)
+        db_session.commit()
         return user
 
     @staticmethod
@@ -143,24 +142,28 @@ class UserEntity(BaseEntity):
 class CustomerActionEntity(BaseEntity):
     __tablename__ = 'customer_action'
 
-    company_id = db.Column(db.ForeignKey('company.id'), nullable=False)
+    company_id = Column(ForeignKey('company.id'), nullable=False)
     company = relationship('CompanyEntity', foreign_keys=company_id)
-    action = db.Column(db.Enum(Actions))
+    user_id = Column(ForeignKey('user.id'), nullable=False)
+    user = relationship('UserEntity', foreign_keys=user_id)
+    action = Column(Enum(Actions))
 
 
 class UserProfileEntity(BaseEntity):
     __tablename__ = 'user_profile'
 
-    user_id = db.Column(db.ForeignKey('user.id'), nullable=False)
+    user_id = Column(ForeignKey('user.id'), nullable=False)
     user = relationship('UserEntity', foreign_keys=user_id)
 
 
 class CompanyConfigurationEntity(BaseEntity):
     __tablename__ = 'company_configuration'
 
-    company_id = db.Column(db.ForeignKey('company.id'), nullable=False)
+    company_id = Column(ForeignKey('company.id'), nullable=False)
     company = relationship('CompanyEntity', foreign_keys=company_id)
-    configuration = db.Column(db.JSON)
+    user_id = Column(ForeignKey('user.id'), nullable=False)
+    user = relationship('UserEntity', foreign_keys=user_id)
+    configuration = Column(JSON)
 
     @staticmethod
     def get_by_id(id):
@@ -181,14 +184,13 @@ class CompanyConfigurationEntity(BaseEntity):
 
 
 def update_user_action(mapper, connection, self):
-    session = db.create_scoped_session()
     action = CustomerActionEntity(
         company_id=self.company_id,
+        user_id=self.user_id,
         action=Actions.CONFIGURATION_UPDATE
     )
-    session.add(action)
-    session.commit()
-    session.flush()
+    with local_session_scope() as session:
+        session.add(action)
 
 
 event.listen(CompanyConfigurationEntity, 'after_insert', update_user_action)

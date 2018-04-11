@@ -1,16 +1,17 @@
-from enum import Enum
+import enum
 
 import pandas as pd
-from flask_sqlalchemy import event
+from sqlalchemy import Column, Integer, ForeignKey, String, DateTime, Boolean, Enum
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy import event
 
-from app.db import db
+from app.database import local_session_scope
 from app.entities import BaseEntity, CustomerActionEntity, Actions
 from config import HDF5_STORE_INDEX
 
 
-class UploadTypes(Enum):
+class UploadTypes(enum.Enum):
     FILESYSTEM = 'filesystem'
     BLOBSTORE = 'blobstore'
 
@@ -20,26 +21,26 @@ class DataSourceEntity(BaseEntity):
 
     __tablename__ = 'data_source'
 
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
     user = relationship('UserEntity', foreign_keys=user_id)
-    company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=False)
+    company_id = Column(Integer, ForeignKey('company.id'), nullable=False)
     company = relationship('CompanyEntity', foreign_keys=company_id)
-    upload_code = db.Column(db.String(), index=True)
-    type = db.Column(db.Enum(UploadTypes), index=True)
-    location = db.Column(db.String(), index=True)
-    filename = db.Column(db.String(), nullable=False)
+    upload_code = Column(String(), index=True)
+    type = Column(Enum(UploadTypes), index=True)
+    location = Column(String(), index=True)
+    filename = Column(String(), nullable=False)
 
-    start_date = db.Column(db.DateTime(timezone=True), index=True, nullable=True)
-    end_date = db.Column(db.DateTime(timezone=True), index=True, nullable=True)
+    start_date = Column(DateTime(timezone=True), index=True, nullable=True)
+    end_date = Column(DateTime(timezone=True), index=True, nullable=True)
 
     prediction_task_list = relationship('PredictionTaskEntity', back_populates='datasource',
                                         cascade='all, delete-orphan')
     training_task_list = relationship('TrainingTaskEntity', back_populates='datasource',
                                       cascade='all, delete-orphan')
 
-    is_original = db.Column(db.Boolean, default=False)
-    features = db.Column(db.String, nullable=True)
-    target_feature = db.Column(db.String, nullable=True)
+    is_original = Column(Boolean, default=False)
+    features = Column(String, nullable=True)
+    target_feature = Column(String, nullable=True)
 
     def get_file(self):
         with pd.HDFStore(self.location) as hdf_store:
@@ -63,14 +64,13 @@ class DataSourceEntity(BaseEntity):
 
 
 def update_user_action(mapper, connection, self):
-    session = db.create_scoped_session()
     action = CustomerActionEntity(
         company_id=self.company_id,
+        user_id=self.user_id,
         action=Actions.FILE_UPLOAD
     )
-    session.add(action)
-    session.commit()
-    session.flush()
+    with local_session_scope() as session:
+        session.add(action)
 
 
 event.listen(DataSourceEntity, 'after_insert', update_user_action)

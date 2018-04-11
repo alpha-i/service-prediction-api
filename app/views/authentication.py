@@ -1,13 +1,12 @@
 import datetime
 import logging
 
-from flask import Blueprint, abort, g, url_for, request
-from app import services
+from flask import Blueprint, g, url_for, request
 
+from app import services
 from app.core.auth import requires_access_token
 from app.core.content import ApiResponse
 from app.core.utils import parse_request_data, handle_error
-
 from config import TOKEN_EXPIRATION
 
 authentication_blueprint = Blueprint('authentication', __name__)

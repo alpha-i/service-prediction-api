@@ -5,6 +5,7 @@ from functools import wraps
 
 from flask import request, g, json, current_app, url_for, redirect, abort, flash
 
+from app.core.jsonencoder import CustomJSONEncoder
 from app.core.auth import is_user_logged
 
 
@@ -24,7 +25,7 @@ def parse_request_data(fn):
 
 
 def json_reload(json_as_a_dict):
-    return json.loads(json.dumps(json_as_a_dict))
+    return json.loads(json.dumps(json_as_a_dict, cls=CustomJSONEncoder))
 
 
 def allowed_extension(filename):

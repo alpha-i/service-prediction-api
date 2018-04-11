@@ -1,11 +1,8 @@
-import os
 from pathlib import Path
 
-import errno
 from celery import Celery
 from flask import Flask, request, render_template
 from flask_bootstrap import Bootstrap
-from flask_migrate import Migrate
 
 from app.core.content import ApiResponse
 from app.core.jsonencoder import CustomJSONEncoder
@@ -21,12 +18,8 @@ def create_app(config_filename, register_blueprints=True):
 
     app.config.from_object(config_filename)
 
-    migrate = Migrate()
-
-    # Init Flask-SQLAlchemy
-    from app.db import db
-    db.init_app(app)
-    migrate.init_app(app, db)
+    from app.database import init_db, db_session
+    init_db()
 
     if register_blueprints:
         from app.views.main import home_blueprint
@@ -50,6 +43,10 @@ def create_app(config_filename, register_blueprints=True):
             # development, so wipe the cache every request.
             if 'localhost' in request.host_url or '0.0.0.0' in request.host_url:
                 app.jinja_env.cache = {}
+
+        @app.teardown_appcontext
+        def shutdown_session(exception=None):
+            db_session.remove()
 
         @app.errorhandler(404)
         def render_404(e):
@@ -89,7 +86,6 @@ def create_app(config_filename, register_blueprints=True):
     app.json_encoder = CustomJSONEncoder
 
     for folder in ['UPLOAD_FOLDER', 'TEMPORARY_CSV_FOLDER']:
-
         path = Path(app.config[folder])
         path.mkdir(parents=True, exist_ok=True)
 
@@ -102,14 +98,4 @@ def make_celery(app):
         backend=CELERY_RESULT_BACKEND,
         broker=CELERY_BROKER_URL
     )
-    TaskBase = celery.Task
-
-    class ContextTask(TaskBase):
-        abstract = True
-
-        def __call__(self, *args, **kwargs):
-            with app.app_context():
-                return TaskBase.__call__(self, *args, **kwargs)
-
-    celery.Task = ContextTask
     return celery

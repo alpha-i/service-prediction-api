@@ -44,38 +44,39 @@
         <div class="col-md-12">
             <div class="box">
                 <h3 class="box-header with-border">Status log</h3>
-               <div class="box-body">
-                    <table class="table table-bordered prediction-log" id="{{ prediction.task_code }}" data-completed="{{ prediction.is_completed }}">
-                    <thead>
-                            <tr>
-                                <th>created</th>
-                                <th>status</th>
-                                <th>message</th>
-                            </tr>
+                <div class="box-body">
+                    <table class="table table-bordered prediction-log" id="{{ prediction.task_code }}"
+                           data-completed="{{ prediction.is_completed }}">
+                        <thead>
+                        <tr>
+                            <th>created</th>
+                            <th>status</th>
+                            <th>message</th>
+                        </tr>
                         </thead>
                         <tbody>
-                            {% for status in prediction.statuses %}
+                        {% for status in prediction.statuses %}
 
-                                <tr>
-                                    <td>{{ macros.format_datetime(status.created_at) }}</td>
-                                    <td>{{ status.state }}</td>
-                                    <td>{{ status.message }}</td>
-                                </tr>
-                            {% endfor %}
-                            <tfoot>
-                                <tr>
-                                    <td colspan="4" class="text-right text-green text-bold">
-                                    {% if not prediction.is_completed %}
-                                        <i id="status-spinner" class="fa fa-refresh fa-spin"></i> &nbsp;&nbsp;
-                                    {% endif %}
-                                        Elapsed time: <span id="elapsed-prediction-time">
+                            <tr>
+                                <td>{{ macros.format_datetime(status.created_at) }}</td>
+                                <td>{{ status.state }}</td>
+                                <td>{{ status.message }}</td>
+                            </tr>
+                        {% endfor %}
+                        <tfoot>
+                        <tr>
+                            <td colspan="4" class="text-right text-green text-bold">
+                                {% if not prediction.is_completed %}
+                                    <i id="status-spinner" class="fa fa-refresh fa-spin"></i> &nbsp;&nbsp;
+                                {% endif %}
+                                Elapsed time: <span id="elapsed-prediction-time">
                                            {{ elapsed }}
                                         </span>
-                                    </td>
-                                </tr>
+                            </td>
+                        </tr>
 
-                                </tr>
-                            </tfoot>
+                        </tr>
+                        </tfoot>
 
                         </tbody>
                     </table>
@@ -85,86 +86,91 @@
     </div>
     {% if result %}
         <div class="row">
-        <div class="col-md-12">
-            <div class="box">
-                <h3 class="box-header with-border">Result</h3>
-                <div class="box-body">
-                {% if result.status == 'SUCCESSFUL' %}
-                    <div class="row">
-                        <div class="col-md-12">
-                            <dl class="dl-horizontal">
-                                <dt>Feature Predicted</dt>
-                                <dd>{{ result.target_feature }}</dd>
-                                <dt>Date Range</dt>
-                                <dd>[ {{ result.timestamp_range[0] }} - {{ result.timestamp_range[1] }} ]</dd>
-                            </dl>
+            <div class="col-md-12">
+                <div class="box">
+                    <h3 class="box-header with-border">Result</h3>
+                    <div class="box-body">
+                        {% if result.status == 'SUCCESSFUL' %}
                             <div class="row">
-                                <div class="col-xs-12">
-                                    <canvas id="prediction-bars"></canvas>
-                                    {{ header }}
+                                <div class="col-md-12">
+                                    <dl class="dl-horizontal">
+                                        <dt>Feature Predicted</dt>
+                                        <dd>{{ result.target_feature }}</dd>
+                                        <dt>Date Range</dt>
+                                        <dd>[ {{ result.timestamp_range[0] }} - {{ result.timestamp_range[1] }} ]</dd>
+                                    </dl>
+                                    <div class="row">
+                                        <div class="col-xs-12">
+                                            <canvas id="prediction-bars"></canvas>
+                                            {{ header }}
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-xs-12">
+                                            <strong>
+                                                <a href="{{ url_for('customer.download_prediction_csv', task_code=prediction.task_code) }}"
+                                                   target="_blank">
+                                                    <i class="fa fa-download"></i>
+                                                    Download the AI factors
+                                                </a>
+                                            </strong>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-xs-12">
+                                            <strong>
+                                                <a href="{{ url_for('customer.download_prediction_factors', task_code=prediction.task_code) }}"
+                                                   target="_blank">
+                                                    <i class="fa fa-download"></i>
+                                                    Download the sensitivities
+                                                </a>
+                                            </strong>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-xs-6">
+                                            <h3>Average sensitivities</h3>
+                                            <table class="table">
+                                                {% for key, value in result.factors.items() %}
+                                                    <tr>
+                                                        <th>{{ key }}</th>
+                                                        <td>{{ value }}%</td>
+                                                    </tr>
+                                                {% endfor %}
+                                            </table>
+                                        </div>
+                                        <div class="col-xs-6">
+                                            <canvas id="sensitivies-pie"></canvas>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-xs-12">
-                                    <strong>
-                                        <a href="{{ url_for('customer.download_prediction_csv', task_code=prediction.task_code) }}" target="_blank">
-                                            <i class="fa fa-download"></i>
-                                            Download the AI factors
-                                        </a>
-                                    </strong>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-xs-12">
-                                    <strong>
-                                        <a href="{{ url_for('customer.download_prediction_factors', task_code=prediction.task_code) }}" target="_blank">
-                                            <i class="fa fa-download"></i>
-                                            Download the sensitivities
-                                        </a>
-                                    </strong>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-xs-6">
-                                    <h3>Sensitivities</h3>
-                                    <table class="table">
-                                        {%  for key, value in result.factors %}
-                                            <tr><th>{{ key }}</th><td>{{ value }}%</td></tr>
-                                        {% endfor %}
-                                    </table>
-                                </div>
-                                <div class="col-xs-6">
-                                    <canvas id="sensitivies-pie"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                         {% else %}
-                    <div class="row">
-                            <div class="col-md-12">
-                                {% if prediction_status in ['QUEUED', 'STARTED'] %}
-                                    <div class="callout callout-info">
-                                        <h4>Processing</h4>
-                                        <p>
-                                            Current status of the prediction is {{ prediction_status }}
-                                            &nbsp;
-                                            <a class="btn btn-primary" href=""><i class="fa fa-refresh"></i></a>
-                                        </p>
-                                    </div>
-                                {% elif prediction_status == 'FAILED' %}
-                                    <div class="callout callout-danger">
-                                        <h4>Failed</h4>
-                                        <p>This prediction has failed so no result displayed</p>
-                                    </div>
-                                {% endif %}
-                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    {% if prediction_status in ['QUEUED', 'STARTED'] %}
+                                        <div class="callout callout-info">
+                                            <h4>Processing</h4>
+                                            <p>
+                                                Current status of the prediction is {{ prediction_status }}
+                                                &nbsp;
+                                                <a class="btn btn-primary" href=""><i class="fa fa-refresh"></i></a>
+                                            </p>
+                                        </div>
+                                    {% elif prediction_status == 'FAILED' %}
+                                        <div class="callout callout-danger">
+                                            <h4>Failed</h4>
+                                            <p>This prediction has failed so no result displayed</p>
+                                        </div>
+                                    {% endif %}
+                                </div>
 
+                            </div>
+                        {% endif %}
                     </div>
-            {% endif %}
                 </div>
             </div>
         </div>
-    </div>
     {% endif %}
 {% endblock %}
 
@@ -172,69 +178,87 @@
 {% block footer_js %}
     {{ super() }}
     <script>
-        $(document).ready(function($){
+        $(document).ready(function ($) {
             {% if not prediction.is_completed %}
                 setInterval(PredictionStatusRefresh.refreshStatuses, 1000);
             {% else %}
                 {%  set prediction_result = [] %}
+                {%  set upper_bounds = [] %}
+                {%  set lower_bounds = [] %}
                 {%  set prediction_labels = [] %}
                 {%- for value in result.data -%}
                     {%- if value.value -%}
                         {%- do prediction_result.append(value.value) -%}
+                        {%- do upper_bounds.append(value.upper) -%}
+                        {%- do lower_bounds.append(value.lower) -%}
                         {%- do prediction_labels.append(value.symbol) -%}
                     {%- endif -%}
                 {%- endfor -%}
                 var prediction_data = {
                     datasets: [
                         {
-                            data: [{%  for value in prediction_result %}{{ value }}{% if not loop.last %},{% endif %}{% endfor %}],
+                            data: [{%  for value in lower_bounds %}{{ value }}{% if not loop.last %}, {% endif %}{% endfor %}],
+                            backgroundColor: ChartDecorator.getAlphaChartColors({{ lower_bounds|length }}),
+                            label: '{{ result.target_feature|capitalize }} (lower)'
+                        },
+                        {
+                            data: [{%  for value in prediction_result %}{{ value }}{% if not loop.last %}, {% endif %}{% endfor %}],
                             backgroundColor: ChartDecorator.getChartColors({{ prediction_result|length }}),
                             label: '{{ result.target_feature|capitalize }}'
+                        },
+                        {
+                            data: [{%  for value in upper_bounds %}{{ value }}{% if not loop.last %}, {% endif %}{% endfor %}],
+                            backgroundColor: ChartDecorator.getAlphaChartColors({{ upper_bounds|length }}),
+                            label: '{{ result.target_feature|capitalize }} (upper)'
                         }
                     ],
-                    labels: [{%  for value in prediction_labels %}'{{ value }}'{% if not loop.last %},{% endif %}{% endfor %}]
+                    labels: [{%  for value in prediction_labels %}'{{ value }}'{% if not loop.last %}, {% endif %}{% endfor %}]
                 }
 
                 var bar_canvas = document.getElementById('prediction-bars');
-                new Chart(bar_canvas,{
+                new Chart(bar_canvas, {
                     type: 'bar',
                     data: prediction_data,
                     options: {
                         legend: {
                             position: 'top',
                             labels: {
-                                fontSize : 14
+                                fontSize: 14
                             }
                         },
                         title: {
-                            text : 'AI Factors',
+                            text: 'AI Factors',
                             display: true,
                             fontSize: 16,
                             padding: 20
+                        },
+                        scales: {
+                            xAxes: [{stacked: true}]
                         }
+
                     }
                 });
 
                 var sensitivities_data = {
                     datasets: [{
-                        data: [{% for key, value in result.factors  %}{{ value }}{% if not loop.last %},{% endif %}{% endfor %}],
+                        data: [{% for key, value in result.factors.items()  %}{{ value }}{% if not loop.last %}, {% endif %}{% endfor %}],
                         backgroundColor: ChartDecorator.getChartColors({{ result.factors|length }})
-                        }],
-                    labels: [{% for key, value in result.factors  %}'{{ key }}'{% if not loop.last %},{% endif %}{% endfor %}],
+                    }],
+                    labels: [{% for key, value in result.factors.items()  %}'{{ key }}'{% if not loop.last %}, {% endif %}{% endfor %}],
                 };
                 var sensitivities_canvas = document.getElementById('sensitivies-pie');
-                new Chart(sensitivities_canvas,{
+                new Chart(sensitivities_canvas, {
                     type: 'doughnut',
                     data: sensitivities_data,
                     options: {
                         legend: {
                             position: 'left',
                             labels: {
-                                fontSize : 14
+                                fontSize: 14
                             }
                         },
                         title: {
-                            text : 'Factor sensitivities',
+                            text: 'Average factor sensitivities',
                             display: true,
                             fontSize: 16,
                             padding: 20

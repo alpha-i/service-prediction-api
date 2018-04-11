@@ -1,6 +1,6 @@
 --extra-index-url https://pypi.fury.io/zNzsk7gQsYY335HLzW9x/alpha-i/
 alembic==0.9.7
-attribdict
+attribdict==1.0.0
 amqp==2.2.2
 appnope==0.1.0
 billiard==3.5.0.3
@@ -10,9 +10,8 @@ click==6.7
 decorator==4.2.1
 Flask==0.12.2
 Flask-Celery-Helper==1.1.0
-Flask-Migrate==2.1.1
-Flask-SQLAlchemy==2.3.2
 Flask-Bootstrap==3.3.7.1
+gunicorn
 itsdangerous==0.24
 jedi==0.11.1
 Jinja2==2.10
@@ -46,7 +45,6 @@ tables
 numpy
 sklearn
 # Oracle-related dependencies
-alphai_delphi==2.2.0
+alphai_delphi>=3.0.0
 tensorflow==1.4.0
-alphai_metacrocubot_oracle
-gunicorn
+alphai_metacrocubot_oracle>=1.0.0

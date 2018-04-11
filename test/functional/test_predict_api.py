@@ -1,13 +1,11 @@
 import datetime
 import json
-import logging
 import os
 import time
 
 from flask import url_for
 
 from app import services, interpreters
-from app.db import db
 from app.interpreters.prediction import metacrocubot_prediction_interpreter
 from test.functional.base_test_class import BaseTestClass
 
@@ -16,7 +14,6 @@ HERE = os.path.join(os.path.dirname(__file__))
 
 class TestPredictionAPI(BaseTestClass):
     TESTING = True
-    DB = db
 
     def setUp(self):
         super().setUp()
