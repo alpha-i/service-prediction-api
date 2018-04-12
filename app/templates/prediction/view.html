@@ -199,7 +199,7 @@
                         {
                             data: [{%  for value in lower_bounds %}{{ value }}{% if not loop.last %}, {% endif %}{% endfor %}],
                             backgroundColor: ChartDecorator.getAlphaChartColors({{ lower_bounds|length }}),
-                            label: '{{ result.target_feature|capitalize }} (lower)'
+                            label: '{{ result.target_feature|capitalize }} (16th percentile)'
                         },
                         {
                             data: [{%  for value in prediction_result %}{{ value }}{% if not loop.last %}, {% endif %}{% endfor %}],
@@ -209,7 +209,7 @@
                         {
                             data: [{%  for value in upper_bounds %}{{ value }}{% if not loop.last %}, {% endif %}{% endfor %}],
                             backgroundColor: ChartDecorator.getAlphaChartColors({{ upper_bounds|length }}),
-                            label: '{{ result.target_feature|capitalize }} (upper)'
+                            label: '{{ result.target_feature|capitalize }} (84th percentile)'
                         }
                     ],
                     labels: [{%  for value in prediction_labels %}'{{ value }}'{% if not loop.last %}, {% endif %}{% endfor %}]
