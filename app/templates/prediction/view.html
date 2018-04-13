@@ -182,6 +182,7 @@
             {% if not prediction.is_completed %}
                 setInterval(PredictionStatusRefresh.refreshStatuses, 1000);
             {% else %}
+                {% if result %}
                 {%  set prediction_result = [] %}
                 {%  set upper_bounds = [] %}
                 {%  set lower_bounds = [] %}
@@ -238,33 +239,34 @@
 
                     }
                 });
-
-                var sensitivities_data = {
-                    datasets: [{
-                        data: [{% for key, value in result.factors.items()  %}{{ value }}{% if not loop.last %}, {% endif %}{% endfor %}],
-                        backgroundColor: ChartDecorator.getChartColors({{ result.factors|length }})
-                    }],
-                    labels: [{% for key, value in result.factors.items()  %}'{{ key }}'{% if not loop.last %}, {% endif %}{% endfor %}],
-                };
-                var sensitivities_canvas = document.getElementById('sensitivies-pie');
-                new Chart(sensitivities_canvas, {
-                    type: 'doughnut',
-                    data: sensitivities_data,
-                    options: {
-                        legend: {
-                            position: 'left',
-                            labels: {
-                                fontSize: 14
+                    var sensitivities_data = {
+                        datasets: [{
+                            data: [{% for key, value in result.factors.items()  %}{{ value }}{% if not loop.last %}, {% endif %}{% endfor %}],
+                            backgroundColor: ChartDecorator.getChartColors({{ result.factors|length }})
+                        }],
+                        labels: [{% for key, value in result.factors.items()  %}'{{ key }}'{% if not loop.last %}, {% endif %}{% endfor %}],
+                    };
+                    var sensitivities_canvas = document.getElementById('sensitivies-pie');
+                    new Chart(sensitivities_canvas, {
+                        type: 'doughnut',
+                        data: sensitivities_data,
+                        options: {
+                            legend: {
+                                position: 'left',
+                                labels: {
+                                    fontSize: 14
+                                }
+                            },
+                            title: {
+                                text: 'Average factor sensitivities',
+                                display: true,
+                                fontSize: 16,
+                                padding: 20
                             }
-                        },
-                        title: {
-                            text: 'Average factor sensitivities',
-                            display: true,
-                            fontSize: 16,
-                            padding: 20
                         }
-                    }
-                });
+                    });
+                {% endif %}
+
 
             {% endif %}
         });
