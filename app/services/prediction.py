@@ -22,6 +22,11 @@ def get_result_by_code(task_code):
     return PredictionResult.from_model(model)
 
 
+def get_tasks_by_company_id(company_id):
+    return PredictionTaskEntity.query.filter(PredictionTaskEntity.company_id == company_id).order_by(
+        PredictionTaskEntity.created_at.desc()).all()
+
+
 def insert_task(prediction_task):
     model = prediction_task.to_model()
     model.save()

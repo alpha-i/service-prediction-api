@@ -27,12 +27,13 @@ customer_blueprint = Blueprint('customer', __name__)
 @requires_access_token
 def dashboard():
     company = g.user.company
-    prediction_tasks = company.prediction_tasks
+    prediction_tasks = services.prediction.get_tasks_by_company_id(g.user.company.id)
+
     context = {
         'user_id': g.user.id,
         'profile': {'email': g.user.email},
         'datasource': company.current_datasource,
-        'prediction_task_list': list(reversed(prediction_tasks))[:5],
+        'prediction_task_list': prediction_tasks,
     }
 
     return render_template('dashboard.html', **context)
@@ -246,13 +247,13 @@ def download_all_predictions():
 @customer_blueprint.route('/prediction', methods=['GET'])
 @requires_access_token
 def list_predictions():
-    prediction_tasks = g.user.company.prediction_tasks if g.user.company.prediction_tasks else []
+    prediction_tasks = services.prediction.get_tasks_by_company_id(g.user.company.id)
 
     context = {
         'user_id': g.user.id,
         'profile': {'email': g.user.email},
         'datasource': g.user.company.current_datasource,
-        'prediction_task_list': list(reversed(prediction_tasks))
+        'prediction_task_list': prediction_tasks
     }
 
     return render_template("prediction/list.html", **context)
