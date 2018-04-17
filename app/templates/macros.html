@@ -35,37 +35,44 @@
 {%- endmacro %}
 
 {% macro print_datasource_task_list(task_list) %}
-     {% if task_list|length > 0 %}
+    {% if task_list|length > 0 %}
         <table class="table table-bordered" id="datasource-task-list">
             <thead>
-                <tr>
-                    <th>name</th>
-                    <th>code</th>
-                    <th>created</th>
-                    <th>status</th>
-                    <th></th>
-                </tr>
+            <tr>
+                <th>name</th>
+                <th>code</th>
+                <th>created on</th>
+                <th>prediction start</th>
+                <th>prediction end</th>
+                <th>datasource</th>
+                <th>status</th>
+                <th></th>
+            </tr>
             </thead>
             <tbody>
+
             {% for task in task_list %}
                 <tr class='task-row' id="{{ task.task_code }}" data-completed="{{ task.is_completed }}">
-                    <td scope="row">
-                        <a href="{{ url_for('customer.view_prediction', task_code=task.task_code) }}">{{ task.name }}</a>
+                    <td scope="row"><a
+                            href="{{ url_for('customer.view_prediction', task_code=task.task_code) }}">{{ task.name }}</a>
                     </td>
                     <td scope="row">{{ task.task_code }}</td>
                     <td>{{ format_datetime(task.created_at) }}</td>
+                    <td>{{ task.prediction_request.start_time }}</td>
+                    <td>{{ task.prediction_request.end_time }}</td>
                     <td>
-                        <i class="fa {{ get_task_status_icon(task.statuses[-1].state) }}" alt="{{ task.statuses[-1].state }}"/>
+                        <a href="{{ url_for('customer.view_datasource', datasource_id=task.datasource_upload_code) }}">
+                            {{ task.datasource_upload_code }}
+                        </a>
                     </td>
-                    <td>
-                        <a href="{{ url_for('customer.view_prediction', task_code=task.task_code) }}"><i class="fa fa-list"></i></a>
-                    </td>
+                    <td><i class="fa {{ get_task_status_icon(task.statuses[-1].state) }}" alt="{{ task.statuses[-1].state }}"/></td>
+                    <td><a href="{{ url_for('customer.view_prediction', task_code=task.task_code) }}"><i class="fa fa-list"></i></a></td>
                 </tr>
             {% endfor %}
             </tbody>
         </table>
     {% else %}
-            <p>No tasks found.</p>
+        <p>No tasks found.</p>
     {% endif %}
 {% endmacro %}
 
@@ -87,29 +94,36 @@
             <tr>
                 <th>name</th>
                 <th>code</th>
-                <th>created</th>
+                <th>created on</th>
+                <th>prediction start</th>
+                <th>prediction end</th>
                 <th>datasource</th>
                 <th>status</th>
                 <th></th>
             </tr>
             {% for task in task_list %}
                 <tr>
-                    <td scope="row"><a href="{{ url_for('customer.view_prediction', task_code=task.task_code) }}">{{ task.name }}</a></td>
+                    <td scope="row"><a
+                            href="{{ url_for('customer.view_prediction', task_code=task.task_code) }}">{{ task.name }}</a>
+                    </td>
                     <td scope="row">{{ task.task_code }}</td>
                     <td>{{ format_datetime(task.created_at) }}</td>
+                    <td>{{ task.prediction_request.start_time }}</td>
+                    <td>{{ task.prediction_request.end_time }}</td>
                     <td>
                         <a href="{{ url_for('customer.view_datasource', datasource_id=task.datasource_upload_code) }}">
                             {{ task.datasource_upload_code }}
                         </a>
                     </td>
                     <td><i class="fa {{ get_task_status_icon(task.statuses[-1].state) }}" alt="{{ task.statuses[-1].state }}"/></td>
-                    <td><a href="{{ url_for('customer.view_prediction', task_code=task.task_code) }}"><i class="fa fa-list"></i></a></td>
+                    <td><a href="{{ url_for('customer.view_prediction', task_code=task.task_code) }}"><i
+                            class="fa fa-list"></i></a></td>
                 </tr>
             {% endfor %}
             </tbody>
         </table>
     {% else %}
-            <p>No tasks found.</p>
+        <p>No tasks found.</p>
     {% endif %}
 {% endmacro %}
 
