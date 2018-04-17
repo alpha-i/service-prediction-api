@@ -5,6 +5,7 @@ import logging
 from app import services
 from app.core.models import DataSource, CompanyConfiguration
 from app.entities import TaskStatusTypes
+from config import MAXIMUM_DAYS_FORECAST
 
 
 class AbstractUploadStrategy(metaclass=abc.ABCMeta):
@@ -49,7 +50,7 @@ class TrainAndPredictOnUploadStrategy(AbstractUploadStrategy):
         prediction_request = {
             'name': f'ON-UPLOAD-PREDICTION-{now}',
             'start_time': datasource.end_date,
-            'end_time': now,
+            'end_time': datasource.end_date + datetime.timedelta(days=MAXIMUM_DAYS_FORECAST),
         }
         task_code = services.prediction.generate_task_code()
 
