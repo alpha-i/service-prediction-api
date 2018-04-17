@@ -20,6 +20,11 @@
                 <h3 class="box-header with-border">Predictions</h3>
                 <div class="box-body">
                     {% if datasource %}
+                        {% if prediction_task_list %}
+                            <p>
+                                <a href="{{ url_for('customer.download_all_predictions') }}"><i class="fa fa-download"></i> Download all successful prediction results in one single file</a>
+                            </p>
+                        {% endif %}
                         {{ macros.print_task_list(prediction_task_list) }}
                     {% else %}
                         <div class="callout callout-warning">
