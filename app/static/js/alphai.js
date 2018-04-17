@@ -53,6 +53,9 @@ var DatasourceRefresh = {
 
         var created_at = moment(task.created_at)
         $row.append('<td>' + created_at.format("YYYY-MM-DD HH:mm:ss") + '</td>');
+        $row.append('<td>' + task.prediction_request.start_time + '</td>');
+        $row.append('<td>' + task.prediction_request.end_time + '</td>');
+        $row.append('<td><a href="/customer/datasource/' + task.datasource_upload_code + '">' + task.datasource_upload_code + '</a></td>');
         $row.append('<td>' + status + '</td>');
         $row.append('<td><a href="/customer/prediction/' + task.task_code + '"><i class="fa fa-list"></i></a></td>');
 
