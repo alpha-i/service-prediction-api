@@ -222,6 +222,27 @@ def download_prediction_factors(task_code):
         )})
 
 
+@customer_blueprint.route('/prediction/predictions/download')
+@requires_access_token
+def download_all_predictions():
+
+    current_user_company_id = g.user.company_id
+    prediction_list = PredictionTaskEntity.get_successful_by_company_id(current_user_company_id)
+
+    result_dataframe = pd.DataFrame()
+
+    for prediction in prediction_list:
+        current_df = prediction_result_to_dataframe_with_error(prediction)
+        result_dataframe = pd.concat([result_dataframe, current_df])
+
+    return Response(
+        result_dataframe.sort_index().to_csv(),
+        mimetype='text/csv',
+        headers={"Content-disposition": "attachment; filename={}_bulk_predictions.csv".format(
+                datetime.now().strftime('%Y%m%d%H%M%S')
+        )})
+
+
 @customer_blueprint.route('/prediction', methods=['GET'])
 @requires_access_token
 def list_predictions():

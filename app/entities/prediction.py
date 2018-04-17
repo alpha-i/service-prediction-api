@@ -60,6 +60,13 @@ class PredictionTaskEntity(BaseEntity):
     def get_by_user_id(user_id):
         return PredictionTaskEntity.query.filter(PredictionTaskEntity.user_id == user_id).all()
 
+    @staticmethod
+    def get_successful_by_company_id(company_id):
+        return PredictionTaskEntity.query.filter(
+            PredictionTaskEntity.company_id == company_id,
+            PredictionTaskEntity.statuses.any(state=TaskStatusTypes.successful.value)
+        ).all()
+
     @property
     def status(self):
         if len(self.statuses):
