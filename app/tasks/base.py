@@ -1,12 +1,27 @@
 from celery import Task
+from celery.signals import worker_process_shutdown, worker_process_init
+from sqlalchemy import create_engine
+from sqlalchemy.pool import NullPool
 
 from app.database import db_session
+from config import SQLALCHEMY_DATABASE_URI
 
 
 class BaseDBTask(Task):
+    def __call__(self, *args, **kwargs):
+        try:
+            return super().__call__(*args, **kwargs)
+        finally:
+            db_session.close()
 
-    def on_failure(self, exc, task_id, args, kwargs, einfo):
+
+@worker_process_shutdown.connect
+def on_fork_close_session(**kwargs):
+    if db_session is not None:
         db_session.remove()
 
-    def after_return(self, status, retval, task_id, args, kwargs, einfo):
-        db_session.remove()
+
+@worker_process_init.connect
+def on_fork_open_session(**kwargs):
+    engine = create_engine(SQLALCHEMY_DATABASE_URI, convert_unicode=True, poolclass=NullPool)
+    db_session.bind = engine
